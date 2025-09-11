@@ -30,6 +30,17 @@
   .ghost{ background:#1b1b1b; color:var(--fg); border:1px solid #2a2a2a; }
   .count{ align-self:center; font-weight:600; padding:6px 10px; border:1px solid #222; border-radius:10px; }
 
+  /* Chaos slider */
+  .chaos{ margin-top:10px; display:flex; gap:10px; align-items:center; }
+  .chaos label{ font-size:13px; color:var(--muted); white-space:nowrap; }
+  .chaos input[type="range"]{ flex:1 1 auto; appearance:none; height:34px; background:transparent; }
+  .chaos input[type="range"]::-webkit-slider-runnable-track{ height:6px; background:#1b1b1b; border:1px solid #2a2a2a; border-radius:999px; }
+  .chaos input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none; width:22px; height:22px; margin-top:-8px; border-radius:50%;
+    background:var(--accent); border:2px solid #083; box-shadow:0 1px 4px rgba(0,0,0,.35);
+  }
+  .chaos .val{ width:40px; text-align:right; color:#c4cbd2; font-variant-tabular-nums:tabular-nums; }
+
   .result{ display:none; margin-top:14px; }
   .poster{
     width:100%; max-width:420px; margin:0 auto 12px; display:block;
@@ -73,14 +84,19 @@
       <div class="count muted">Deck: <span id="left">0</span> • Total: <span id="total">0</span></div>
     </div>
 
+    <!-- Chaos slider -->
+    <div class="chaos" aria-label="chaos control">
+      <label for="cha">Chaos</label>
+      <input id="cha" type="range" min="0" max="100" step="1" value="0" />
+      <div class="val" id="chaVal">0</div>
+    </div>
+
     <div id="err" role="alert" aria-live="polite"></div>
 
     <section id="result" class="result" aria-live="polite">
       <img id="poster" class="poster skeleton" alt="Movie poster" />
       <div class="title" id="title">Loading…</div>
-      <!-- tagline now directly under title -->
       <div class="tagline-inline" id="taglineInline" style="display:none;"></div>
-
       <div class="meta" id="year"></div>
 
       <div class="links">
@@ -101,6 +117,7 @@ const TMDB_IMG = (path, size="w500") => path ? `https://image.tmdb.org/t/p/${siz
 
 let MOVIES = [];
 let DECK = [];
+let CHAOS = 0; // 0..100
 
 async function loadData() {
   try {
@@ -109,28 +126,75 @@ async function loadData() {
     if (!r.ok) throw new Error(`HTTP ${r.status}: ${txt.slice(0,180)}`);
     MOVIES = JSON.parse(txt);
     $("#total").textContent = MOVIES.length;
-    resetDeck();
+    rebuildDeck();
   } catch (e) {
     err("Could not load movies.json.\n" + (e.message || e));
   }
 }
 
-function shuffleIdx(n){
-  const idx = Array.from({length:n}, (_,i)=>i);
-  const rnd = new Uint32Array(n); crypto.getRandomValues(rnd);
-  for (let i=n-1;i>0;i--){ const j=rnd[i]%(i+1); [idx[i],idx[j]]=[idx[j],idx[i]]; }
-  return idx;
+// ======== Chaos weighting ========
+// We bias toward older years & "weird" words in title/tagline.
+// CHAOS=0 -> uniform. CHAOS=100 -> heavy weighting.
+const WEIRD_WORDS = [
+  "demon","witch","blood","gore","mutant","possession","alien","apocalypse","cult","curse","cursed","nightmare","corpse",
+  "zombie","kaiju","satan","hell","freak","monster","vampire","ghost","necro","tentacle","trash","slime","meltdown","surreal",
+  "weird","forbidden","forbiden","haunted","killer","cannibal","driller","scream","beast","sick","twisted","grotesque","fever",
+  "evil","ritual","occult","inferno"
+];
+
+function scoreWeird(text){
+  const t = (text||"").toLowerCase();
+  let c = 0;
+  for (const w of WEIRD_WORDS){
+    if (t.includes(w)) c++;
+  }
+  // log-ish growth cap
+  return Math.min(1.5, Math.log2(1 + c) ); // 0..~1.5
 }
-function resetDeck(){
+
+function scoreOld(year){
+  const y = Number(year);
+  if (!y) return 0;
+  const age = Math.max(0, 2025 - y); // adjust current year if you want
+  // 0..(older gets closer to ~2.0)
+  return Math.min(2.0, age / 25); // 25y old ~1.0, 50y ~2.0
+}
+
+// Build weighted deck (with no repeats). Each index appears N times ~= weight.
+function rebuildDeck(){
   if (!MOVIES.length) return;
-  DECK = shuffleIdx(MOVIES.length);
+  const chaos = CHAOS / 100; // 0..1
+  const bucket = [];
+
+  for (let i=0;i<MOVIES.length;i++){
+    const it = MOVIES[i];
+    const base = 1; // uniform
+    const wOld = scoreOld(it.year);
+    const wWeird = Math.max( scoreWeird(it.title), scoreWeird(it.tagline) );
+    // combine: base + chaos * (old + weird)
+    const weight = base + chaos * (wOld + wWeird);
+
+    // turn into discrete multiplicity; keep it bounded
+    const times = Math.max(1, Math.min(8, Math.round(weight * 2))); // 1..8 copies
+    for (let k=0;k<times;k++) bucket.push(i);
+  }
+
+  // shuffle
+  const rnd = new Uint32Array(bucket.length); crypto.getRandomValues(rnd);
+  for (let i=bucket.length-1;i>0;i--){ const j=rnd[i]%(i+1); [bucket[i],bucket[j]]=[bucket[j],bucket[i]]; }
+  // convert to a no-repeat sequence by filtering the first occurrence of each index in order
+  const seen = new Set(); const deck = [];
+  for (const idx of bucket){ if (!seen.has(idx)){ seen.add(idx); deck.push(idx); } }
+  DECK = deck;
   $("#left").textContent = DECK.length;
 }
+
+function resetDeck(){ rebuildDeck(); }
 
 async function deal(){
   err("");
   if (!MOVIES.length){ err("Data not loaded yet."); return; }
-  if (!DECK.length) resetDeck();
+  if (!DECK.length) rebuildDeck();
   const idx = DECK.pop();
   $("#left").textContent = DECK.length;
 
@@ -141,7 +205,7 @@ async function deal(){
   poster.classList.add("skeleton");
 
   $("#title").textContent = item.title || "Untitled";
-  // tagline inline under title
+
   const tagline = (item.tagline && String(item.tagline).trim()) || "";
   const tInline = $("#taglineInline");
   if (tagline) { tInline.textContent = tagline; tInline.style.display = "block"; }
@@ -154,7 +218,7 @@ async function deal(){
   poster.src = item.poster ? TMDB_IMG(item.poster, "w500") : "";
   poster.onload = poster.onerror = () => poster.classList.remove("skeleton");
 
-  // keep the single “Where to watch” button:
+  // Single reliable button
   if (item.justwatch) {
     $("#watchLink").href = item.justwatch;
     $("#watchLink").textContent = "Where to watch";
@@ -164,8 +228,15 @@ async function deal(){
   }
 }
 
+// Wire up
 $("#deal").addEventListener("click", deal);
 $("#reset").addEventListener("click", resetDeck);
+$("#cha").addEventListener("input", (e)=>{
+  CHAOS = Number(e.target.value) || 0;
+  $("#chaVal").textContent = CHAOS;
+});
+$("#cha").addEventListener("change", ()=>{ rebuildDeck(); }); // rebuild on release
+
 loadData();
 </script>
 </body>
