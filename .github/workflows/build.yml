@@ -1,34 +1,57 @@
-name: Build movies.json
+name: Build & Deploy (Pages)
 
 on:
   push:
-    branches: [main]
-    paths:
-      - 'data/**'
-      - 'scripts/**'
-      - 'package.json'
-      - 'index.html'
+    branches: [ main ]
   workflow_dispatch:
 
+# Required for GitHub Pages
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node
+        uses: actions/setup-node@v4
         with:
-          persist-credentials: true
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - run: npm install
-      - run: npm run build
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build movies.json (AI chaos + providers)
         env:
-          TMDB_KEY: ${{ secrets.TMDB_KEY }}
-      - name: Commit movies.json
-        uses: stefanzweifel/git-auto-commit-action@v5
+          TMDB_KEY: $000802da6224e125437187b196cde898
+          OPENAI_API_KEY: $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
+          TMDB_REGION: US
+        run: node scripts/process.js
+
+      # Upload the WHOLE repo root (static site) as the Pages artifact.
+      # This includes index.html, movies.json, /data, etc.
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          commit_message: 'build: update movies.json'
-          file_pattern: movies.json
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
