@@ -21,7 +21,7 @@
   h1{ margin:0 0 8px; font-size:20px; letter-spacing:.2px; }
   .muted{ color:var(--muted); font-size:13px; }
 
-  .controls{ display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
+  .controls{ display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; align-items:center; }
   .controls .spacer{ flex:1 1 auto; }
   button{
     appearance:none; border:0; border-radius:12px; padding:14px 16px; font-weight:800; cursor:pointer;
@@ -30,25 +30,30 @@
   .ghost{ background:#1b1b1b; color:var(--fg); border:1px solid #2a2a2a; }
   .count{ align-self:center; font-weight:600; padding:6px 10px; border:1px solid #222; border-radius:10px; }
 
-  /* Order ↔ Neutral ↔ Chaos control */
+  /* Dial + variety + toggle */
   .dial{ margin-top:10px; }
   .sliderrow{ display:flex; gap:10px; align-items:center; width:100%; }
   .sliderrow input[type="range"]{
-    flex:1 1 auto; appearance:none; height:34px; background:linear-gradient(90deg,#2a2a2a 0,#2a2a2a 50%,#2a2a2a 100%);
-  }
-  .sliderrow input[type="range"]::-webkit-slider-runnable-track{
-    height:8px; background:#161616; border:1px solid #2a2a2a; border-radius:999px;
+    flex:1 1 auto; appearance:none; height:8px; background:#161616; border:1px solid #2a2a2a; border-radius:999px;
     background-image: linear-gradient(90deg,
       rgba(119,255,165,.25) 0%, rgba(119,255,165,.25) 49%,
       #161616 49%, #161616 51%,
       rgba(255,119,199,.25) 51%, rgba(255,119,199,.25) 100%);
   }
   .sliderrow input[type="range"]::-webkit-slider-thumb{
-    -webkit-appearance:none; appearance:none; width:26px; height:26px; margin-top:-10px; border-radius:50%;
+    -webkit-appearance:none; appearance:none; width:28px; height:28px; margin-top:-10px; border-radius:50%;
     background:var(--accent); border:2px solid #083; box-shadow:0 1px 4px rgba(0,0,0,.35);
   }
   .ticks{ display:flex; justify-content:space-between; margin-top:4px; color:var(--muted); font-size:12px; }
   .mode{ margin-top:6px; font-size:13px; color:#c4cbd2; }
+  .row{ display:flex; gap:10px; align-items:center; margin-top:8px; flex-wrap:wrap; }
+  .seg{ display:flex; background:#161616; border:1px solid #2a2a2a; border-radius:999px; overflow:hidden; }
+  .seg button{
+    background:transparent; border:0; color:#cfe; padding:6px 10px; font-weight:700; font-size:13px; cursor:pointer;
+  }
+  .seg button.active{ background:#1f3327; color:#b6ffd1; }
+  .toggle{ display:flex; gap:8px; align-items:center; color:#cfe; font-size:13px; }
+  .toggle input{ width:20px; height:20px; }
 
   .result{ display:none; margin-top:14px; }
   .poster{
@@ -57,7 +62,8 @@
   }
   .title{ font-size:24px; font-weight:900; margin:2px 0 2px; word-wrap:break-word; }
   .tagline-inline{ color:#c4cbd2; font-size:15px; margin:0 0 8px; }
-  .meta{ color:var(--muted); margin-bottom:10px; }
+  .meta{ color:var(--muted); margin-bottom:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .chip{ font-size:12px; background:#1a1a1a; border:1px solid #2a2a2a; padding:4px 8px; border-radius:999px; color:#cfe; }
 
   .links{ display:flex; gap:10px; flex-wrap:wrap; }
   .links a{
@@ -84,7 +90,7 @@
 <div class="wrap">
   <main class="card" role="main">
     <h1>🎲 Movie Roulette</h1>
-    <div class="muted">Tap “Deal” for a random pick. No repeats until the deck is spent.</div>
+    <div class="muted">Slide mood. Pick vibes. No repeats until the deck is spent.</div>
 
     <div class="controls" aria-label="controls">
       <button id="deal">Deal</button>
@@ -93,7 +99,6 @@
       <div class="count muted">Deck: <span id="left">0</span> • Total: <span id="total">0</span></div>
     </div>
 
-    <!-- Cleaner dial -->
     <div class="dial" aria-label="order chaos control">
       <div class="sliderrow">
         <span class="muted" style="width:52px;">Order</span>
@@ -102,6 +107,18 @@
       </div>
       <div class="ticks"><span>0</span><span>50</span><span>100</span></div>
       <div class="mode" id="modeText">Neutral • pure shuffle</div>
+
+      <div class="row">
+        <div class="seg" role="tablist" aria-label="variety">
+          <button id="varT" class="active" role="tab" aria-selected="true">Tight</button>
+          <button id="varM" role="tab" aria-selected="false">Medium</button>
+          <button id="varW" role="tab" aria-selected="false">Wide</button>
+        </div>
+        <label class="toggle">
+          <input id="onlyNow" type="checkbox" />
+          <span>Only streamable now</span>
+        </label>
+      </div>
     </div>
 
     <div id="err" role="alert" aria-live="polite"></div>
@@ -110,7 +127,7 @@
       <img id="poster" class="poster skeleton" alt="Movie poster" />
       <div class="title" id="title">Loading…</div>
       <div class="tagline-inline" id="taglineInline" style="display:none;"></div>
-      <div class="meta" id="year"></div>
+      <div class="meta"><span id="year"></span><span id="chaosChip" class="chip" style="display:none;"></span></div>
 
       <div class="links">
         <a id="lbLink" target="_blank" rel="noopener">Open on Letterboxd</a>
@@ -130,7 +147,9 @@ const TMDB_IMG = (path, size="w500") => path ? `https://image.tmdb.org/t/p/${siz
 
 let MOVIES = [];
 let DECK = [];
-let CHAOS = 50; // 0..100; 50 = neutral
+let CHAOS = 50; // target 0..100
+let ONLY_NOW = false;
+let VARIETY = "T"; // T|M|W
 
 async function loadData() {
   try {
@@ -145,135 +164,59 @@ async function loadData() {
   }
 }
 
-/* ======== Order vs Chaos weighting (v3) + Streaming availability ======== */
-// Chaos ➜ older + weird. Order ➜ newer + tame. Availability nudges up across the board.
-
-// word lists (word-boundary matched)
-const WEIRD_WORDS = [
-  "demon","witch","blood","gore","mutant","possession","alien","apocalypse","cult","curse","cursed",
-  "nightmare","corpse","zombie","kaiju","satan","hell","freak","monster","vampire","ghost","necro",
-  "tentacle","slime","meltdown","surreal","weird","haunted","killer","cannibal","driller","scream",
-  "beast","grotesque","fever","evil","ritual","occult","inferno"
-];
-const TAME_WORDS = [
-  "drama","biopic","documentary","romance","comedy","adventure","family","animation","biography",
-  "sports","sport","music","musical","histor","true story","inspired by","based on"
-];
-
-// helpers
-function countMatches(words, text){
-  const t = (text||"").toLowerCase();
-  let c = 0;
-  for (const w of words){
-    const re = new RegExp(`\\b${w.replace(/[-/\\^$*+?.()|[\]{}]/g,"\\$&")}\\b`,"i");
-    if (re.test(t)) c++;
-  }
-  return c;
-}
-function scoreWeird(item){
-  const c = countMatches(WEIRD_WORDS, `${item.title} ${item.tagline||""}`);
-  return Math.min(1.6, Math.log2(1 + c));
-}
-function scoreTame(item){
-  const c = countMatches(TAME_WORDS, `${item.title} ${item.tagline||""}`);
-  return Math.min(1.3, Math.log2(1 + c)) || 0;
-}
-function scoreOld(year){
-  const y = Number(year); if (!y) return 0;
-  const age = Math.max(0, 2025 - y);
-  return Math.min(2.0, age / 25);
-}
-function scoreNew(year){
-  const y = Number(year); if (!y) return 0;
-  return Math.min(2.0, Math.max(0, (y - 2005) / 10));
-}
-// availability: count providers by kind; heavier for sub/free
-function rawAvailability(item){
+// availability helpers
+function availabilityScore(item){
   const prov = Array.isArray(item.providers) ? item.providers : [];
   let sub=0, free=0, ads=0, rent=0, buy=0;
-  for (const p of prov){
-    if (p.kind==="sub") sub++;
-    else if (p.kind==="free") free++;
-    else if (p.kind==="ads") ads++;
-    else if (p.kind==="rent") rent++;
-    else if (p.kind==="buy") buy++;
-  }
-  // weighted sum (rough “how easy now?” score)
-  return sub*1.0 + free*0.8 + ads*0.6 + rent*0.35 + buy*0.2;
+  for (const p of prov){ if (p.kind==="sub") sub++; else if (p.kind==="free") free++; else if (p.kind==="ads") ads++; else if (p.kind==="rent") rent++; else if (p.kind==="buy") buy++; }
+  const raw = sub*1.0 + free*0.8 + ads*0.6 + rent*0.35 + buy*0.2;
+  return Math.min(1, raw/6);
 }
-function normalize(vals){
-  const n = Math.max(1, vals.length);
-  const mean = vals.reduce((a,b)=>a+b,0)/n;
-  const sd = Math.sqrt(vals.reduce((a,b)=>a+(b-mean)*(b-mean),0)/n) || 1;
-  return vals.map(v => 1/(1+Math.exp(-((v-mean)/sd))));
+function hasAnyAvailability(item){
+  return (Array.isArray(item.providers) && item.providers.length>0) || !!item.justwatch;
+}
+
+// gaussian around target with adjustable sigma (variety)
+function gaussianWeight(x, mu, sigma){
+  const d = x - mu;
+  return Math.exp(-(d*d)/(2*sigma*sigma)); // 0..1
+}
+function sigmaForVariety(){
+  return VARIETY==="T" ? 10 : VARIETY==="M" ? 18 : 30; // Tight/Medium/Wide
 }
 
 function rebuildDeck(){
   if (!MOVIES.length) return;
 
-  const bias = (CHAOS - 50) / 50; // -1..+1
-
-  // precompute
-  const rawOld = MOVIES.map(m => scoreOld(m.year));
-  const rawNew = MOVIES.map(m => scoreNew(m.year));
-  const rawWeird = MOVIES.map(m => scoreWeird(m));
-  const rawTame = MOVIES.map(m => scoreTame(m));
-  const rawAvail = MOVIES.map(m => rawAvailability(m));
-  const hasAnyAvail = MOVIES.map(m => (Array.isArray(m.providers) && m.providers.length>0) || !!m.justwatch);
-
-  // normalize to 0..1
-  const nOld = normalize(rawOld);
-  const nNew = normalize(rawNew);
-  const nWeird = normalize(rawWeird);
-  const nTame = normalize(rawTame);
-  const nAvail = normalize(rawAvail);
-
+  const target = CHAOS;
+  const sigma = sigmaForVariety();
   const bucket = [];
+
   for (let i=0;i<MOVIES.length;i++){
-    const old = nOld[i], nw = nNew[i], wd = nWeird[i], tm = nTame[i], av = nAvail[i];
+    const it = MOVIES[i];
+    if (ONLY_NOW && !hasAnyAvailability(it)) continue;
 
-    // base weight
-    let weight = 1;
+    const chaos = typeof it.chaos === "number" ? it.chaos : 50;
+    let weight = 1 + 2.2*gaussianWeight(chaos, target, sigma); // 1..~3.2 depending on proximity
+    weight += 0.6 * availabilityScore(it); // nudge streamable things
 
-    if (bias >= 0){
-      // CHAOS: boost old+weird, suppress new+tame
-      const k = bias; // 0..1
-      weight += k * 2.0 * (0.6*old + 0.8*wd);
-      weight -= k * 1.2 * (0.6*nw + 0.6*tm);
-      // availability still matters but a bit less at chaos
-      weight += (0.6 * av);
-    } else {
-      // ORDER: boost new+tame, suppress old+weird
-      const k = -bias; // 0..1
-      weight += k * 2.0 * (0.7*nw + 0.7*tm);
-      weight -= k * 1.2 * (0.7*old + 0.9*wd);
-      // availability matters more on the order side
-      weight += (1.0 * av);
-    }
-
-    // gentle penalty if nothing is available anywhere (so it doesn't dominate)
-    if (!hasAnyAvail[i]) weight *= 0.75;
-
-    // clamp + discretize
     weight = Math.max(0.2, Math.min(3.8, weight));
-    const times = Math.max(1, Math.min(10, Math.round(weight * 3))); // 1..10
+    const times = Math.max(1, Math.min(10, Math.round(weight * 3)));
     for (let t=0;t<times;t++) bucket.push(i);
   }
+  if (!bucket.length){ for (let i=0;i<MOVIES.length;i++) bucket.push(i); }
 
-  // shuffle bucket
   const rnd = new Uint32Array(bucket.length); crypto.getRandomValues(rnd);
   for (let i=bucket.length-1;i>0;i--){ const j=rnd[i]%(i+1); [bucket[i],bucket[j]]=[bucket[j],bucket[i]]; }
 
-  // collapse to no-repeat order by first occurrence
-  const seen = new Set(); const deck = [];
-  for (const idx of bucket){ if (!seen.has(idx)){ seen.add(idx); deck.push(idx); } }
+  const seen=new Set(), deck=[];
+  for (const idx of bucket){ if(!seen.has(idx)){ seen.add(idx); deck.push(idx); } }
   DECK = deck;
   $("#left").textContent = DECK.length;
 }
 
 function resetDeck(){ rebuildDeck(); }
 
-/* ======== Deal one ======== */
 async function deal(){
   err("");
   if (!MOVIES.length){ err("Data not loaded yet."); return; }
@@ -282,17 +225,19 @@ async function deal(){
   $("#left").textContent = DECK.length;
 
   const item = MOVIES[idx];
-  const res = $("#result");
+  $("#result").style.display = "block";
   const poster = $("#poster");
-  res.style.display = "block";
   poster.classList.add("skeleton");
 
   $("#title").textContent = item.title || "Untitled";
 
   const tagline = (item.tagline && String(item.tagline).trim()) || "";
   const tInline = $("#taglineInline");
-  if (tagline) { tInline.textContent = tagline; tInline.style.display = "block"; }
-  else { tInline.textContent = ""; tInline.style.display = "none"; }
+  if (tagline) { tInline.textContent = tagline; tInline.style.display = "block"; } else { tInline.textContent = ""; tInline.style.display = "none"; }
+
+  const chaos = typeof item.chaos === "number" ? item.chaos : null;
+  const chip = $("#chaosChip");
+  if (chaos !== null){ chip.textContent = `Chaos: ${chaos}`; chip.style.display = "inline-block"; } else { chip.style.display = "none"; }
 
   $("#year").textContent = item.year ? `Year: ${item.year}` : "";
   $("#lbLink").href = item.link || "#";
@@ -301,36 +246,36 @@ async function deal(){
   poster.src = item.poster ? TMDB_IMG(item.poster, "w500") : "";
   poster.onload = poster.onerror = () => poster.classList.remove("skeleton");
 
-  if (item.justwatch) {
-    $("#watchLink").href = item.justwatch;
-    $("#watchLink").textContent = "Where to watch";
-  } else {
-    $("#watchLink").href = "https://www.google.com/search?q=" + encodeURIComponent((item.title||"") + " where to watch");
-    $("#watchLink").textContent = "Search streaming";
-  }
+  if (item.justwatch) { $("#watchLink").href = item.justwatch; $("#watchLink").textContent = "Where to watch"; }
+  else { $("#watchLink").href = "https://www.google.com/search?q=" + encodeURIComponent((item.title||"") + " where to watch"); $("#watchLink").textContent = "Search streaming"; }
 }
 
-/* ======== Wire up ======== */
+// Wire up
 $("#deal").addEventListener("click", deal);
 $("#reset").addEventListener("click", resetDeck);
 
-const cha = $("#cha"), modeText = $("#modeText");
+const cha = $("#cha"), modeText = $("#modeText"), onlyNow = $("#onlyNow");
 function updateModeLabel(v){
-  if (v < 40)      modeText.textContent = "Order • favor newer & tame (plus what's streamable)";
-  else if (v > 60) modeText.textContent = "Chaos • favor older & weird (still nudging what’s available)";
+  if (v < 40)      modeText.textContent = "Order • bias toward low-chaos (newer/tame)";
+  else if (v > 60) modeText.textContent = "Chaos • bias toward high-chaos (older/weird)";
   else             modeText.textContent = "Neutral • pure shuffle";
 }
-cha.addEventListener("input", (e)=>{
-  CHAOS = Number(e.target.value) || 50;
-  updateModeLabel(CHAOS);
-});
-cha.addEventListener("change", ()=>{ rebuildDeck(); });
+cha.addEventListener("input", (e)=>{ CHAOS = Number(e.target.value)||50; updateModeLabel(CHAOS); });
+cha.addEventListener("change", rebuildDeck);
+onlyNow.addEventListener("change", ()=>{ ONLY_NOW = onlyNow.checked; rebuildDeck(); });
+
+function setVar(which){
+  VARIETY = which;
+  $("#varT").classList.toggle("active", which==="T");
+  $("#varM").classList.toggle("active", which==="M");
+  $("#varW").classList.toggle("active", which==="W");
+  rebuildDeck();
+}
+$("#varT").onclick = ()=>setVar("T");
+$("#varM").onclick = ()=>setVar("M");
+$("#varW").onclick = ()=>setVar("W");
+
 updateModeLabel(CHAOS);
-
-// (Optional) press "D" to toggle console debug logs for picks
-let DEBUG_ON = false;
-window.addEventListener("keydown",(e)=>{ if (e.key.toLowerCase()==="d"){ DEBUG_ON=!DEBUG_ON; console.log("Debug:", DEBUG_ON); }});
-
 loadData();
 </script>
 </body>
