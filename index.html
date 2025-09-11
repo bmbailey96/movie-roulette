@@ -35,7 +35,8 @@
     width:100%; max-width:420px; margin:0 auto 12px; display:block;
     aspect-ratio:2/3; object-fit:cover; border-radius:14px; background:#181818;
   }
-  .title{ font-size:24px; font-weight:900; margin:2px 0 4px; word-wrap:break-word; }
+  .title{ font-size:24px; font-weight:900; margin:2px 0 2px; word-wrap:break-word; }
+  .tagline-inline{ color:#c4cbd2; font-size:15px; margin:0 0 8px; }
   .meta{ color:var(--muted); margin-bottom:10px; }
 
   .links{ display:flex; gap:10px; flex-wrap:wrap; }
@@ -44,24 +45,6 @@
     background:#1b1b1b; color:#c0ffd6; border:1px solid #2a2a2a; flex:1 1 220px; text-align:center;
   }
 
-  .providers{
-    margin-top:12px;
-    display:grid;
-    grid-template-columns: repeat(auto-fill, minmax(110px,1fr));
-    gap:8px;
-  }
-  .provider{
-    display:flex; align-items:center; gap:8px;
-    padding:10px 12px; border-radius:12px;
-    background:#151515; border:1px solid #2a2a2a;
-    text-decoration:none; color:#e8fff2; font-weight:700; font-size:13px;
-  }
-  .provider img{ width:22px; height:22px; border-radius:6px; object-fit:cover; background:#222; }
-
-  .tagline{ margin-top:10px; padding:10px 12px; border-radius:12px; background:#141414; border:1px solid #272727; }
-  .tagline h3{ margin:0 0 6px; font-size:14px; color:#c4cbd2; letter-spacing:.2px; }
-  .tagline p{ margin:0; font-size:15px; }
-
   #err{ margin-top:10px; color:#ffb3b3; white-space:pre-wrap; }
   .skeleton{
     animation: pulse 1.2s infinite ease-in-out;
@@ -69,6 +52,12 @@
     background-size:400% 100%;
   }
   @keyframes pulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
+
+  @media (min-width:700px){
+    .title{ font-size:26px; }
+    button{ flex:0 0 auto }
+    .links a{ flex:0 0 auto }
+  }
 </style>
 </head>
 <body>
@@ -89,18 +78,14 @@
     <section id="result" class="result" aria-live="polite">
       <img id="poster" class="poster skeleton" alt="Movie poster" />
       <div class="title" id="title">Loading…</div>
+      <!-- tagline now directly under title -->
+      <div class="tagline-inline" id="taglineInline" style="display:none;"></div>
+
       <div class="meta" id="year"></div>
 
       <div class="links">
         <a id="lbLink" target="_blank" rel="noopener">Open on Letterboxd</a>
         <a id="watchLink" target="_blank" rel="noopener">Where to watch</a>
-      </div>
-
-      <div id="providers" class="providers" style="display:none;"></div>
-
-      <div id="tagBlock" class="tagline" style="display:none;">
-        <h3>Tagline</h3>
-        <p id="taglineText"></p>
       </div>
     </section>
 
@@ -113,7 +98,6 @@
 const $ = s => document.querySelector(s);
 const err = (m="") => { const e=$("#err"); e.textContent=m; e.style.display = m ? "block" : "none"; };
 const TMDB_IMG = (path, size="w500") => path ? `https://image.tmdb.org/t/p/${size}${path}` : "";
-const TMDB_IMG_FULL = path => path ? `https://image.tmdb.org/t/p/w92${path}` : "";
 
 let MOVIES = [];
 let DECK = [];
@@ -143,46 +127,6 @@ function resetDeck(){
   $("#left").textContent = DECK.length;
 }
 
-// Fall-back search URLs per provider id (if no JustWatch deep link per title)
-const PROVIDER_SEARCH = {
-  8:  t => `https://www.netflix.com/search?q=${encodeURIComponent(t)}`,
-  9:  t => `https://www.amazon.com/s?k=${encodeURIComponent(t)}&i=instant-video`,
-  350:t => `https://tv.apple.com/us/search?term=${encodeURIComponent(t)}`,
-  384:t => `https://play.max.com/search?q=${encodeURIComponent(t)}`,
-  15: t => `https://www.hulu.com/search?q=${encodeURIComponent(t)}`,
-  531:t => `https://www.paramountplus.com/search/?q=${encodeURIComponent(t)}`,
-  387:t => `https://www.peacocktv.com/search?query=${encodeURIComponent(t)}`,
-  257:t => `https://www.tubitv.com/search/${encodeURIComponent(t)}`,
-  207:t => `https://www.shudder.com/search?q=${encodeURIComponent(t)}`,
-  391:t => `https://www.criterionchannel.com/search?query=${encodeURIComponent(t)}`,
-  3:  t => `https://www.youtube.com/results?search_query=${encodeURIComponent(t)}+full+movie`,
-  192:t => `https://www.vudu.com/content/movies/search?searchString=${encodeURIComponent(t)}`
-};
-
-function renderProvidersFromBaked(item){
-  const box = $("#providers");
-  box.style.display = "none";
-  box.innerHTML = "";
-  const list = Array.isArray(item.providers) ? item.providers : [];
-  if (!list.length) return;
-  for (const p of list) {
-    const a = document.createElement("a");
-    a.className = "provider";
-    const hrefGen = PROVIDER_SEARCH[p.id];
-    a.href = (hrefGen ? hrefGen(item.title) : (item.justwatch || "#"));
-    a.target = "_blank";
-    a.rel = "noopener";
-    const img = document.createElement("img");
-    img.src = TMDB_IMG_FULL(p.logo_path);
-    img.alt = p.name || "Watch";
-    const text = document.createElement("span");
-    text.textContent = p.name || "Watch";
-    a.appendChild(img); a.appendChild(text);
-    box.appendChild(a);
-  }
-  box.style.display = "grid";
-}
-
 async function deal(){
   err("");
   if (!MOVIES.length){ err("Data not loaded yet."); return; }
@@ -197,29 +141,26 @@ async function deal(){
   poster.classList.add("skeleton");
 
   $("#title").textContent = item.title || "Untitled";
+  // tagline inline under title
+  const tagline = (item.tagline && String(item.tagline).trim()) || "";
+  const tInline = $("#taglineInline");
+  if (tagline) { tInline.textContent = tagline; tInline.style.display = "block"; }
+  else { tInline.textContent = ""; tInline.style.display = "none"; }
+
   $("#year").textContent = item.year ? `Year: ${item.year}` : "";
   $("#lbLink").href = item.link || "#";
 
   poster.alt = item.title || "poster";
   poster.src = item.poster ? TMDB_IMG(item.poster, "w500") : "";
-  if (!item.poster) poster.classList.add("skeleton");
   poster.onload = poster.onerror = () => poster.classList.remove("skeleton");
 
-  // Tagline from movies.json (baked)
-  const tag = (item.tagline && String(item.tagline).trim()) || "";
-  const tBlock = $("#tagBlock"), tTxt = $("#taglineText");
-  if (tag) { tTxt.textContent = tag; tBlock.style.display = "block"; }
-  else { tBlock.style.display = "none"; tTxt.textContent = ""; }
-
-  // Baked provider badges + main button
-  renderProvidersFromBaked(item);
-  const watch = $("#watchLink");
+  // keep the single “Where to watch” button:
   if (item.justwatch) {
-    watch.href = item.justwatch;
-    watch.textContent = "Where to watch";
+    $("#watchLink").href = item.justwatch;
+    $("#watchLink").textContent = "Where to watch";
   } else {
-    watch.href = "https://www.google.com/search?q=" + encodeURIComponent((item.title||"") + " where to watch");
-    watch.textContent = "Search streaming";
+    $("#watchLink").href = "https://www.google.com/search?q=" + encodeURIComponent((item.title||"") + " where to watch");
+    $("#watchLink").textContent = "Search streaming";
   }
 }
 
