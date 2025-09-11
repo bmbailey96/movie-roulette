@@ -30,18 +30,25 @@
   .ghost{ background:#1b1b1b; color:var(--fg); border:1px solid #2a2a2a; }
   .count{ align-self:center; font-weight:600; padding:6px 10px; border:1px solid #222; border-radius:10px; }
 
-  /* Order ↔ Chaos slider */
-  .chaos{ margin-top:10px; display:flex; gap:10px; align-items:center; flex-direction:column; }
+  /* Order ↔ Neutral ↔ Chaos control */
+  .dial{ margin-top:10px; }
   .sliderrow{ display:flex; gap:10px; align-items:center; width:100%; }
-  .sliderrow input[type="range"]{ flex:1 1 auto; appearance:none; height:34px; background:transparent; }
-  .sliderrow input[type="range"]::-webkit-slider-runnable-track{ height:6px; background:#1b1b1b; border:1px solid #2a2a2a; border-radius:999px; }
+  .sliderrow input[type="range"]{
+    flex:1 1 auto; appearance:none; height:34px; background:linear-gradient(90deg,#2a2a2a 0,#2a2a2a 50%,#2a2a2a 100%);
+  }
+  .sliderrow input[type="range"]::-webkit-slider-runnable-track{
+    height:8px; background:#161616; border:1px solid #2a2a2a; border-radius:999px;
+    background-image: linear-gradient(90deg,
+      rgba(119,255,165,.25) 0%, rgba(119,255,165,.25) 49%,
+      #161616 49%, #161616 51%,
+      rgba(255,119,199,.25) 51%, rgba(255,119,199,.25) 100%);
+  }
   .sliderrow input[type="range"]::-webkit-slider-thumb{
-    -webkit-appearance:none; appearance:none; width:22px; height:22px; margin-top:-8px; border-radius:50%;
+    -webkit-appearance:none; appearance:none; width:26px; height:26px; margin-top:-10px; border-radius:50%;
     background:var(--accent); border:2px solid #083; box-shadow:0 1px 4px rgba(0,0,0,.35);
   }
-  .chaos .val{ width:56px; text-align:right; color:#c4cbd2; font-variant-numeric: tabular-nums; }
-  .labels{ display:flex; justify-content:space-between; gap:10px; width:100%; margin-top:2px; }
-  .labels label{ font-size:12px; color:var(--muted); }
+  .ticks{ display:flex; justify-content:space-between; margin-top:4px; color:var(--muted); font-size:12px; }
+  .mode{ margin-top:6px; font-size:13px; color:#c4cbd2; }
 
   .result{ display:none; margin-top:14px; }
   .poster{
@@ -86,16 +93,15 @@
       <div class="count muted">Deck: <span id="left">0</span> • Total: <span id="total">0</span></div>
     </div>
 
-    <!-- Order ↔ Chaos slider -->
-    <div class="chaos" aria-label="order chaos control">
+    <!-- Cleaner dial -->
+    <div class="dial" aria-label="order chaos control">
       <div class="sliderrow">
+        <span class="muted" style="width:52px;">Order</span>
         <input id="cha" type="range" min="0" max="100" step="1" value="50" />
-        <div class="val" id="chaVal">50</div>
+        <span class="muted" style="width:52px; text-align:right;">Chaos</span>
       </div>
-      <div class="labels">
-        <label>Order (newer / tame)</label>
-        <label>Chaos (older / weird)</label>
-      </div>
+      <div class="ticks"><span>0</span><span>50</span><span>100</span></div>
+      <div class="mode" id="modeText">Neutral • pure shuffle</div>
     </div>
 
     <div id="err" role="alert" aria-live="polite"></div>
@@ -139,10 +145,10 @@ async function loadData() {
   }
 }
 
-/* ======== Order vs Chaos weighting (v2) ======== */
-// Chaos side favors OLD + WEIRD; Order side favors NEW + TAME.
-// Word-boundary matching, normalization, and anti-bias terms.
+/* ======== Order vs Chaos weighting (v3) + Streaming availability ======== */
+// Chaos ➜ older + weird. Order ➜ newer + tame. Availability nudges up across the board.
 
+// word lists (word-boundary matched)
 const WEIRD_WORDS = [
   "demon","witch","blood","gore","mutant","possession","alien","apocalypse","cult","curse","cursed",
   "nightmare","corpse","zombie","kaiju","satan","hell","freak","monster","vampire","ghost","necro",
@@ -154,6 +160,7 @@ const TAME_WORDS = [
   "sports","sport","music","musical","histor","true story","inspired by","based on"
 ];
 
+// helpers
 function countMatches(words, text){
   const t = (text||"").toLowerCase();
   let c = 0;
@@ -174,13 +181,26 @@ function scoreTame(item){
 function scoreOld(year){
   const y = Number(year); if (!y) return 0;
   const age = Math.max(0, 2025 - y);
-  return Math.min(2.0, age / 25); // 25y -> 1.0, 50y -> 2.0
+  return Math.min(2.0, age / 25);
 }
 function scoreNew(year){
   const y = Number(year); if (!y) return 0;
-  return Math.min(2.0, Math.max(0, (y - 2005) / 10)); // 2005->0, 2015->1, 2025->2
+  return Math.min(2.0, Math.max(0, (y - 2005) / 10));
 }
-// Normalize list to ~0..1 via z-score squish -> sigmoid
+// availability: count providers by kind; heavier for sub/free
+function rawAvailability(item){
+  const prov = Array.isArray(item.providers) ? item.providers : [];
+  let sub=0, free=0, ads=0, rent=0, buy=0;
+  for (const p of prov){
+    if (p.kind==="sub") sub++;
+    else if (p.kind==="free") free++;
+    else if (p.kind==="ads") ads++;
+    else if (p.kind==="rent") rent++;
+    else if (p.kind==="buy") buy++;
+  }
+  // weighted sum (rough “how easy now?” score)
+  return sub*1.0 + free*0.8 + ads*0.6 + rent*0.35 + buy*0.2;
+}
 function normalize(vals){
   const n = Math.max(1, vals.length);
   const mean = vals.reduce((a,b)=>a+b,0)/n;
@@ -191,44 +211,52 @@ function normalize(vals){
 function rebuildDeck(){
   if (!MOVIES.length) return;
 
-  const bias = (CHAOS - 50) / 50; // -1 .. +1
+  const bias = (CHAOS - 50) / 50; // -1..+1
 
-  // precompute + normalize
+  // precompute
   const rawOld = MOVIES.map(m => scoreOld(m.year));
   const rawNew = MOVIES.map(m => scoreNew(m.year));
   const rawWeird = MOVIES.map(m => scoreWeird(m));
   const rawTame = MOVIES.map(m => scoreTame(m));
+  const rawAvail = MOVIES.map(m => rawAvailability(m));
+  const hasAnyAvail = MOVIES.map(m => (Array.isArray(m.providers) && m.providers.length>0) || !!m.justwatch);
 
+  // normalize to 0..1
   const nOld = normalize(rawOld);
   const nNew = normalize(rawNew);
   const nWeird = normalize(rawWeird);
   const nTame = normalize(rawTame);
+  const nAvail = normalize(rawAvail);
 
   const bucket = [];
-
   for (let i=0;i<MOVIES.length;i++){
-    const old = nOld[i], nw = nNew[i], wd = nWeird[i], tm = nTame[i];
+    const old = nOld[i], nw = nNew[i], wd = nWeird[i], tm = nTame[i], av = nAvail[i];
 
-    let weight = 1; // base
+    // base weight
+    let weight = 1;
+
     if (bias >= 0){
-      // CHAOS: reward old + weird; penalize new + tame
+      // CHAOS: boost old+weird, suppress new+tame
       const k = bias; // 0..1
-      const chaosScore = 0.6*old + 0.8*wd;
-      const newTame = 0.6*nw + 0.6*tm;
-      weight += k * 2.0 * chaosScore;
-      weight -= k * 1.2 * newTame;
+      weight += k * 2.0 * (0.6*old + 0.8*wd);
+      weight -= k * 1.2 * (0.6*nw + 0.6*tm);
+      // availability still matters but a bit less at chaos
+      weight += (0.6 * av);
     } else {
-      // ORDER: reward new + tame; penalize old + weird
+      // ORDER: boost new+tame, suppress old+weird
       const k = -bias; // 0..1
-      const orderScore = 0.7*nw + 0.7*tm;
-      const oldWeird = 0.7*old + 0.9*wd;
-      weight += k * 2.0 * orderScore;
-      weight -= k * 1.2 * oldWeird;
+      weight += k * 2.0 * (0.7*nw + 0.7*tm);
+      weight -= k * 1.2 * (0.7*old + 0.9*wd);
+      // availability matters more on the order side
+      weight += (1.0 * av);
     }
 
-    // clamp & discretize
-    weight = Math.max(0.2, Math.min(3.5, weight));
-    const times = Math.max(1, Math.min(10, Math.round(weight * 3))); // 1..10 copies
+    // gentle penalty if nothing is available anywhere (so it doesn't dominate)
+    if (!hasAnyAvail[i]) weight *= 0.75;
+
+    // clamp + discretize
+    weight = Math.max(0.2, Math.min(3.8, weight));
+    const times = Math.max(1, Math.min(10, Math.round(weight * 3))); // 1..10
     for (let t=0;t<times;t++) bucket.push(i);
   }
 
@@ -285,11 +313,19 @@ async function deal(){
 /* ======== Wire up ======== */
 $("#deal").addEventListener("click", deal);
 $("#reset").addEventListener("click", resetDeck);
-$("#cha").addEventListener("input", (e)=>{
+
+const cha = $("#cha"), modeText = $("#modeText");
+function updateModeLabel(v){
+  if (v < 40)      modeText.textContent = "Order • favor newer & tame (plus what's streamable)";
+  else if (v > 60) modeText.textContent = "Chaos • favor older & weird (still nudging what’s available)";
+  else             modeText.textContent = "Neutral • pure shuffle";
+}
+cha.addEventListener("input", (e)=>{
   CHAOS = Number(e.target.value) || 50;
-  $("#chaVal").textContent = CHAOS;
+  updateModeLabel(CHAOS);
 });
-$("#cha").addEventListener("change", ()=>{ rebuildDeck(); }); // rebuild on release
+cha.addEventListener("change", ()=>{ rebuildDeck(); });
+updateModeLabel(CHAOS);
 
 // (Optional) press "D" to toggle console debug logs for picks
 let DEBUG_ON = false;
