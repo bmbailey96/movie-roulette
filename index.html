@@ -4,12 +4,9 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Movie Roulette</title>
-
-<!-- iOS web-app vibes -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b0b0b">
-
 <style>
   :root{
     color-scheme: light dark;
@@ -47,7 +44,6 @@
     background:#1b1b1b; color:#c0ffd6; border:1px solid #2a2a2a; flex:1 1 220px; text-align:center;
   }
 
-  /* Providers grid */
   .providers{
     margin-top:12px;
     display:grid;
@@ -62,7 +58,6 @@
   }
   .provider img{ width:22px; height:22px; border-radius:6px; object-fit:cover; background:#222; }
 
-  /* Tagline */
   .tagline{ margin-top:10px; padding:10px 12px; border-radius:12px; background:#141414; border:1px solid #272727; }
   .tagline h3{ margin:0 0 6px; font-size:14px; color:#c4cbd2; letter-spacing:.2px; }
   .tagline p{ margin:0; font-size:15px; }
@@ -74,8 +69,6 @@
     background-size:400% 100%;
   }
   @keyframes pulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
-
-  /* (Optional) Taglines editor modal omitted for brevity; can add later */
 </style>
 </head>
 <body>
@@ -117,18 +110,10 @@
 </div>
 
 <script>
-/* ========= CONFIG =========
-   If you want live provider badges (icons) below the main button,
-   paste a TMDb v3 key here. Leaving it blank keeps your key private;
-   the main “Where to watch” button will still fall back to Google.
-*/
-const TMDB_KEY_PUBLIC = "000802da6224e125437187b196cde898";   // <-- optional public key (string). Leave "" to keep badges off.
-const REGION = "US";          // e.g. "US", "GB", "CA", "AU"
-
-const TMDB_IMG = (path, size="w500") => path ? `https://image.tmdb.org/t/p/${size}${path}` : "";
-const TMDB_IMG_FULL = path => path ? `https://image.tmdb.org/t/p/w92${path}` : "";
 const $ = s => document.querySelector(s);
 const err = (m="") => { const e=$("#err"); e.textContent=m; e.style.display = m ? "block" : "none"; };
+const TMDB_IMG = (path, size="w500") => path ? `https://image.tmdb.org/t/p/${size}${path}` : "";
+const TMDB_IMG_FULL = path => path ? `https://image.tmdb.org/t/p/w92${path}` : "";
 
 let MOVIES = [];
 let DECK = [];
@@ -158,13 +143,12 @@ function resetDeck(){
   $("#left").textContent = DECK.length;
 }
 
-/* ======== Provider badge plumbing ======== */
-// Known provider search fallbacks (if TMDb doesn't give a deep link)
+// Fall-back search URLs per provider id (if no JustWatch deep link per title)
 const PROVIDER_SEARCH = {
   8:  t => `https://www.netflix.com/search?q=${encodeURIComponent(t)}`,
   9:  t => `https://www.amazon.com/s?k=${encodeURIComponent(t)}&i=instant-video`,
   350:t => `https://tv.apple.com/us/search?term=${encodeURIComponent(t)}`,
-  384:t => `https://play.max.com/search?q=${encodeURIComponent(t)}`,  // Max (HBO)
+  384:t => `https://play.max.com/search?q=${encodeURIComponent(t)}`,
   15: t => `https://www.hulu.com/search?q=${encodeURIComponent(t)}`,
   531:t => `https://www.paramountplus.com/search/?q=${encodeURIComponent(t)}`,
   387:t => `https://www.peacocktv.com/search?query=${encodeURIComponent(t)}`,
@@ -175,57 +159,30 @@ const PROVIDER_SEARCH = {
   192:t => `https://www.vudu.com/content/movies/search?searchString=${encodeURIComponent(t)}`
 };
 
-async function fetchProviders(tmdbId){
-  if (!TMDB_KEY_PUBLIC || !tmdbId) return null;
-  try {
-    const url = `https://api.themoviedb.org/3/movie/${tmdbId}/watch/providers?language=en-US&api_key=${encodeURIComponent(TMDB_KEY_PUBLIC)}`;
-    const r = await fetch(url);
-    if (!r.ok) return null;
-    return r.json();
-  } catch { return null; }
-}
-function uniqById(arr) {
-  const seen = new Set(), out=[];
-  for (const x of arr) { if (seen.has(x.provider_id)) continue; seen.add(x.provider_id); out.push(x); }
-  return out;
-}
-function renderProviders(entry, title){
+function renderProvidersFromBaked(item){
   const box = $("#providers");
   box.style.display = "none";
   box.innerHTML = "";
-  if (!entry) return;
-
-  // priority: subscriptions first, then rent, buy, free, ads
-  const lists = [
-    ...(entry.flatrate || []),
-    ...(entry.rent || []),
-    ...(entry.buy || []),
-    ...(entry.free || []),
-    ...(entry.ads || [])
-  ];
-  const providers = uniqById(lists);
-  if (!providers.length) return;
-
-  for (const p of providers) {
-    const name = p.provider_name || "Watch";
-    const href = (PROVIDER_SEARCH[p.provider_id] || (() => entry.link || "#"))(title);
+  const list = Array.isArray(item.providers) ? item.providers : [];
+  if (!list.length) return;
+  for (const p of list) {
     const a = document.createElement("a");
     a.className = "provider";
-    a.href = href || "#";
+    const hrefGen = PROVIDER_SEARCH[p.id];
+    a.href = (hrefGen ? hrefGen(item.title) : (item.justwatch || "#"));
     a.target = "_blank";
     a.rel = "noopener";
     const img = document.createElement("img");
     img.src = TMDB_IMG_FULL(p.logo_path);
-    img.alt = name;
+    img.alt = p.name || "Watch";
     const text = document.createElement("span");
-    text.textContent = name;
+    text.textContent = p.name || "Watch";
     a.appendChild(img); a.appendChild(text);
     box.appendChild(a);
   }
   box.style.display = "grid";
 }
 
-/* ======== Deal one movie ======== */
 async function deal(){
   err("");
   if (!MOVIES.length){ err("Data not loaded yet."); return; }
@@ -248,25 +205,24 @@ async function deal(){
   if (!item.poster) poster.classList.add("skeleton");
   poster.onload = poster.onerror = () => poster.classList.remove("skeleton");
 
-  // Tagline (from movies.json if you added it in CSV / build)
+  // Tagline from movies.json (baked)
   const tag = (item.tagline && String(item.tagline).trim()) || "";
   const tBlock = $("#tagBlock"), tTxt = $("#taglineText");
-  if (tag) { tTxt.textContent = tag; tBlock.style.display = "block"; } else { tBlock.style.display = "none"; }
+  if (tag) { tTxt.textContent = tag; tBlock.style.display = "block"; }
+  else { tBlock.style.display = "none"; tTxt.textContent = ""; }
 
-  // Providers & main button
-  let jw = "";
-  try {
-    const data = await fetchProviders(item.tmdbId);
-    const regionEntry = data?.results?.[REGION];
-    jw = regionEntry?.link || "";
-    renderProviders(regionEntry || null, item.title);
-  } catch {}
+  // Baked provider badges + main button
+  renderProvidersFromBaked(item);
   const watch = $("#watchLink");
-  watch.href = jw || ("https://www.google.com/search?q=" + encodeURIComponent((item.title||"") + " where to watch"));
-  watch.textContent = jw ? "Where to watch" : "Search streaming";
+  if (item.justwatch) {
+    watch.href = item.justwatch;
+    watch.textContent = "Where to watch";
+  } else {
+    watch.href = "https://www.google.com/search?q=" + encodeURIComponent((item.title||"") + " where to watch");
+    watch.textContent = "Search streaming";
+  }
 }
 
-/* ======== Wire up ======== */
 $("#deal").addEventListener("click", deal);
 $("#reset").addEventListener("click", resetDeck);
 loadData();
