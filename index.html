@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b0b0b">
+
 <style>
   :root{
     color-scheme: light dark;
@@ -23,17 +24,17 @@
   h1{ margin:0 0 8px; font-size:20px; letter-spacing:.2px; }
   .muted{ color:var(--muted); font-size:13px; }
 
-  /* Controls – big thumbs, single row on mobile, wrap if needed */
+  /* Controls */
   .controls{ display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
   .controls .spacer{ flex:1 1 auto; }
   button{
     appearance:none; border:0; border-radius:12px; padding:14px 16px; font-weight:800; cursor:pointer;
-    background:var(--accent); color:#05200f; flex:1 0 140px; font-size:16px;
+    background:var(--accent); color:#05200f; flex:1 0 130px; font-size:16px;
   }
   .ghost{ background:#1b1b1b; color:var(--fg); border:1px solid #2a2a2a; }
   .count{ align-self:center; font-weight:600; padding:6px 10px; border:1px solid #222; border-radius:10px; }
 
-  /* Result layout – true mobile-first: poster on top, info below */
+  /* Result */
   .result{ display:none; margin-top:14px; }
   .poster{
     width:100%; max-width:420px; margin:0 auto 12px; display:block;
@@ -41,11 +42,32 @@
   }
   .title{ font-size:24px; font-weight:900; margin:2px 0 4px; word-wrap:break-word; }
   .meta{ color:var(--muted); margin-bottom:10px; }
+
   .links{ display:flex; gap:10px; flex-wrap:wrap; }
   .links a{
     display:inline-block; padding:12px 14px; border-radius:12px; text-decoration:none; font-weight:700; font-size:15px;
     background:#1b1b1b; color:#c0ffd6; border:1px solid #2a2a2a; flex:1 1 220px; text-align:center;
   }
+
+  /* Providers grid */
+  .providers{
+    margin-top:12px;
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px,1fr));
+    gap:8px;
+  }
+  .provider{
+    display:flex; align-items:center; gap:8px;
+    padding:10px 12px; border-radius:12px;
+    background:#151515; border:1px solid #2a2a2a;
+    text-decoration:none; color:#e8fff2; font-weight:700; font-size:13px;
+  }
+  .provider img{ width:22px; height:22px; border-radius:6px; object-fit:cover; background:#222; }
+
+  /* Tagline block */
+  .tagline{ margin-top:10px; padding:10px 12px; border-radius:12px; background:#141414; border:1px solid #272727; }
+  .tagline h3{ margin:0 0 6px; font-size:14px; color:#c4cbd2; letter-spacing:.2px; }
+  .tagline p{ margin:0; font-size:15px; }
 
   /* Error + skeleton */
   #err{ margin-top:10px; color:#ffb3b3; white-space:pre-wrap; }
@@ -55,6 +77,15 @@
     background-size:400% 100%;
   }
   @keyframes pulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
+
+  /* Modal for taglines */
+  .modal{ position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; padding:18px; }
+  .sheet{ width:100%; max-width:640px; background:#101010; border:1px solid #2a2a2a; border-radius:16px; padding:14px; }
+  .sheet h2{ margin:0 0 8px; font-size:18px; }
+  .sheet textarea{ width:100%; min-height:220px; padding:12px 14px; border-radius:12px; border:1px solid #2a2a2a; background:#0e0e0e; color:var(--fg); }
+  .sheet .row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+  .sheet .row button{ flex:1 1 140px; }
+  .k{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background:#151515; padding:2px 6px; border-radius:6px; border:1px solid #2a2a2a; color:#d1d1d1; }
 
   /* Desktop tweaks */
   @media (min-width:700px){
@@ -73,6 +104,7 @@
     <div class="controls" aria-label="controls">
       <button id="deal">Deal</button>
       <button id="reset" class="ghost">Reset Deck</button>
+      <button id="editTag" class="ghost">Edit Taglines</button>
       <div class="spacer"></div>
       <div class="count muted">Deck: <span id="left">0</span> • Total: <span id="total">0</span></div>
     </div>
@@ -83,25 +115,67 @@
       <img id="poster" class="poster skeleton" alt="Movie poster" />
       <div class="title" id="title">Loading…</div>
       <div class="meta" id="year"></div>
+
       <div class="links">
         <a id="lbLink" target="_blank" rel="noopener">Open on Letterboxd</a>
         <a id="watchLink" target="_blank" rel="noopener">Where to watch</a>
       </div>
+
+      <div id="providers" class="providers" style="display:none;"></div>
+
+      <div id="tagBlock" class="tagline" style="display:none;">
+        <h3>Tagline</h3>
+        <p id="taglineText"></p>
+      </div>
     </section>
 
     <p class="muted" style="margin-top:14px;">Tip: Add to Home Screen from Safari’s share menu for full-screen app mode.</p>
+    <p class="muted" style="margin-top:6px; font-size:12px;">This product uses the TMDb API but is not endorsed or certified by TMDb.</p>
   </main>
 </div>
 
+<!-- Taglines modal -->
+<div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="sheet">
+    <h2 id="modalTitle">Edit Taglines</h2>
+    <p class="muted" style="margin:6px 0 10px;">
+      Paste one per line: <span class="k">Title<TAB>tagline</span> or JSON like <span class="k">[{ "title":"Possession","tagline":"marriage meltdown as demon opera" }]</span>.
+    </p>
+    <textarea id="tagInput" placeholder="The Beyond\tmoldy dream logic and maggot rain
+Final Flesh\thand-cam apocalypse made of weird porn sketches
+…"></textarea>
+    <div class="row">
+      <button id="saveTags">Save Taglines</button>
+      <button id="closeTags" class="ghost">Close</button>
+      <button id="exportTags" class="ghost">Export</button>
+      <button id="clearTags" class="ghost">Clear</button>
+    </div>
+  </div>
+</div>
+
 <script>
+/* ========= CONFIG =========
+   If you want live provider badges, you can paste a TMDb v3 API key below.
+   Leaving it blank is safer (key not public); the main “Where to watch” button will fall back to Google.
+*/
+const TMDB_KEY_PUBLIC = ""; // <-- optional. if set, provider badges will populate via TMDb watch/providers.
+const REGION = "US";        // change to e.g. "GB", "CA" if you prefer.
+
 const TMDB_IMG = (path, size="w500") => path ? `https://image.tmdb.org/t/p/${size}${path}` : "";
+const TMDB_IMG_FULL = path => path ? `https://image.tmdb.org/t/p/w92${path}` : "";
 const $ = s => document.querySelector(s);
 const err = (m="") => { const e=$("#err"); e.textContent=m; e.style.display = m ? "block" : "none"; };
 
+/* ======== Data + Deck ======== */
 let MOVIES = [];
 let DECK = [];
 
-// Mobile-first: quicker feedback + cache-busting fetch
+// Taglines map (title -> tagline) stored on-device
+const TAG_KEY = "mr_taglines_v1";
+function loadTags(){ try { const raw = localStorage.getItem(TAG_KEY); return raw ? JSON.parse(raw) : {}; } catch { return {}; } }
+function saveTags(map){ localStorage.setItem(TAG_KEY, JSON.stringify(map)); }
+let TAGS = loadTags();
+
 async function loadData() {
   try {
     const r = await fetch("./movies.json?v=" + Date.now(), { cache: "no-store" });
@@ -121,13 +195,79 @@ function shuffleIdx(n){
   for (let i=n-1;i>0;i--){ const j=rnd[i]%(i+1); [idx[i],idx[j]]=[idx[j],idx[i]]; }
   return idx;
 }
-
 function resetDeck(){
   if (!MOVIES.length) return;
   DECK = shuffleIdx(MOVIES.length);
   $("#left").textContent = DECK.length;
 }
 
+/* ======== Provider search fallbacks (service -> title search) ======== */
+const PROVIDER_SEARCH = {
+  8:  t => `https://www.netflix.com/search?q=${encodeURIComponent(t)}`,                          // Netflix
+  9:  t => `https://www.amazon.com/s?k=${encodeURIComponent(t)}&i=instant-video`,                // Prime Video
+  350:t => `https://tv.apple.com/us/search?term=${encodeURIComponent(t)}`,                       // Apple TV
+  384:t => `https://play.max.com/search?q=${encodeURIComponent(t)}`,                             // Max
+  15: t => `https://www.hulu.com/search?q=${encodeURIComponent(t)}`,                             // Hulu
+  531:t => `https://www.paramountplus.com/search/?q=${encodeURIComponent(t)}`,                   // Paramount+
+  387:t => `https://www.peacocktv.com/search?query=${encodeURIComponent(t)}`,                    // Peacock
+  257:t => `https://www.tubitv.com/search/${encodeURIComponent(t)}`,                             // Tubi
+  207:t => `https://www.shudder.com/search?q=${encodeURIComponent(t)}`,                          // Shudder
+  391:t => `https://www.criterionchannel.com/search?query=${encodeURIComponent(t)}`,             // Criterion
+  3:  t => `https://www.youtube.com/results?search_query=${encodeURIComponent(t)}+full+movie`,   // YouTube/GPlay
+  192:t => `https://www.vudu.com/content/movies/search?searchString=${encodeURIComponent(t)}`    // Vudu
+};
+
+/* ======== Fetch TMDb providers and render badges ======== */
+async function fetchProviders(tmdbId){
+  if (!TMDB_KEY_PUBLIC || !tmdbId) return null;
+  try {
+    const url = `https://api.themoviedb.org/3/movie/${tmdbId}/watch/providers?language=en-US&api_key=${encodeURIComponent(TMDB_KEY_PUBLIC)}`;
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    return r.json();
+  } catch { return null; }
+}
+function uniqById(arr) {
+  const seen = new Set(), out=[];
+  for (const x of arr) { if (seen.has(x.provider_id)) continue; seen.add(x.provider_id); out.push(x); }
+  return out;
+}
+function renderProviders(entry, title){
+  const box = $("#providers");
+  box.style.display = "none";
+  box.innerHTML = "";
+  if (!entry) return;
+
+  const lists = [
+    ...(entry.flatrate || []),
+    ...(entry.rent || []),
+    ...(entry.buy || []),
+    ...(entry.free || []),
+    ...(entry.ads || [])
+  ];
+  const providers = uniqById(lists);
+  if (!providers.length) return;
+
+  for (const p of providers) {
+    const name = p.provider_name || "Watch";
+    const href = (PROVIDER_SEARCH[p.provider_id] || (() => entry.link || "#"))(title);
+    const a = document.createElement("a");
+    a.className = "provider";
+    a.href = href || "#";
+    a.target = "_blank";
+    a.rel = "noopener";
+    const img = document.createElement("img");
+    img.src = TMDB_IMG_FULL(p.logo_path);
+    img.alt = name;
+    const text = document.createElement("span");
+    text.textContent = name;
+    a.appendChild(img); a.appendChild(text);
+    box.appendChild(a);
+  }
+  box.style.display = "grid";
+}
+
+/* ======== Deal one movie ======== */
 async function deal(){
   err("");
   if (!MOVIES.length){ err("Data not loaded yet."); return; }
@@ -150,31 +290,78 @@ async function deal(){
   if (!item.poster) poster.classList.add("skeleton");
   poster.onload = poster.onerror = () => poster.classList.remove("skeleton");
 
-  // Provider link (optional; falls back gracefully)
-  try{
-    const wl = await whereToWatch(item.tmdbId);
-    const a = $("#watchLink");
-    a.href = wl || ("https://www.google.com/search?q=" + encodeURIComponent((item.title||"") + " where to watch"));
-    a.textContent = wl ? "Where to watch" : "Search streaming";
-  } catch {
-    const a = $("#watchLink");
-    a.href = "https://www.google.com/search?q=" + encodeURIComponent((item.title||"") + " where to watch");
-    a.textContent = "Search streaming";
+  // Tagline (from local map or from movies.json if you choose to bake it there later)
+  const tag = (item.tagline && String(item.tagline).trim()) || TAGS[item.title] || "";
+  const tBlock = $("#tagBlock"), tTxt = $("#taglineText");
+  if (tag) { tTxt.textContent = tag; tBlock.style.display = "block"; }
+  else { tTxt.textContent = ""; tBlock.style.display = "none"; }
+
+  // Provider badges + “Where to watch” button
+  let jw = "";
+  try {
+    const data = await fetchProviders(item.tmdbId);
+    const regionEntry = data?.results?.[REGION];
+    jw = regionEntry?.link || "";
+    renderProviders(regionEntry || null, item.title);
+  } catch { /* swallow and fall back */ }
+
+  const watch = $("#watchLink");
+  watch.href = jw || ("https://www.google.com/search?q=" + encodeURIComponent((item.title||"") + " where to watch"));
+  watch.textContent = jw ? "Where to watch" : "Search streaming";
+}
+
+/* ======== Taglines modal ======== */
+function openModal(){ $("#modal").style.display = "flex"; $("#tagInput").value = ""; }
+function closeModal(){ $("#modal").style.display = "none"; }
+function parseTaglines(text){
+  text = (text||"").trim();
+  if (!text) return {};
+  // JSON array support
+  if (text.startsWith("[") || text.startsWith("{")) {
+    try {
+      const obj = JSON.parse(text);
+      const arr = Array.isArray(obj) ? obj : [obj];
+      const map = {};
+      for (const r of arr) {
+        const t = (r.title||"").trim(); const g = (r.tagline||"").trim();
+        if (t && g) map[t] = g;
+      }
+      return map;
+    } catch { /* fallthrough */ }
   }
+  // TSV/line format: Title<TAB>tagline (tab or hyphen as soft delimiter)
+  const out = {};
+  for (const line of text.split(/\r?\n/)) {
+    const raw = line.trim(); if (!raw) continue;
+    let [title, ...rest] = raw.split(/\t| - | — | – /); // support tab or spaced hyphens
+    title = (title||"").trim();
+    const tagline = rest.join(" ").trim();
+    if (title && tagline) out[title] = tagline;
+  }
+  return out;
 }
 
-async function whereToWatch(tmdbId, region="US"){
-  // If you didn't bake a TMDb key into index.html, this may 403; we fall back above.
-  if (!tmdbId) return "";
-  const url = `https://api.themoviedb.org/3/movie/${tmdbId}/watch/providers?language=en-US&api_key=${encodeURIComponent("{{REPLACE_ME_OR_LEAVE_BLANK}}")}`;
-  const r = await fetch(url);
-  if (!r.ok) return "";
-  const data = await r.json();
-  return data?.results?.[region]?.link || "";
-}
-
+/* ======== Wire up ======== */
 $("#deal").addEventListener("click", deal);
 $("#reset").addEventListener("click", resetDeck);
+
+// Taglines controls
+$("#editTag").addEventListener("click", openModal);
+$("#closeTags").addEventListener("click", closeModal);
+$("#saveTags").addEventListener("click", ()=>{
+  const incoming = parseTaglines($("#tagInput").value);
+  TAGS = { ...TAGS, ...incoming };
+  saveTags(TAGS);
+  closeModal();
+});
+$("#exportTags").addEventListener("click", ()=>{
+  const payload = JSON.stringify(Object.entries(TAGS).map(([title,tagline])=>({title,tagline})), null, 2);
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(payload);
+  $("#tagInput").value = payload;
+});
+$("#clearTags").addEventListener("click", ()=>{
+  TAGS = {}; saveTags(TAGS); $("#tagInput").value = "";
+});
 
 // Boot
 loadData();
