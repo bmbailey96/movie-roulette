@@ -4,75 +4,114 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Movie Roulette</title>
+
+<!-- iOS web-app vibes -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b0b0b">
 <style>
-  :root { color-scheme: light dark; --bg:#0b0b0b; --fg:#f4f4f4; --muted:#9aa0a6; --accent:#77ffa5; --card:#111; --border:#222; }
-  html,body { margin:0; height:100%; background:var(--bg); color:var(--fg); font:16px/1.45 -apple-system, system-ui, Segoe UI, Inter, Roboto, sans-serif; }
-  .wrap { min-height:100%; display:grid; place-items:center; padding:24px; }
-  .card { width:min(760px,95vw); border:1px solid var(--border); border-radius:16px; padding:20px; background:var(--card); box-shadow:0 10px 30px rgba(0,0,0,.35); }
-  h1 { margin:0 0 12px; font-size:20px; letter-spacing:.25px; }
-  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-  button { padding:12px 16px; border-radius:12px; border:0; background:var(--accent); color:#051308; font-weight:800; cursor:pointer; }
-  .ghost { background:#1b1b1b; color:var(--fg); border:1px solid #2a2a2a; }
-  .grid { display:grid; grid-template-columns:120px 1fr; gap:16px; margin-top:18px; }
-  .poster { width:120px; aspect-ratio:2/3; border-radius:10px; object-fit:cover; background:#191919; }
-  .title { font-size:22px; font-weight:800; margin:2px 0 4px; }
-  .meta { color:var(--muted); margin-bottom:10px; }
-  .links a { color:#b5ffd1; text-decoration:none; margin-right:12px; }
-  .small { color:var(--muted); font-size:13px; }
-  #err { margin-top:10px; color:#ffb3b3; white-space:pre-wrap; display:none; }
-  footer { margin-top:14px; color:#7c8a96; font-size:12px; }
+  :root{
+    color-scheme: light dark;
+    --bg:#0b0b0b; --card:#111; --fg:#f4f4f4; --muted:#9aa0a6; --border:#232323; --accent:#77ffa5;
+    --radius:16px; --shadow:0 12px 40px rgba(0,0,0,.45);
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 -apple-system, system-ui, Inter, Segoe UI, Roboto, sans-serif; }
+  .wrap{ min-height:100%; display:flex; align-items:center; justify-content:center; padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
+  .card{ width:100%; max-width:560px; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; }
+
+  h1{ margin:0 0 8px; font-size:20px; letter-spacing:.2px; }
+  .muted{ color:var(--muted); font-size:13px; }
+
+  /* Controls – big thumbs, single row on mobile, wrap if needed */
+  .controls{ display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
+  .controls .spacer{ flex:1 1 auto; }
+  button{
+    appearance:none; border:0; border-radius:12px; padding:14px 16px; font-weight:800; cursor:pointer;
+    background:var(--accent); color:#05200f; flex:1 0 140px; font-size:16px;
+  }
+  .ghost{ background:#1b1b1b; color:var(--fg); border:1px solid #2a2a2a; }
+  .count{ align-self:center; font-weight:600; padding:6px 10px; border:1px solid #222; border-radius:10px; }
+
+  /* Result layout – true mobile-first: poster on top, info below */
+  .result{ display:none; margin-top:14px; }
+  .poster{
+    width:100%; max-width:420px; margin:0 auto 12px; display:block;
+    aspect-ratio:2/3; object-fit:cover; border-radius:14px; background:#181818;
+  }
+  .title{ font-size:24px; font-weight:900; margin:2px 0 4px; word-wrap:break-word; }
+  .meta{ color:var(--muted); margin-bottom:10px; }
+  .links{ display:flex; gap:10px; flex-wrap:wrap; }
+  .links a{
+    display:inline-block; padding:12px 14px; border-radius:12px; text-decoration:none; font-weight:700; font-size:15px;
+    background:#1b1b1b; color:#c0ffd6; border:1px solid #2a2a2a; flex:1 1 220px; text-align:center;
+  }
+
+  /* Error + skeleton */
+  #err{ margin-top:10px; color:#ffb3b3; white-space:pre-wrap; }
+  .skeleton{
+    animation: pulse 1.2s infinite ease-in-out;
+    background: linear-gradient(90deg,#141414 25%,#1a1a1a 37%,#141414 63%);
+    background-size:400% 100%;
+  }
+  @keyframes pulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
+
+  /* Desktop tweaks */
+  @media (min-width:700px){
+    .title{ font-size:26px; }
+    button{ flex:0 0 auto }
+    .links a{ flex:0 0 auto }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="card">
-    <h1>🎲 Movie Roulette (No Repeats)</h1>
+  <main class="card" role="main">
+    <h1>🎲 Movie Roulette</h1>
+    <div class="muted">Tap “Deal” for a random pick. No repeats until the deck is spent.</div>
 
-    <div class="row">
+    <div class="controls" aria-label="controls">
       <button id="deal">Deal</button>
       <button id="reset" class="ghost">Reset Deck</button>
-      <span class="small">Deck: <span id="left">0</span> • Total: <span id="total">0</span></span>
+      <div class="spacer"></div>
+      <div class="count muted">Deck: <span id="left">0</span> • Total: <span id="total">0</span></div>
     </div>
 
-    <div id="err"></div>
+    <div id="err" role="alert" aria-live="polite"></div>
 
-    <div id="result" class="grid" style="display:none;">
-      <img id="poster" class="poster" alt="">
-      <div>
-        <div class="title" id="title"></div>
-        <div class="meta" id="year"></div>
-        <div class="links">
-          <a id="lbLink" target="_blank" rel="noopener">Open on Letterboxd</a>
-          <a id="watchLink" target="_blank" rel="noopener">Where to watch</a>
-        </div>
+    <section id="result" class="result" aria-live="polite">
+      <img id="poster" class="poster skeleton" alt="Movie poster" />
+      <div class="title" id="title">Loading…</div>
+      <div class="meta" id="year"></div>
+      <div class="links">
+        <a id="lbLink" target="_blank" rel="noopener">Open on Letterboxd</a>
+        <a id="watchLink" target="_blank" rel="noopener">Where to watch</a>
       </div>
-    </div>
+    </section>
 
-    <footer>This product uses the TMDb API but is not endorsed or certified by TMDb.</footer>
-  </div>
+    <p class="muted" style="margin-top:14px;">Tip: Add to Home Screen from Safari’s share menu for full-screen app mode.</p>
+  </main>
 </div>
 
 <script>
 const TMDB_IMG = (path, size="w500") => path ? `https://image.tmdb.org/t/p/${size}${path}` : "";
-
 const $ = s => document.querySelector(s);
-const err = (m) => { const e=$("#err"); e.textContent=m||""; e.style.display=m?"block":"none"; };
+const err = (m="") => { const e=$("#err"); e.textContent=m; e.style.display = m ? "block" : "none"; };
 
-// Load full prebuilt list
 let MOVIES = [];
 let DECK = [];
 
+// Mobile-first: quicker feedback + cache-busting fetch
 async function loadData() {
   try {
-    const r = await fetch("./movies.json", { cache: "no-store" });
-    if (!r.ok) throw new Error("Could not load movies.json");
-    MOVIES = await r.json();
+    const r = await fetch("./movies.json?v=" + Date.now(), { cache: "no-store" });
+    const txt = await r.text();
+    if (!r.ok) throw new Error(`HTTP ${r.status}: ${txt.slice(0,180)}`);
+    MOVIES = JSON.parse(txt);
     $("#total").textContent = MOVIES.length;
     resetDeck();
   } catch (e) {
-    err(e.message || String(e));
+    err("Could not load movies.json.\n" + (e.message || e));
   }
 }
 
@@ -84,50 +123,60 @@ function shuffleIdx(n){
 }
 
 function resetDeck(){
+  if (!MOVIES.length) return;
   DECK = shuffleIdx(MOVIES.length);
   $("#left").textContent = DECK.length;
 }
 
 async function deal(){
   err("");
-  if (!MOVIES.length) { err("No data yet."); return; }
+  if (!MOVIES.length){ err("Data not loaded yet."); return; }
   if (!DECK.length) resetDeck();
   const idx = DECK.pop();
   $("#left").textContent = DECK.length;
 
   const item = MOVIES[idx];
+  const res = $("#result");
+  const poster = $("#poster");
+  res.style.display = "block";
+  poster.classList.add("skeleton");
+
   $("#title").textContent = item.title || "Untitled";
   $("#year").textContent = item.year ? `Year: ${item.year}` : "";
   $("#lbLink").href = item.link || "#";
-  const poster = $("#poster");
-  poster.src = item.poster ? TMDB_IMG(item.poster, "w500") : "";
+
   poster.alt = item.title || "poster";
+  poster.src = item.poster ? TMDB_IMG(item.poster, "w500") : "";
+  if (!item.poster) poster.classList.add("skeleton");
+  poster.onload = poster.onerror = () => poster.classList.remove("skeleton");
 
-  // On-demand provider link (US by default)
-  const link = await whereToWatch(item.tmdbId);
-  const wl = $("#watchLink");
-  wl.href = link || ("https://www.google.com/search?q=" + encodeURIComponent((item.title || "") + " where to watch"));
-  wl.textContent = link ? "Where to watch" : "Search streaming";
-
-  $("#result").style.display = "grid";
+  // Provider link (optional; falls back gracefully)
+  try{
+    const wl = await whereToWatch(item.tmdbId);
+    const a = $("#watchLink");
+    a.href = wl || ("https://www.google.com/search?q=" + encodeURIComponent((item.title||"") + " where to watch"));
+    a.textContent = wl ? "Where to watch" : "Search streaming";
+  } catch {
+    const a = $("#watchLink");
+    a.href = "https://www.google.com/search?q=" + encodeURIComponent((item.title||"") + " where to watch");
+    a.textContent = "Search streaming";
+  }
 }
 
 async function whereToWatch(tmdbId, region="US"){
-  try {
-    if (!tmdbId) return "";
-    const url = `https://api.themoviedb.org/3/movie/${tmdbId}/watch/providers?language=en-US&api_key=${encodeURIComponent("{{REPLACE_ME_AT_BUILD}}" )}`;
-    // We don’t actually know your key at runtime; we’ll overwrite {{REPLACE_ME_AT_BUILD}} during Action build with a redacted string or leave blank.
-    const r = await fetch(url);
-    if (!r.ok) return "";
-    const data = await r.json();
-    const res = data.results?.[region];
-    // TMDb returns a link to the JustWatch landing page for the title/region
-    return res?.link || "";
-  } catch { return ""; }
+  // If you didn't bake a TMDb key into index.html, this may 403; we fall back above.
+  if (!tmdbId) return "";
+  const url = `https://api.themoviedb.org/3/movie/${tmdbId}/watch/providers?language=en-US&api_key=${encodeURIComponent("{{REPLACE_ME_OR_LEAVE_BLANK}}")}`;
+  const r = await fetch(url);
+  if (!r.ok) return "";
+  const data = await r.json();
+  return data?.results?.[region]?.link || "";
 }
 
 $("#deal").addEventListener("click", deal);
 $("#reset").addEventListener("click", resetDeck);
+
+// Boot
 loadData();
 </script>
 </body>
