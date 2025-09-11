@@ -20,7 +20,6 @@
 
   h1{ margin:0 0 8px; font-size:20px; letter-spacing:.2px; }
   .muted{ color:var(--muted); font-size:13px; }
-  .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
 
   .controls{ position:sticky; top:0; background:linear-gradient(#111, #111cc); padding-top:6px; margin-top:-6px; z-index:5; }
   .bar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
@@ -29,10 +28,8 @@
     background:var(--accent); color:#05200f; font-size:16px;
   }
   .ghost{ background:#1b1b1b; color:var(--fg); border:1px solid #2a2a2a; }
-  .danger{ background:#2b1622; color:#ffd3ec; border:1px solid #3a2030; }
   .count{ margin-left:auto; font-weight:600; padding:8px 12px; border:1px solid #222; border-radius:12px; color:#cfe; }
 
-  /* Dial + variety + toggles */
   .dial{ margin-top:10px; }
   .sliderrow{ display:flex; gap:10px; align-items:center; width:100%; }
   .sliderrow input[type="range"]{
@@ -48,14 +45,12 @@
   }
   .ticks{ display:flex; justify-content:space-between; margin-top:4px; color:var(--muted); font-size:12px; }
   .mode{ margin-top:6px; font-size:13px; color:#c4cbd2; }
+
   .seg{ display:flex; background:#161616; border:1px solid #2a2a2a; border-radius:999px; overflow:hidden; }
   .seg button{
     background:transparent; border:0; color:#cfe; padding:6px 10px; font-weight:800; font-size:13px; cursor:pointer;
   }
   .seg button.active{ background:#1f3327; color:#b6ffd1; }
-
-  .tog{ display:flex; gap:8px; align-items:center; color:#cfe; font-size:13px; }
-  .tog input{ width:20px; height:20px; }
 
   .poster{ width:100%; max-width:520px; margin:8px auto 12px; display:block; aspect-ratio:2/3; object-fit:cover; border-radius:14px; background:#181818; }
   .title{ font-size:26px; font-weight:900; margin:2px 0 2px; word-wrap:break-word; }
@@ -76,12 +71,9 @@
   .skeleton{ animation: pulse 1.2s infinite ease-in-out; background: linear-gradient(90deg,#141414 25%,#1a1a1a 37%,#141414 63%); background-size:400% 100%; }
   @keyframes pulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
 
-  /* Histogram */
   .hist{ margin-top:14px; background:#121212; border:1px solid #222; border-radius:12px; padding:10px; }
   .hist svg{ width:100%; height:80px; display:block; }
   .hist .labels{ display:flex; justify-content:space-between; font-size:11px; color:#9aa0a6; margin-top:4px; }
-
-  @media (min-width:860px){ .title{ font-size:28px; } }
 </style>
 </head>
 <body>
@@ -90,11 +82,10 @@
     <h1>🎲 Movie Roulette</h1>
     <div class="muted">Slide mood. Pick vibes. No repeats until the deck is spent.</div>
 
-    <!-- Controls -->
     <div class="controls">
       <div class="bar">
         <button id="deal">Deal</button>
-        <button id="reroll" class="ghost" title="Another pick near this chaos">Re-roll nearby</button>
+        <button id="reroll" class="ghost" title="Another near this chaos">Re-roll nearby</button>
         <button id="double" class="ghost" title="Main + palette cleanser">Double feature</button>
         <div class="count muted">Deck: <span id="left">0</span> • Total: <span id="total">0</span></div>
       </div>
@@ -108,53 +99,31 @@
         <div class="ticks"><span>0</span><span>50</span><span>100</span></div>
         <div class="mode" id="modeText">Neutral • pure shuffle</div>
 
-        <div class="row" style="margin-top:8px;">
-          <div class="seg" role="tablist" aria-label="variety">
-            <button id="varT" class="active" role="tab" aria-selected="true">Tight</button>
-            <button id="varM" role="tab" aria-selected="false">Medium</button>
-            <button id="varW" role="tab" aria-selected="false">Wide</button>
-          </div>
-
-          <label class="tog" title="Filter to your apps (sub/free/ads).">
-            <input id="onlyMine" type="checkbox" />
-            <span>On my services now</span>
-          </label>
-
-          <label class="tog" title="Include rent/buy in that filter.">
-            <input id="incRent" type="checkbox" />
-            <span>Include rentals</span>
-          </label>
-
-          <div class="seg" role="tablist" aria-label="theme nights">
-            <button id="thNone" class="active">All</button>
-            <button id="thWitch">Witchy</button>
-            <button id="thBody">Body</button>
-            <button id="thFolk">Folk</button>
-            <button id="thFound">Found</button>
-            <button id="thNeon">Neon</button>
-          </div>
+        <div class="seg" role="tablist" aria-label="variety" style="margin-top:8px;">
+          <button id="varT" class="active" role="tab" aria-selected="true">Tight</button>
+          <button id="varM" role="tab" aria-selected="false">Medium</button>
+          <button id="varW" role="tab" aria-selected="false">Wide</button>
         </div>
 
-        <div class="row" style="margin-top:6px;">
-          <label class="tog" title="Hide extreme gore">
-            <input id="noGore" type="checkbox" />
-            <span>No extreme gore</span>
-          </label>
-          <label class="tog" title="Hide sexual violence">
-            <input id="noSV" type="checkbox" />
-            <span>No sexual violence</span>
-          </label>
-          <label class="tog" title="Hide kids-in-peril">
-            <input id="noKids" type="checkbox" />
-            <span>No kids-in-peril</span>
-          </label>
+        <div class="seg" role="tablist" aria-label="theme nights" style="margin-top:8px;">
+          <button id="thAll" class="active">All</button>
+          <button id="thWitch">Witchy</button>
+          <button id="thBody">Body</button>
+          <button id="thFolk">Folk</button>
+          <button id="thFound">Found</button>
+          <button id="thNeon">Neon</button>
+        </div>
+
+        <div class="seg" role="tablist" aria-label="content flags" style="margin-top:8px;">
+          <button id="fNoGore" class="">No gore</button>
+          <button id="fNoSV" class="">No sexual violence</button>
+          <button id="fNoKids" class="">No kids-in-peril</button>
         </div>
       </div>
     </div>
 
     <div id="err" role="alert" aria-live="polite"></div>
 
-    <!-- Result: MAIN -->
     <section id="result" style="display:none; margin-top:10px;">
       <img id="poster" class="poster skeleton" alt="Movie poster" />
       <div class="title" id="title">Loading…</div>
@@ -174,7 +143,6 @@
       <div class="links" id="linksRow"></div>
     </section>
 
-    <!-- Double Feature -->
     <section id="resultB" style="display:none; margin-top:18px; border-top:1px dashed #242424; padding-top:12px;">
       <div class="muted" style="margin-bottom:4px;">Palette Cleanser</div>
       <img id="posterB" class="poster skeleton" alt="Movie poster" />
@@ -189,7 +157,6 @@
       <div class="links" id="linksRowB"></div>
     </section>
 
-    <!-- Chaos Histogram -->
     <div class="hist" id="histBox" style="display:none;">
       <div class="muted">Chaos spread</div>
       <svg id="hist"></svg>
@@ -203,18 +170,15 @@
 
 <script>
 /* --- Services you actually have --- */
-const MY_SERVICES = new Set([
-  "Netflix","Amazon Prime Video","Hulu","Max","Paramount+","Apple TV+","Tubi TV"
-]);
+const MY_SERVICES = new Set(["Netflix","Amazon Prime Video","Hulu","Max","Paramount+","Apple TV+","Tubi TV"]);
 
 const $ = s => document.querySelector(s);
 const TMDB_IMG = (path, size="w500") => path ? `https://image.tmdb.org/t/p/${size}${path}` : "";
 const err = (m="") => { const e=$("#err"); e.textContent=m; e.style.display = m ? "block" : "none"; };
 
 let MOVIES=[], DECK=[];
-let CHAOS=50, VARIETY="T"; // Tight|Medium|Wide
-let ONLY_MINE=false, INCLUDE_RENT=false;
-let THEME="all"; // all|witch|body|folk|found|neon
+let CHAOS=50, VARIETY="T";             // Tight|Medium|Wide
+let THEME="all";                       // all|witch|body|folk|found|neon
 let FILTERS={ noGore:false, noSV:false, noKids:false };
 let lastPickIndex=null;
 
@@ -230,7 +194,7 @@ async function loadData(){
   }catch(e){ err("Could not load movies.json.\n"+(e.message||e)); }
 }
 
-/* ---- Providers / streaming ---- */
+/* ---- Providers / streaming badges ---- */
 function providerMatchesMyServices(p){
   if (!p?.name) return false;
   const n = String(p.name).trim();
@@ -241,36 +205,27 @@ function providerMatchesMyServices(p){
 }
 function availabilityBuckets(item){
   const prov = Array.isArray(item.providers) ? item.providers : [];
-  const res = { sub:0, free:0, ads:0, rent:0, buy:0, mySub:0, myFree:0, myAds:0, myRent:0, myBuy:0, myNames:[] };
-  const seenNames = new Set();
+  const res = { myNames:[] }; const seen = new Set();
   for (const p of prov){
-    const k = p.kind; if(res[k]!==undefined) res[k]++;
     if (providerMatchesMyServices(p)){
-      if (k==="sub") res.mySub++;
-      else if (k==="free") res.myFree++;
-      else if (k==="ads") res.myAds++;
-      else if (k==="rent") res.myRent++;
-      else if (k==="buy") res.myBuy++;
       const nm = String(p.name).trim();
-      if (!seenNames.has(nm)){ seenNames.add(nm); res.myNames.push(nm); }
+      if (!seen.has(nm)){ seen.add(nm); res.myNames.push(nm); }
     }
   }
   return res;
 }
-function hasOnMyServicesNow(item, includeRentBuy=false){
+function buildBadges(container, item){
   const b = availabilityBuckets(item);
-  const now = (b.mySub + b.myFree + b.myAds) > 0;
-  if (now) return true;
-  return includeRentBuy ? (b.myRent + b.myBuy) > 0 : false;
-}
-function isStreamingOnMyServices(item){
-  const b = availabilityBuckets(item);
-  return (b.mySub + b.myFree + b.myAds) > 0;
-}
-function availabilityScore(item, includeRentBuy=false){
-  const b = availabilityBuckets(item);
-  const raw = b.mySub*1.0 + b.myFree*0.8 + b.myAds*0.6 + (includeRentBuy? b.myRent*0.35 + b.myBuy*0.2 : 0);
-  return Math.min(1, raw/6);
+  container.innerHTML = "";
+  if (b.myNames.length){
+    for (const name of b.myNames){
+      const span = document.createElement("span");
+      span.className="badge";
+      span.textContent = name;
+      container.appendChild(span);
+    }
+    container.style.display="";
+  } else container.style.display="none";
 }
 
 /* ---- Filters ---- */
@@ -289,10 +244,10 @@ function passesContentFlags(item){
   if (FILTERS.noGore && f.extreme_gore) return false;
   if (FILTERS.noSV && f.sexual_violence) return false;
   if (FILTERS.noKids && f.kids_in_peril) return false;
-  return true;
+  return !item.unreleased_error; // hide unreleased
 }
 
-/* ---- Deck building (gaussian toward CHAOS) ---- */
+/* ---- Deck building ---- */
 function gaussianWeight(x, mu, sigma){ const d=x-mu; return Math.exp(-(d*d)/(2*sigma*sigma)); }
 function sigmaForVariety(){ return VARIETY==="T" ? 10 : VARIETY==="M" ? 18 : 30; }
 
@@ -303,21 +258,16 @@ function rebuildDeck(){
 
   for (let i=0;i<MOVIES.length;i++){
     const it = MOVIES[i];
-
-    if (!passesTheme(it)) continue;
-    if (!passesContentFlags(it)) continue;
-    if (ONLY_MINE && !hasOnMyServicesNow(it, INCLUDE_RENT)) continue;
+    if (!passesTheme(it) || !passesContentFlags(it)) continue;
 
     const chaos = typeof it.chaos==="number" ? it.chaos : 50;
     let weight = 1 + 2.2*gaussianWeight(chaos, target, sigma);
-    weight += 0.7 * availabilityScore(it, INCLUDE_RENT);
-
-    weight = Math.max(0.2, Math.min(3.8, weight));
+    weight = Math.max(0.2, Math.min(3.0, weight));
     const times = Math.max(1, Math.min(10, Math.round(weight * 3)));
     for (let t=0;t<times;t++) bucket.push(i);
   }
 
-  if (!bucket.length){ for (let i=0;i<MOVIES.length;i++) bucket.push(i); } // fallback
+  if (!bucket.length){ for (let i=0;i<MOVIES.length;i++) bucket.push(i); }
 
   const rnd = new Uint32Array(bucket.length); crypto.getRandomValues(rnd);
   for (let i=bucket.length-1;i>0;i--){ const j=rnd[i]%(i+1); [bucket[i],bucket[j]]=[bucket[j],bucket[i]]; }
@@ -347,7 +297,9 @@ function buildLinksRow(container, item){
   lbBtn.target="_blank"; lbBtn.rel="noopener";
   container.appendChild(lbBtn);
 
-  if (!isStreamingOnMyServices(item)){
+  // If not on your services, add "Search elsewhere" (archive/youtube/torrent hint)
+  const b = availabilityBuckets(item);
+  if (!b.myNames.length){
     const q = encodeURIComponent(`${item.title} full movie site:archive.org OR site:youtube.com OR torrent`);
     const searchBtn = document.createElement("a");
     searchBtn.textContent = "Search elsewhere";
@@ -356,33 +308,14 @@ function buildLinksRow(container, item){
     container.appendChild(searchBtn);
   }
 }
-function buildBadges(container, item){
-  const b = availabilityBuckets(item);
-  container.innerHTML = "";
-  if (b.myNames.length){
-    for (const name of b.myNames){
-      const span = document.createElement("span");
-      span.className="badge";
-      span.textContent = name;
-      container.appendChild(span);
-    }
-    show(container, true);
-  } else {
-    show(container, false);
-  }
-}
 
 /* ---- Deal + Reroll ---- */
-function dealOne(fromNearby=null){
+function dealOne(fromIdx=null){
   err("");
   if (!MOVIES.length){ err("Data not loaded yet."); return; }
 
-  let idx;
-  if (fromNearby!==null && Array.isArray(fromNearby) && fromNearby.length){
-    idx = fromNearby[Math.floor(Math.random()*fromNearby.length)];
-    // remove idx from DECK if present
-    const pos = DECK.indexOf(idx); if (pos>=0) DECK.splice(pos,1);
-  } else {
+  let idx = fromIdx;
+  if (idx==null){
     if (!DECK.length) rebuildDeck();
     idx = DECK.pop();
     $("#left").textContent = DECK.length;
@@ -399,10 +332,10 @@ function dealOne(fromNearby=null){
 
   setText($("#title"), item.title || "Untitled");
   const tag = (item.tagline||"").trim();
-  setText($("#taglineInline"), tag);
-  show($("#taglineInline"), !!tag);
+  setText($("#taglineInline"), tag); show($("#taglineInline"), !!tag);
 
-  setText($("#year"), item.year ? `Year: ${item.year}` : "");
+  const metaErr = item.unreleased_error ? ` — ${item.unreleased_error}` : "";
+  setText($("#year"), item.year ? `Year: ${item.year}${metaErr}` : metaErr);
   const runText = runtimeLabel(item.runtime);
   setText($("#runChip"), runText); show($("#runChip"), !!runText);
 
@@ -411,54 +344,75 @@ function dealOne(fromNearby=null){
 
   buildBadges($("#streamBadges"), item);
 
-  setText($("#whyText"), item.chaos_reason || "Because the algorithm wanted mischief.");
-  $("#why").open = false;
+  const why = (item.chaos_reason || "").trim();
+  const whyBox = $("#why");
+  setText($("#whyText"), why || "");
+  whyBox.style.display = why ? "" : "none";
 
   buildLinksRow($("#linksRow"), item);
 
   drawHistogramMarker(chaos, CHAOS);
 
-  // clear any previous double feature
+  // clear cleanser
   $("#resultB").style.display = "none";
 }
 
-function nearbyIndices(centerChaos, radius=6){
-  const ids=[];
+function neighborsAroundChaos(target, initial=10, max=35, step=5){
+  // widen window until we have candidates
+  for (let radius=initial; radius<=max; radius+=step){
+    const pool=[];
+    for (let i=0;i<MOVIES.length;i++){
+      if (i===lastPickIndex) continue;
+      const it = MOVIES[i];
+      if (!passesTheme(it) || !passesContentFlags(it)) continue;
+      const c = typeof it.chaos==="number" ? it.chaos : 50;
+      if (Math.abs(c - target) <= radius) pool.push(i);
+    }
+    if (pool.length) return pool;
+  }
+  // final fallback: return *all* valid indices
+  const all=[];
   for (let i=0;i<MOVIES.length;i++){
     if (i===lastPickIndex) continue;
-    const c = typeof MOVIES[i].chaos==="number" ? MOVIES[i].chaos : 50;
-    if (Math.abs(c - centerChaos) <= radius && passesTheme(MOVIES[i]) && passesContentFlags(MOVIES[i]) && (!ONLY_MINE || hasOnMyServicesNow(MOVIES[i], INCLUDE_RENT))){
-      ids.push(i);
-    }
+    const it = MOVIES[i];
+    if (passesTheme(it) && passesContentFlags(it)) all.push(i);
   }
-  return ids;
+  return all;
 }
 
 function rerollNearby(){
   if (lastPickIndex==null){ dealOne(); return; }
   const curr = MOVIES[lastPickIndex];
   const c = typeof curr.chaos==="number" ? curr.chaos : 50;
-  const pool = nearbyIndices(c, 6);
-  if (!pool.length){ err("No nearby picks. Widen variety or adjust slider."); return; }
-  dealOne(pool);
+  const pool = neighborsAroundChaos(c, 10, 35, 5);
+  if (!pool.length){ err("No nearby picks available with current filters."); return; }
+  const idx = pool[Math.floor(Math.random()*pool.length)];
+  dealOne(idx);
 }
 
 function doubleFeature(){
   if (lastPickIndex==null){ dealOne(); }
   const main = MOVIES[lastPickIndex];
   const mainChaos = typeof main.chaos==="number" ? main.chaos : 50;
-  const target = 100 - mainChaos;
-  const pool=[];
-  for (let i=0;i<MOVIES.length;i++){
-    if (i===lastPickIndex) continue;
-    const it = MOVIES[i];
-    if (!passesTheme(it) || !passesContentFlags(it)) continue;
-    if (ONLY_MINE && !hasOnMyServicesNow(it, INCLUDE_RENT)) continue;
-    const c = typeof it.chaos==="number" ? it.chaos : 50;
-    // around inverted target ±12
-    if (Math.abs(c - target) <= 12) pool.push(i);
+  const target = Math.max(0, Math.min(100, 100 - mainChaos)); // inverted
+
+  // progressively widen ± window; if still nothing, pick the farthest chaos from main
+  let pool = neighborsAroundChaos(target, 12, 48, 6);
+  if (!pool.length){
+    // farthest-from-main fallback
+    let bestIdx = null, bestDist = -1;
+    for (let i=0;i<MOVIES.length;i++){
+      if (i===lastPickIndex) continue;
+      const it = MOVIES[i];
+      if (!passesTheme(it) || !passesContentFlags(it)) continue;
+      const c = typeof it.chaos==="number" ? it.chaos : 50;
+      const d = Math.abs(c - mainChaos);
+      if (d > bestDist){ bestDist = d; bestIdx = i; }
+    }
+    if (bestIdx==null){ err("No suitable cleanser with current filters."); return; }
+    pool = [bestIdx];
   }
-  if (!pool.length){ err("Couldn't find a good cleanser — try toggling Variety wider."); return; }
+
   const idx = pool[Math.floor(Math.random()*pool.length)];
   const item = MOVIES[idx];
 
@@ -497,17 +451,14 @@ function buildHistogram(){
 
   const svg = [];
   svg.push(`<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">`);
-  // bars
   for (let i=0;i<bins.length;i++){
     const x = pad + i*barW + 2;
     const bh = Math.round((bins[i]/max) * (h - 20));
     const y = h - bh - 6;
     svg.push(`<rect x="${x}" y="${y}" width="${barW-4}" height="${bh}" fill="#2a2a2a" rx="3" />`);
   }
-  // target marker line (CHAOS)
   const tx = pad + (CHAOS/100)*(w - pad*2);
   svg.push(`<line x1="${tx}" y1="4" x2="${tx}" y2="${h-4}" stroke="${'#77ffa5'}" stroke-width="2" stroke-dasharray="4 3"/>`);
-  // current pick marker added later
   svg.push(`<circle id="currDot" cx="-10" cy="${12}" r="4" fill="${'#ff77c7'}" />`);
   svg.push(`</svg>`);
   $("#hist").innerHTML = svg.join("");
@@ -518,14 +469,12 @@ function drawHistogramMarker(currentChaos, targetChaos){
   const w = 680, pad=8;
   const x = currentChaos!=null ? (pad + (currentChaos/100)*(w - pad*2)) : -10;
   const dot = svg.querySelector("#currDot"); if (dot) dot.setAttribute("cx", String(x));
-  // also redraw target line by rebuilding histogram when CHAOS changes (cheap)
 }
 
 /* ---- Wire up ---- */
 $("#deal").addEventListener("click", ()=>dealOne());
 $("#reroll").addEventListener("click", rerollNearby);
 $("#double").addEventListener("click", doubleFeature);
-$("#reset")?.addEventListener("click", ()=>{ rebuildDeck(); $("#resultB").style.display="none"; });
 
 const cha = $("#cha"), modeText = $("#modeText");
 function updateModeLabel(v){
@@ -547,15 +496,9 @@ $("#varT").onclick = ()=>setVar("T");
 $("#varM").onclick = ()=>setVar("M");
 $("#varW").onclick = ()=>setVar("W");
 
-const onlyMine = $("#onlyMine");
-onlyMine.addEventListener("change", ()=>{ ONLY_MINE = onlyMine.checked; rebuildDeck(); });
-
-const incRent = $("#incRent");
-incRent.addEventListener("change", ()=>{ INCLUDE_RENT = incRent.checked; rebuildDeck(); });
-
 function setTheme(which){
   THEME = which;
-  $("#thNone").classList.toggle("active", which==="all");
+  $("#thAll").classList.toggle("active", which==="all");
   $("#thWitch").classList.toggle("active", which==="witch");
   $("#thBody").classList.toggle("active", which==="body");
   $("#thFolk").classList.toggle("active", which==="folk");
@@ -563,16 +506,21 @@ function setTheme(which){
   $("#thNeon").classList.toggle("active", which==="neon");
   rebuildDeck();
 }
-$("#thNone").onclick = ()=>setTheme("all");
-$("#thWitch").onclick = ()=>setTheme("witch");
-$("#thBody").onclick  = ()=>setTheme("body");
-$("#thFolk").onclick  = ()=>setTheme("folk");
-$("#thFound").onclick = ()=>setTheme("found");
-$("#thNeon").onclick  = ()=>setTheme("neon");
+$("#thAll").onclick  = ()=>setTheme("all");
+$("#thWitch").onclick= ()=>setTheme("witch");
+$("#thBody").onclick = ()=>setTheme("body");
+$("#thFolk").onclick = ()=>setTheme("folk");
+$("#thFound").onclick= ()=>setTheme("found");
+$("#thNeon").onclick = ()=>setTheme("neon");
 
-$("#noGore").addEventListener("change", e=>{ FILTERS.noGore = e.target.checked; rebuildDeck(); });
-$("#noSV").addEventListener("change", e=>{ FILTERS.noSV = e.target.checked; rebuildDeck(); });
-$("#noKids").addEventListener("change", e=>{ FILTERS.noKids = e.target.checked; rebuildDeck(); });
+function toggleFlag(btn, key){
+  btn.classList.toggle("active");
+  FILTERS[key] = btn.classList.contains("active");
+  rebuildDeck();
+}
+$("#fNoGore").onclick = (e)=>toggleFlag(e.currentTarget, "noGore");
+$("#fNoSV").onclick   = (e)=>toggleFlag(e.currentTarget, "noSV");
+$("#fNoKids").onclick = (e)=>toggleFlag(e.currentTarget, "noKids");
 
 loadData();
 </script>
