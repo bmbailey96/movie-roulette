@@ -25,15 +25,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'   # fine even without lockfile
+          # removed cache:'npm' because it needs a lockfile
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --no-audit --no-fund
 
       - name: Build movies.json (AI chaos + providers)
         env:
-          TMDB_KEY: ${{ secrets.TMDB_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TMDB_KEY: $000802da6224e125437187b196cde898
+          OPENAI_API_KEY: $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
           TMDB_REGION: US
         run: node scripts/process.js
 
