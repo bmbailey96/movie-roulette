@@ -1,3 +1,4 @@
+// scripts/process.js
 // Build movies.json from Letterboxd watchlist.csv using TMDb
 import fs from "fs/promises";
 import path from "path";
@@ -35,15 +36,18 @@ async function tmdbSearch(title, year) {
 function chooseBest(results, title, year) {
   if (!results?.length) return null;
   const tNorm = norm(title);
+
   // exact title + year
   let exact = results.find(
     r => norm(r.title) === tNorm &&
       (!year || (r.release_date || "").startsWith(String(year)))
   );
   if (exact) return exact;
+
   // exact title any year
   exact = results.find(r => norm(r.title) === tNorm);
   if (exact) return exact;
+
   // same decade popularity
   if (year) {
     const decade = Math.floor(Number(year) / 10);
@@ -51,8 +55,11 @@ function chooseBest(results, title, year) {
       const y = (r.release_date || "").slice(0, 4);
       return y && Math.floor(Number(y) / 10) === decade;
     });
-    if (sameDecade.length) return sameDecade.sort((a, b) => (b.popularity || 0) - (a.popularity || 0))[0];
+    if (sameDecade.length) {
+      return sameDecade.sort((a, b) => (b.popularity || 0) - (a.popularity || 0))[0];
+    }
   }
+
   // popularity fallback
   return results.sort((a, b) => (b.popularity || 0) - (a.popularity || 0))[0];
 }
@@ -64,9 +71,15 @@ function parseYear(s) {
 
 async function main() {
   const csvRaw = await fs.readFile(CSV_PATH, "utf8");
-  const rows = parse(csvRaw, { columns: true, skip_empty_lines: true });
 
-  // Letterboxd watchlist.csv typically has Name, Year, Rating, Letterboxd URI, etc.
+  // auto-detect delimiter: tab or comma
+  const rows = parse(csvRaw, {
+    columns: true,
+    skip_empty_lines: true,
+    delimiter: csvRaw.includes("\t") ? "\t" : ","
+  });
+
+  // Letterboxd export headers: Date, Name, Year, Letterboxd URI
   const films = rows.map(r => ({
     title: (r.Name || r.Title || "").trim(),
     year: parseYear(r.Year),
@@ -85,7 +98,7 @@ async function main() {
 
   console.log(`Found ${unique.length} films in watchlist.csv`);
 
-  const limit = pLimit(10); // be polite
+  const limit = pLimit(10); // parallelism
   const results = await Promise.all(unique.map(f => limit(async () => {
     try {
       let res = await tmdbSearch(f.title, f.year);
@@ -102,7 +115,8 @@ async function main() {
         tmdbId: best.id,
         poster: best.poster_path || ""
       };
-    } catch {
+    } catch (e) {
+      console.warn(`Miss: ${f.title} (${f.year || "?"})`);
       return { ...f, tmdbId: null, poster: "" };
     }
   })));
