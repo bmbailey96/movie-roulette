@@ -15,33 +15,33 @@
   }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 -apple-system, system-ui, Inter, Segoe UI, Roboto, sans-serif; }
-  .wrap{ min-height:100%; display:flex; align-items:center; justify-content:center; padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
-  .card{ width:100%; max-width:560px; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; }
+  .wrap{ min-height:100%; display:flex; align-items:center; justify-content:center; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+  .card{ width:100%; max-width:620px; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; }
 
   h1{ margin:0 0 8px; font-size:20px; letter-spacing:.2px; }
   .muted{ color:var(--muted); font-size:13px; }
 
-  .controls{ display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; align-items:center; }
-  .controls .spacer{ flex:1 1 auto; }
-  button{
-    appearance:none; border:0; border-radius:12px; padding:14px 16px; font-weight:800; cursor:pointer;
-    background:var(--accent); color:#05200f; flex:1 0 130px; font-size:16px;
+  .controls{ position:sticky; top:0; background:linear-gradient(#111, #111cc); padding-top:6px; margin-top:-6px; z-index:5; }
+  .bar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .bar button{
+    appearance:none; border:0; border-radius:14px; padding:16px 18px; font-weight:900; cursor:pointer;
+    background:var(--accent); color:#05200f; flex:1 0 150px; font-size:17px;
   }
   .ghost{ background:#1b1b1b; color:var(--fg); border:1px solid #2a2a2a; }
-  .count{ align-self:center; font-weight:600; padding:6px 10px; border:1px solid #222; border-radius:10px; }
+  .count{ margin-left:auto; font-weight:600; padding:8px 12px; border:1px solid #222; border-radius:12px; color:#cfe; }
 
-  /* Dial + variety + toggle */
+  /* Dial + variety + toggles */
   .dial{ margin-top:10px; }
   .sliderrow{ display:flex; gap:10px; align-items:center; width:100%; }
   .sliderrow input[type="range"]{
-    flex:1 1 auto; appearance:none; height:8px; background:#161616; border:1px solid #2a2a2a; border-radius:999px;
+    flex:1 1 auto; appearance:none; height:10px; background:#161616; border:1px solid #2a2a2a; border-radius:999px;
     background-image: linear-gradient(90deg,
       rgba(119,255,165,.25) 0%, rgba(119,255,165,.25) 49%,
       #161616 49%, #161616 51%,
       rgba(255,119,199,.25) 51%, rgba(255,119,199,.25) 100%);
   }
   .sliderrow input[type="range"]::-webkit-slider-thumb{
-    -webkit-appearance:none; appearance:none; width:28px; height:28px; margin-top:-10px; border-radius:50%;
+    -webkit-appearance:none; appearance:none; width:32px; height:32px; margin-top:-12px; border-radius:50%;
     background:var(--accent); border:2px solid #083; box-shadow:0 1px 4px rgba(0,0,0,.35);
   }
   .ticks{ display:flex; justify-content:space-between; margin-top:4px; color:var(--muted); font-size:12px; }
@@ -49,25 +49,25 @@
   .row{ display:flex; gap:10px; align-items:center; margin-top:8px; flex-wrap:wrap; }
   .seg{ display:flex; background:#161616; border:1px solid #2a2a2a; border-radius:999px; overflow:hidden; }
   .seg button{
-    background:transparent; border:0; color:#cfe; padding:6px 10px; font-weight:700; font-size:13px; cursor:pointer;
+    background:transparent; border:0; color:#cfe; padding:8px 12px; font-weight:800; font-size:13px; cursor:pointer;
   }
   .seg button.active{ background:#1f3327; color:#b6ffd1; }
-  .toggle{ display:flex; gap:8px; align-items:center; color:#cfe; font-size:13px; }
-  .toggle input{ width:20px; height:20px; }
+  .tog{ display:flex; gap:8px; align-items:center; color:#cfe; font-size:13px; }
+  .tog input{ width:20px; height:20px; }
 
   .result{ display:none; margin-top:14px; }
   .poster{
-    width:100%; max-width:420px; margin:0 auto 12px; display:block;
+    width:100%; max-width:460px; margin:0 auto 12px; display:block;
     aspect-ratio:2/3; object-fit:cover; border-radius:14px; background:#181818;
   }
-  .title{ font-size:24px; font-weight:900; margin:2px 0 2px; word-wrap:break-word; }
+  .title{ font-size:26px; font-weight:900; margin:2px 0 2px; word-wrap:break-word; }
   .tagline-inline{ color:#c4cbd2; font-size:15px; margin:0 0 8px; }
   .meta{ color:var(--muted); margin-bottom:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .chip{ font-size:12px; background:#1a1a1a; border:1px solid #2a2a2a; padding:4px 8px; border-radius:999px; color:#cfe; }
 
   .links{ display:flex; gap:10px; flex-wrap:wrap; }
   .links a{
-    display:inline-block; padding:12px 14px; border-radius:12px; text-decoration:none; font-weight:700; font-size:15px;
+    display:inline-block; padding:14px 16px; border-radius:12px; text-decoration:none; font-weight:900; font-size:16px;
     background:#1b1b1b; color:#c0ffd6; border:1px solid #2a2a2a; flex:1 1 220px; text-align:center;
   }
 
@@ -79,45 +79,51 @@
   }
   @keyframes pulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
 
-  @media (min-width:700px){
-    .title{ font-size:26px; }
-    button{ flex:0 0 auto }
+  @media (min-width:760px){
+    .title{ font-size:28px; }
     .links a{ flex:0 0 auto }
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <main class="card" role="main">
+  <main class="card" role="main" id="root">
     <h1>🎲 Movie Roulette</h1>
     <div class="muted">Slide mood. Pick vibes. No repeats until the deck is spent.</div>
 
-    <div class="controls" aria-label="controls">
-      <button id="deal">Deal</button>
-      <button id="reset" class="ghost">Reset Deck</button>
-      <div class="spacer"></div>
-      <div class="count muted">Deck: <span id="left">0</span> • Total: <span id="total">0</span></div>
-    </div>
-
-    <div class="dial" aria-label="order chaos control">
-      <div class="sliderrow">
-        <span class="muted" style="width:52px;">Order</span>
-        <input id="cha" type="range" min="0" max="100" step="1" value="50" />
-        <span class="muted" style="width:52px; text-align:right;">Chaos</span>
+    <div class="controls">
+      <div class="bar">
+        <button id="deal">Deal</button>
+        <button id="reset" class="ghost">Reset Deck</button>
+        <div class="count muted">Deck: <span id="left">0</span> • Total: <span id="total">0</span></div>
       </div>
-      <div class="ticks"><span>0</span><span>50</span><span>100</span></div>
-      <div class="mode" id="modeText">Neutral • pure shuffle</div>
 
-      <div class="row">
-        <div class="seg" role="tablist" aria-label="variety">
-          <button id="varT" class="active" role="tab" aria-selected="true">Tight</button>
-          <button id="varM" role="tab" aria-selected="false">Medium</button>
-          <button id="varW" role="tab" aria-selected="false">Wide</button>
+      <div class="dial" aria-label="order chaos control">
+        <div class="sliderrow" style="margin-top:8px;">
+          <span class="muted" style="width:56px;">Order</span>
+          <input id="cha" type="range" min="0" max="100" step="1" value="50" />
+          <span class="muted" style="width:56px; text-align:right;">Chaos</span>
         </div>
-        <label class="toggle">
-          <input id="onlyNow" type="checkbox" />
-          <span>Only streamable now</span>
-        </label>
+        <div class="ticks"><span>0</span><span>50</span><span>100</span></div>
+        <div class="mode" id="modeText">Neutral • pure shuffle</div>
+
+        <div class="row">
+          <div class="seg" role="tablist" aria-label="variety">
+            <button id="varT" class="active" role="tab" aria-selected="true">Tight</button>
+            <button id="varM" role="tab" aria-selected="false">Medium</button>
+            <button id="varW" role="tab" aria-selected="false">Wide</button>
+          </div>
+
+          <label class="tog" title="Filter deck to titles on your actual apps (sub/free/ads).">
+            <input id="onlyMine" type="checkbox" />
+            <span>On my services now</span>
+          </label>
+
+          <label class="tog" title="Also allow rent/buy when filtering.">
+            <input id="incRent" type="checkbox" />
+            <span>Include rentals</span>
+          </label>
+        </div>
       </div>
     </div>
 
@@ -129,10 +135,7 @@
       <div class="tagline-inline" id="taglineInline" style="display:none;"></div>
       <div class="meta"><span id="year"></span><span id="chaosChip" class="chip" style="display:none;"></span></div>
 
-      <div class="links">
-        <a id="lbLink" target="_blank" rel="noopener">Open on Letterboxd</a>
-        <a id="watchLink" target="_blank" rel="noopener">Where to watch</a>
-      </div>
+      <div class="links" id="linksRow"></div>
     </section>
 
     <p class="muted" style="margin-top:14px;">Tip: Add to Home Screen from Safari’s share menu for full-screen app mode.</p>
@@ -141,15 +144,28 @@
 </div>
 
 <script>
+/* ---------- Your subscribed/free apps ---------- */
+const MY_SERVICES = new Set([
+  "Netflix",
+  "Amazon Prime Video",
+  "Hulu",
+  "Max",            // “HBO Max” may appear as “Max”
+  "Paramount+",
+  "Apple TV+",
+  "Tubi TV"
+]);
+/* ---------------------------------------------- */
+
 const $ = s => document.querySelector(s);
 const err = (m="") => { const e=$("#err"); e.textContent=m; e.style.display = m ? "block" : "none"; };
 const TMDB_IMG = (path, size="w500") => path ? `https://image.tmdb.org/t/p/${size}${path}` : "";
 
 let MOVIES = [];
 let DECK = [];
-let CHAOS = 50; // target 0..100
-let ONLY_NOW = false;
-let VARIETY = "T"; // T|M|W
+let CHAOS = 50;     // target 0..100
+let VARIETY = "T";  // T|M|W
+let ONLY_MINE = false;
+let INCLUDE_RENT = false;
 
 async function loadData() {
   try {
@@ -158,47 +174,81 @@ async function loadData() {
     if (!r.ok) throw new Error(`HTTP ${r.status}: ${txt.slice(0,180)}`);
     MOVIES = JSON.parse(txt);
     $("#total").textContent = MOVIES.length;
+    updateModeLabel(CHAOS);
+    setVar(VARIETY);
     rebuildDeck();
   } catch (e) {
     err("Could not load movies.json.\n" + (e.message || e));
   }
 }
 
-// availability helpers
-function availabilityScore(item){
+// --- availability helpers (name-based) ---
+function providerMatchesMyServices(p){
+  if (!p?.name) return false;
+  const n = String(p.name).trim();
+  if (MY_SERVICES.has(n)) return true;
+  if (n === "HBO Max" && MY_SERVICES.has("Max")) return true;
+  if (n === "Max" && MY_SERVICES.has("HBO Max")) return true;
+  return false;
+}
+function availabilityBuckets(item){
   const prov = Array.isArray(item.providers) ? item.providers : [];
-  let sub=0, free=0, ads=0, rent=0, buy=0;
-  for (const p of prov){ if (p.kind==="sub") sub++; else if (p.kind==="free") free++; else if (p.kind==="ads") ads++; else if (p.kind==="rent") rent++; else if (p.kind==="buy") buy++; }
+  const res = { sub:0, free:0, ads:0, rent:0, buy:0, mySub:0, myFree:0, myAds:0, myRent:0, myBuy:0 };
+  for (const p of prov){
+    const k = p.kind; if (!res.hasOwnProperty(k)) continue;
+    res[k]++;
+    if (providerMatchesMyServices(p)) {
+      if (k==="sub") res.mySub++;
+      else if (k==="free") res.myFree++;
+      else if (k==="ads") res.myAds++;
+      else if (k==="rent") res.myRent++;
+      else if (k==="buy") res.myBuy++;
+    }
+  }
+  return res;
+}
+function hasOnMyServicesNow(item, includeRentBuy=false){
+  const b = availabilityBuckets(item);
+  const now = (b.mySub + b.myFree + b.myAds) > 0; // streaming only
+  if (now) return true;
+  if (includeRentBuy) return (b.myRent + b.myBuy) > 0;
+  return false;
+}
+function isStreamingOnMyServices(item){
+  const b = availabilityBuckets(item);
+  return (b.mySub + b.myFree + b.myAds) > 0; // used for button logic
+}
+function availabilityScore(item, includeRentBuy=false){
+  // score just my services
+  const b = availabilityBuckets(item);
+  const sub = b.mySub, free = b.myFree, ads = b.myAds;
+  const rent = includeRentBuy ? b.myRent : 0;
+  const buy  = includeRentBuy ? b.myBuy  : 0;
   const raw = sub*1.0 + free*0.8 + ads*0.6 + rent*0.35 + buy*0.2;
   return Math.min(1, raw/6);
 }
-function hasAnyAvailability(item){
-  return (Array.isArray(item.providers) && item.providers.length>0) || !!item.justwatch;
-}
 
-// gaussian around target with adjustable sigma (variety)
+// --- gaussian around target with adjustable sigma (variety) ---
 function gaussianWeight(x, mu, sigma){
   const d = x - mu;
-  return Math.exp(-(d*d)/(2*sigma*sigma)); // 0..1
+  return Math.exp(-(d*d)/(2*sigma*sigma));
 }
-function sigmaForVariety(){
-  return VARIETY==="T" ? 10 : VARIETY==="M" ? 18 : 30; // Tight/Medium/Wide
-}
+function sigmaForVariety(){ return VARIETY==="T" ? 10 : VARIETY==="M" ? 18 : 30; }
 
 function rebuildDeck(){
   if (!MOVIES.length) return;
-
-  const target = CHAOS;
-  const sigma = sigmaForVariety();
+  const target = CHAOS, sigma = sigmaForVariety();
   const bucket = [];
 
   for (let i=0;i<MOVIES.length;i++){
     const it = MOVIES[i];
-    if (ONLY_NOW && !hasAnyAvailability(it)) continue;
+
+    // filter if “On my services now”
+    if (ONLY_MINE && !hasOnMyServicesNow(it, INCLUDE_RENT)) continue;
 
     const chaos = typeof it.chaos === "number" ? it.chaos : 50;
-    let weight = 1 + 2.2*gaussianWeight(chaos, target, sigma); // 1..~3.2 depending on proximity
-    weight += 0.6 * availabilityScore(it); // nudge streamable things
+    let weight = 1 + 2.2*gaussianWeight(chaos, target, sigma); // proximity to target
+    weight += 0.7 * availabilityScore(it, INCLUDE_RENT);       // nudge playable
 
     weight = Math.max(0.2, Math.min(3.8, weight));
     const times = Math.max(1, Math.min(10, Math.round(weight * 3)));
@@ -215,7 +265,7 @@ function rebuildDeck(){
   $("#left").textContent = DECK.length;
 }
 
-function resetDeck(){ rebuildDeck(); }
+function buzz(ms=18){ try{ if (navigator.vibrate) navigator.vibrate(ms); }catch{} }
 
 async function deal(){
   err("");
@@ -240,21 +290,39 @@ async function deal(){
   if (chaos !== null){ chip.textContent = `Chaos: ${chaos}`; chip.style.display = "inline-block"; } else { chip.style.display = "none"; }
 
   $("#year").textContent = item.year ? `Year: ${item.year}` : "";
-  $("#lbLink").href = item.link || "#";
 
   poster.alt = item.title || "poster";
   poster.src = item.poster ? TMDB_IMG(item.poster, "w500") : "";
   poster.onload = poster.onerror = () => poster.classList.remove("skeleton");
 
-  if (item.justwatch) { $("#watchLink").href = item.justwatch; $("#watchLink").textContent = "Where to watch"; }
-  else { $("#watchLink").href = "https://www.google.com/search?q=" + encodeURIComponent((item.title||"") + " where to watch"); $("#watchLink").textContent = "Search streaming"; }
+  // Build links row: always Letterboxd; add “Search elsewhere” if not streaming on your services
+  const linksRow = $("#linksRow");
+  linksRow.innerHTML = "";
+
+  const lbBtn = document.createElement("a");
+  lbBtn.textContent = "Open on Letterboxd";
+  lbBtn.href = item.link || "#";
+  lbBtn.target = "_blank"; lbBtn.rel = "noopener";
+  linksRow.appendChild(lbBtn);
+
+  const onMyStreaming = isStreamingOnMyServices(item); // sub/free/ads only on your apps
+  if (!onMyStreaming){
+    const q = encodeURIComponent(`${item.title} full movie site:archive.org OR site:youtube.com OR torrent`);
+    const searchBtn = document.createElement("a");
+    searchBtn.textContent = "Search elsewhere";
+    searchBtn.href = "https://www.google.com/search?q=" + q;
+    searchBtn.target = "_blank"; searchBtn.rel = "noopener";
+    linksRow.appendChild(searchBtn);
+  }
+
+  buzz();
 }
 
-// Wire up
+/* ======== Wire up ======== */
 $("#deal").addEventListener("click", deal);
-$("#reset").addEventListener("click", resetDeck);
+$("#reset").addEventListener("click", rebuildDeck);
 
-const cha = $("#cha"), modeText = $("#modeText"), onlyNow = $("#onlyNow");
+const cha = $("#cha"), modeText = $("#modeText");
 function updateModeLabel(v){
   if (v < 40)      modeText.textContent = "Order • bias toward low-chaos (newer/tame)";
   else if (v > 60) modeText.textContent = "Chaos • bias toward high-chaos (older/weird)";
@@ -262,7 +330,6 @@ function updateModeLabel(v){
 }
 cha.addEventListener("input", (e)=>{ CHAOS = Number(e.target.value)||50; updateModeLabel(CHAOS); });
 cha.addEventListener("change", rebuildDeck);
-onlyNow.addEventListener("change", ()=>{ ONLY_NOW = onlyNow.checked; rebuildDeck(); });
 
 function setVar(which){
   VARIETY = which;
@@ -275,7 +342,11 @@ $("#varT").onclick = ()=>setVar("T");
 $("#varM").onclick = ()=>setVar("M");
 $("#varW").onclick = ()=>setVar("W");
 
-updateModeLabel(CHAOS);
+const onlyMine = $("#onlyMine");
+onlyMine.addEventListener("change", ()=>{ ONLY_MINE = onlyMine.checked; rebuildDeck(); });
+const incRent = $("#incRent");
+incRent.addEventListener("change", ()=>{ INCLUDE_RENT = incRent.checked; rebuildDeck(); });
+
 loadData();
 </script>
 </body>
