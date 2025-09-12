@@ -78,17 +78,15 @@ async function tmdbProviders(id){
   return { link: entry.link || "", providers };
 }
 
-/* ---------- YOUR TASTE: title biases ---------- */
-// Quick per-title nudges (add/remove as you like)
+/* ---------- YOUR TASTE: quick per-title nudges ---------- */
 const titleBias = new Map(Object.entries({
-  // Lower the safe sequels:
+  // Lower safe sequels:
   "fridaythe13thpartviiijasontakesmanhattan": -18,
   "tremors": -6,
   "thelaststarfighter": -8,
 
   // Boost psychedelic/experimental/animated oddities:
   "belladonnaofsadness": +18,
-  "catSoup": +16, // allow both spellings
   "catsoup": +16,
   "angelsegg": +18,
   "thewolfhouse": +24,
@@ -98,7 +96,7 @@ const titleBias = new Map(Object.entries({
   "fantasticplanet": +14,
   "begotten": +26,
   "finalflesh": +22,
-  "things": +22,
+  "things": +22
 }));
 
 /* ---------- Heuristic flags ---------- */
@@ -154,6 +152,7 @@ function chaosFromFeatures({ title, year, genres, keywords, overview, runtime, f
   if (gset.has("science fiction") || gset.has("sci-fi")) add(6,"sci-fi oddity");
   if (gset.has("fantasy")) add(4,"fantasy tilt");
   if (gset.has("animation")) add(3,"animation");
+
   // Psychedelic/experimental/“how did they make this”
   if (flags.hint_psych_anim) add(18,"psychedelic/experimental animation");
   const hwKeywords = ["surreal","experimental","avant-garde","stop motion","rotoscope","dream","hallucination"];
@@ -175,15 +174,14 @@ function chaosFromFeatures({ title, year, genres, keywords, overview, runtime, f
     else if (year <= 1990) add(5,"80s cult patina");
   }
 
-  // Runtime
-  if (runtime){
-    if (runtime >= 150) add(3,"marathon");
-  }
+  // Runtime spice
+  if (runtime && runtime >= 150) add(3,"marathon");
 
   // Franchise/Sequel/Safe slasher dampeners
   if (flags.hint_slasher) c -= 10;
   if (flags.hint_sequelish) c -= 8;
-  // Stronger dampener for mainstream romcom/family
+
+  // Mainstream romcom/family dampeners
   const isRomCom = (gset.has("romance") && gset.has("comedy"));
   const isFamilyish = gset.has("family");
   if (isRomCom && !gset.has("horror")) c -= 30;
@@ -193,7 +191,7 @@ function chaosFromFeatures({ title, year, genres, keywords, overview, runtime, f
   const spooky = (gset.has("horror") || flags.extreme_gore || flags.theme_body_horror || flags.theme_witchy || flags.theme_folk || flags.theme_found_footage || flags.hint_psych_anim);
   if (!spooky && vote_count>=10000 && popularity>=15) c -= 14;
 
-  // Per-title bias (you control this list)
+  // Per-title bias
   if (titleBias.has(tN)) c += titleBias.get(tN);
 
   c = Math.max(0, Math.min(100, Math.round(c)));
@@ -239,7 +237,6 @@ async function main(){
       if (!best && f.year){ res = await tmdbSearch(f.title); best = chooseBest(res.results, f.title); }
 
       if (!best){
-        // compute from title only
         const flags = classifyFlags({ title:f.title, overview:"", tagline:f.tagline, genres:[], keywords:[] });
         const { score, reason } = chaosFromFeatures({ title:f.title, year:f.year, genres:[], keywords:[], overview:"", runtime:null, flags });
         const chaos = f.chaosOverride!=null ? Math.max(0, Math.min(100, Math.round(f.chaosOverride))) : score;
@@ -268,7 +265,10 @@ async function main(){
         title:f.title, year:f.year || Number(releaseYear)||undefined, genres, keywords, overview, runtime, flags, popularity, vote_count
       });
 
-      const poster = det.poster_path || best.poster_path || "";
+      // --- Poster normalization (always ensure leading /) ---
+      const rawPoster = det.poster_path || best.poster_path || "";
+      const poster = rawPoster ? (rawPoster.startsWith("/") ? rawPoster : "/"+rawPoster) : "";
+
       const chaos = f.chaosOverride!=null ? Math.max(0, Math.min(100, Math.round(f.chaosOverride))) : score;
 
       return {
