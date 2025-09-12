@@ -32,6 +32,7 @@ async function tmdbSearch(title, year){
   url.searchParams.set("query", title);
   if (year) url.searchParams.set("year", String(year));
   url.searchParams.set("include_adult", "true");
+  url.searchParams.set("language", "en-US");
   url.searchParams.set("api_key", TMDB_KEY);
   const r = await fetch(url);
   if(!r.ok) throw new Error(`TMDb search ${r.status}`);
@@ -78,105 +79,105 @@ async function tmdbProviders(id){
 }
 
 /* ---------- heuristics ---------- */
-const titleBoosts = new Map(Object.entries({
-  "begotten": 20, "tetsuo:theironman": 18, "wearetheflesh": 18, "taxidermia": 18,
-  "sweetmovie": 18, "visitorq": 16, "santasangre": 14, "valerieandherweekofwonders": 12,
-  "belladonnaofsadness": 14, "possession": 14, "thewolfhouse": 20, "964pinocchio": 16,
-  "theboxersomen": 18, "streettrash": 12, "things": 16, "finalflesh": 16, "thepizzagatemassacre": 10,
-  "funkyforestthefirstcontact": 12, "liquidsky": 12, "phantomoftheparadise": 8, "zardoz": 12,
+// Explicit boosts for cult chaos; explicit *dampeners* for mainstream comfort.
+const titleAdjust = new Map(Object.entries({
+  // Cult boosts
+  "begotten": +28, "tetsuo:theironman": +22, "wearetheflesh": +22, "taxidermia": +22,
+  "sweetmovie": +22, "visitorq": +20, "santasangre": +18, "valerieandherweekofwonders": +16,
+  "belladonnaofsadness": +18, "possession": +18, "thewolfhouse": +26, "964pinocchio": +20,
+  "theboxersomen": +22, "streettrash": +16, "things": +22, "finalflesh": +22, "liquidsky": +16,
+  "phantomoftheparadise": +10, "zardoz": +14, "thepizzagatemassacre": +12, "funkyforestthefirstcontact": +14,
+  // Mainstream dampeners
+  "bridgetjonessdiary": -40, "highfidelity": -30, "agoofymovie": -38, "soul": -28, "elemental": -26,
+  "once": -24, "standbyme": -20, "ariverrunsthroughit": -26, "beforemidnight": -22, "beforesunrise": -22, "beforesunset": -22,
+  "blackbook": -12, "thelaststarfighter": -10, "tokyocowboy": -8
 }));
 
-function flagByText(s, re){ return re.test(s); }
-function any(s, arr){ return arr.some(re => re.test(s)); }
-
-function classifyFlags({ title, overview, tagline, genres, keywords }){
-  const bag = [
+function bagText({ title, overview, tagline, genres, keywords }){
+  return [
     title||"", overview||"", tagline||"",
     (genres||[]).join(" "), (keywords||[]).join(" ")
   ].join(" ").toLowerCase();
+}
+function any(reArr, text){ return reArr.some(re => re.test(text)); }
 
-  const gore = any(bag, [/gore|gory|viscera|entrails|dismember|guignol|splatter|extreme horror|torture/]);
-  const sexV = any(bag, [/rape|sexual\s+assault|molest|incest\b|sexual\s+violence/]);
-  const kids = any(bag, [/\bchild\b.*(peril|harm|abduct|murder|die|death)|children.*(peril|harm|violence)|kids?[-\s]?in[-\s]?peril/]);
+function classifyFlags({ title, overview, tagline, genres, keywords }){
+  const bag = bagText({ title, overview, tagline, genres, keywords });
 
-  const found = any(bag, [/found\s*footage|mockumentary|pov\b/]);
-  const witch = any(bag, [/witch|covens?|occult|sabbath|pagan/]);
-  const body  = any(bag, [/body\s*horror|mutation|metamorph|transformation|tumor|parasite|skin.*(peel|rot|rip)/]);
-  const folk  = any(bag, [/folk\s*horror|ritual|pagan|rural|harvest|solstice/]);
-  const neon  = any(bag, [/neon|cyberpunk|club|disco|city.*night|sleaze/]);
-
-  return {
-    extreme_gore: gore?1:0,
-    sexual_violence: sexV?1:0,
-    kids_in_peril: kids?1:0,
-    theme_found_footage: found?1:0,
-    theme_witchy: witch?1:0,
-    theme_body_horror: body?1:0,
-    theme_folk: folk?1:0,
-    theme_neon: neon?1:0
+  const flags = {
+    extreme_gore: any([/gore|gory|viscera|entrails|dismember|splatter|guignol|torture/], bag) ? 1 : 0,
+    sexual_violence: any([/\brape\b|sexual\s+assault|molest|incest\b|sexual\s+violence/], bag) ? 1 : 0,
+    kids_in_peril: any([/\bchild\b.*(peril|harm|abduct|murder|die|death)|children.*(peril|harm|violence)|kids?[-\s]?in[-\s]?peril/], bag) ? 1 : 0,
+    theme_found_footage: any([/found\s*footage|mockumentary|pov\b/], bag) ? 1 : 0,
+    theme_witchy: any([/\bwitch|\bcoven\b|occult|sabbath|pagan/], bag) ? 1 : 0,
+    theme_body_horror: any([/body\s*horror|mutation|metamorph|transformation|tumor|parasite|skin.*(peel|rot|rip)/], bag) ? 1 : 0,
+    theme_folk: any([/folk\s*horror|ritual|pagan|rural|harvest|solstice/], bag) ? 1 : 0,
+    theme_neon: any([/\bneon\b|cyberpunk|club|disco|city.*night|sleaze/], bag) ? 1 : 0
   };
+  return flags;
 }
 
-// coarse chaos from features; returns {score, reasons[]}
-function chaosFromFeatures({ title, year, genres, keywords, overview, countries, runtime, flags }){
-  let c = 35; const reasons = [];
-
+function chaosFromFeatures({ title, year, genres, keywords, overview, runtime, flags, popularity=0, vote_count=0 }){
+  // Start lower so mainstream defaults low.
+  let c = 20; const reasons = [];
+  const gset = new Set((genres||[]).map(s=>s.toLowerCase()));
+  const kset = new Set((keywords||[]).map(s=>s.toLowerCase()));
   const tN = norm(title||"");
-  if (titleBoosts.has(tN)){ c += titleBoosts.get(tN); reasons.push("cult chaos pedigree"); }
 
-  const gset = new Set((genres||[]).map(x=>x.toLowerCase()));
-  const kset = new Set((keywords||[]).map(x=>x.toLowerCase()));
+  const add = (pts, why) => { c+=pts; reasons.push(why); };
 
-  const add = (pts, why)=>{ c+=pts; reasons.push(why); };
+  // Title-specific nudges
+  if (titleAdjust.has(tN)){ const v = titleAdjust.get(tN); c += v; reasons.push(v>0?"cult chaos pedigree":"mainstream comfort"); }
 
-  if (gset.has("horror")) add(15, "horror core");
-  if (gset.has("science fiction") || gset.has("sci-fi")) add(6, "sci-fi strangeness");
-  if (gset.has("fantasy")) add(4, "fantasy tilt");
-  if (gset.has("animation")) add(4, "animation surreal option");
-  if (gset.has("music") || gset.has("musical")) add(3, "musical oddity");
+  // Core boosts
+  if (gset.has("horror")) add(18,"horror core");
+  if (gset.has("science fiction") || gset.has("sci-fi")) add(7,"sci-fi oddity");
+  if (gset.has("fantasy")) add(5,"fantasy tilt");
+  if (gset.has("animation")) add(4,"animation surreal option");
 
-  // vibe keywords
-  const kwPlus = ["surrealism","experimental film","cult film","body horror","witchcraft","occult",
+  // Keyword vibes
+  const plusKw = ["surreal","experimental","cult film","body horror","witchcraft","occult",
                   "vampire","zombie","demon","found footage","splatter","giallo","possession",
                   "dream","hallucination","stop motion","erotic horror","necrophilia"];
-  for (const k of kwPlus){ if (Array.from(kset).some(s=>s.includes(k))) add(4, k); }
+  for (const k of plusKw){ if (Array.from(kset).some(s=>s.includes(k))) add(5,k); }
 
-  // flags weight
-  if (flags.extreme_gore) add(14,"extreme gore");
-  if (flags.sexual_violence) add(10,"sexual violence");
-  if (flags.kids_in_peril) add(6,"kids-in-peril");
-  if (flags.theme_body_horror) add(8,"body horror");
-  if (flags.theme_witchy) add(6,"witchy/occult");
-  if (flags.theme_folk) add(5,"folk dread");
-  if (flags.theme_found_footage) add(5,"found-footage texture");
-  if (flags.theme_neon) add(3,"neon grime");
+  // Flag weights (heavier)
+  if (flags.extreme_gore) add(16,"extreme gore");
+  if (flags.sexual_violence) add(12,"sexual violence");
+  if (flags.kids_in_peril) add(7,"kids-in-peril");
+  if (flags.theme_body_horror) add(10,"body horror");
+  if (flags.theme_witchy) add(7,"witch/occult");
+  if (flags.theme_folk) add(6,"folk dread");
+  if (flags.theme_found_footage) add(6,"found-footage");
+  if (flags.theme_neon) add(4,"neon grime");
 
-  // era factor: pre-1990 cult → add a bit; squeaky-clean family titles → subtract
+  // Era spice
   if (year){
-    if (year <= 1975) add(6,"old weird");
-    else if (year <= 1990) add(4,"80s cult patina");
-    else if (year >= 2015) add(0,"modern polish");
+    if (year <= 1975) add(7,"old weird");
+    else if (year <= 1990) add(5,"80s cult patina");
   }
 
-  // runtime punisher
+  // Runtime
   if (runtime){
-    if (runtime >= 150) add(4, "marathon length");
-    else if (runtime <= 80) add(0, "merciful runtime");
+    if (runtime >= 150) add(4, "marathon");
+    else if (runtime <= 80) add(0, "merciful");
   }
 
-  // gentle genres dampener
-  if (gset.has("romance") && !gset.has("horror")) c -= 6;
-  if (gset.has("family") && !gset.has("horror")) c -= 12;
-  if (gset.has("animation") && (title.toLowerCase().includes("goofy") || title.toLowerCase().includes("disney"))) c -= 16;
+  // **DAMPENERS** (this is where Bridget Jones gets put in the corner)
+  const isRomCom = (gset.has("romance") && gset.has("comedy"));
+  const isFamilyish = gset.has("family");
+  const isPixar = title.toLowerCase().includes("soul") || title.toLowerCase().includes("elemental");
+  if (isRomCom && !gset.has("horror")) c -= 28;
+  if (isFamilyish && !gset.has("horror")) c -= 26;
+  if (isPixar) c -= 18;
+  // High-popularity mainstream dampener when no spooky vibes:
+  const hasSpooky = (flags.extreme_gore||flags.theme_body_horror||flags.theme_witchy||flags.theme_folk||flags.theme_found_footage||gset.has("horror"));
+  if (!hasSpooky && vote_count>=10000 && popularity>=15) c -= 14;
 
+  // Clamp & reason
   c = Math.max(0, Math.min(100, Math.round(c)));
-  // build 10–20 word reason
-  const reasonParts = [];
-  const pri = ["extreme gore","body horror","witchy/occult","folk dread","found-footage texture","surrealism","experimental film",
-               "cult chaos pedigree","80s cult patina","old weird","sci-fi strangeness","musical oddity","neon grime","sexual violence","kids-in-peril"];
-  for (const p of pri){ if (reasons.includes(p)) reasonParts.push(p); if (reasonParts.length>=4) break; }
-  let reason = reasonParts.join(" · ");
-  if (!reason) reason = "genre tilt and cult energy";
+  const pri = ["extreme gore","body horror","witch/occult","folk dread","found-footage","surreal","experimental","cult chaos pedigree","80s cult patina","old weird","sci-fi oddity","neon grime","mainstream comfort"];
+  const reason = pri.filter(p => reasons.includes(p)).slice(0,4).join(" · ") || "tame/mainstream tilt";
   return { score: c, reason };
 }
 
@@ -212,12 +213,11 @@ async function main(){
       let best = chooseBest(res.results, f.title, f.year);
       if (!best && f.year){ res = await tmdbSearch(f.title); best = chooseBest(res.results, f.title); }
 
-      // If no TMDb hit, fallback minimal record
       if (!best){
         const flags = classifyFlags({ title:f.title, overview:"", tagline:f.tagline, genres:[], keywords:[] });
-        const { score, reason } = chaosFromFeatures({ title:f.title, year:f.year, genres:[], keywords:[], overview:"", countries:[], runtime:null, flags });
+        const { score, reason } = chaosFromFeatures({ title:f.title, year:f.year, genres:[], keywords:[], overview:"", runtime:null, flags });
         return { ...f, tmdbId:null, poster:"", providers:[], justwatch:"", runtime:null, genres:[], keywords:[], countries:[], decade: f.year? Math.floor(f.year/10)*10 : null,
-          chaos: score, chaos_reason: reason, flags, unreleased_error: null };
+          chaos: score, chaos_reason: reason, flags, unreleased_error: null, popularity:0, vote_count:0 };
       }
 
       const det = await tmdbDetails(best.id);
@@ -232,26 +232,32 @@ async function main(){
       const releaseYear = (det.release_date||"").slice(0,4);
       const unreleased_error = (status && status!=="released") ? `Not released (TMDb status: ${det.status})` : null;
 
+      const popularity = Number(det.popularity||0);
+      const vote_count = Number(det.vote_count||0);
+
       const overview = det.overview || "";
       const flags = classifyFlags({ title:f.title, overview, tagline:f.tagline, genres, keywords });
       const { score, reason } = chaosFromFeatures({
-        title:f.title, year:f.year || Number(releaseYear)||undefined, genres, keywords, overview, countries, runtime, flags
+        title:f.title, year:f.year || Number(releaseYear)||undefined, genres, keywords, overview, runtime, flags, popularity, vote_count
       });
+
+      // **Poster hardening**: keep search poster if details missing; final fallback empty string (UI shows skeleton/placeholder)
+      const poster = det.poster_path || best.poster_path || "";
 
       return {
         ...f,
         tmdbId: det.id,
-        poster: det.poster_path || best.poster_path || "",
-        providers, justwatch,
+        poster, providers, justwatch,
         runtime, genres, keywords, countries, decade,
         chaos: score, chaos_reason: reason,
-        flags, unreleased_error
+        flags, unreleased_error,
+        popularity, vote_count
       };
     }catch(e){
       const flags = classifyFlags({ title:f.title, overview:"", tagline:f.tagline, genres:[], keywords:[] });
-      const { score, reason } = chaosFromFeatures({ title:f.title, year:f.year, genres:[], keywords:[], overview:"", countries:[], runtime:null, flags });
+      const { score, reason } = chaosFromFeatures({ title:f.title, year:f.year, genres:[], keywords:[], overview:"", runtime:null, flags });
       return { ...f, tmdbId:null, poster:"", providers:[], justwatch:"", runtime:null, genres:[], keywords:[], countries:[], decade: f.year? Math.floor(f.year/10)*10 : null,
-        chaos: score, chaos_reason: reason, flags, unreleased_error: null };
+        chaos: score, chaos_reason: reason, flags, unreleased_error: null, popularity:0, vote_count:0 };
     }
   })));
 
