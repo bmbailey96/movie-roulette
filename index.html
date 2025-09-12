@@ -8,137 +8,193 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b0b0b">
 <style>
-  :root{ color-scheme: light dark;
-    --bg:#0b0b0b; --card:#111; --fg:#f4f4f4; --muted:#9aa0a6; --border:#232323; --accent:#77ffa5; --accent2:#ff77c7;
-    --radius:16px; --shadow:0 12px 40px rgba(0,0,0,.45); }
+  :root{
+    color-scheme: light dark;
+    --bg:#0b0b0b; --card:#111; --fg:#f4f4f4; --muted:#a2a7ad; --border:#242424;
+    --accent:#77ffa5; --accentFg:#05200f; --ghost:#1b1b1b; --radius:16px;
+  }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 -apple-system,system-ui,Inter,Segoe UI,Roboto,sans-serif; }
-  .wrap{ min-height:100%; display:flex; align-items:flex-start; justify-content:center; padding:max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
-  .card{ width:100%; max-width:760px; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; }
-  h1{ margin:0 0 8px; font-size:20px; letter-spacing:.2px; }
-  .muted{ color:var(--muted); font-size:13px; }
+  html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
+    font:16px/1.45 -apple-system, system-ui, Inter, Segoe UI, Roboto, sans-serif; }
+  .wrap{ height:100dvh; padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); display:flex; }
+  .card{ flex:1; max-width:760px; margin:auto; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); display:grid; grid-template-rows:auto auto 1fr auto; gap:8px; padding:10px; }
 
-  .controls{ position:sticky; top:0; background:linear-gradient(#111, #111cc); padding-top:6px; margin-top:-6px; z-index:5; }
-  .bar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-  .bar button{ appearance:none; border:0; border-radius:14px; padding:14px 16px; font-weight:900; cursor:pointer; background:var(--accent); color:#05200f; font-size:16px; }
-  .ghost{ background:#1b1b1b; color:var(--fg); border:1px solid #2a2a2a; }
-  .count{ margin-left:auto; font-weight:600; padding:8px 12px; border:1px solid #222; border-radius:12px; color:#cfe; }
+  /* Header */
+  h1{ margin:0; font-size:18px; letter-spacing:.2px; }
+  .sub{ color:var(--muted); font-size:12px; margin-top:2px; }
 
-  .dial{ margin-top:10px; }
-  .sliderrow{ display:flex; gap:10px; align-items:center; width:100%; }
-  .sliderrow input[type="range"]{ flex:1 1 auto; appearance:none; height:10px; background:#161616; border:1px solid #2a2a2a; border-radius:999px;
+  /* Top bar: compact, sticky */
+  .bar{
+    position:sticky; top:0; z-index:5; padding-top:6px; margin-top:-6px;
+    background:linear-gradient(#111, #111c);
+    display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:8px; align-items:center;
+  }
+  .btn{ appearance:none; border:0; border-radius:12px; padding:10px 10px; font-weight:900; cursor:pointer; font-size:14px; }
+  .btn.pri{ background:var(--accent); color:var(--accentFg); }
+  .btn.gh{ background:var(--ghost); color:var(--fg); border:1px solid #2a2a2a; }
+  .count{ justify-self:end; padding:6px 10px; border:1px solid #222; border-radius:10px; color:#cfe; font-size:12px; }
+
+  /* Slider row tight */
+  .dial{ display:grid; grid-template-columns:auto 1fr auto auto; gap:8px; align-items:center; }
+  .lab{ color:var(--muted); font-size:12px; }
+  input[type="range"]{ appearance:none; width:100%; height:8px; background:#161616; border:1px solid #2a2a2a; border-radius:999px;
     background-image:linear-gradient(90deg, rgba(119,255,165,.25) 0%, rgba(119,255,165,.25) 49%, #161616 49%, #161616 51%, rgba(255,119,199,.25) 51%, rgba(255,119,199,.25) 100%); }
-  .sliderrow input[type="range"]::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:28px; height:28px; margin-top:-10px; border-radius:50%; background:var(--accent); border:2px solid #083; box-shadow:0 1px 4px rgba(0,0,0,.35); }
-  .ticks{ display:flex; justify-content:space-between; margin-top:4px; color:var(--muted); font-size:12px; }
-  .mode{ margin-top:6px; font-size:13px; color:#c4cbd2; }
+  input[type="range"]::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:24px; height:24px; margin-top:-8px; border-radius:50%; background:var(--accent); border:2px solid #083; }
+
+  /* Result area fits without scrolling */
+  #result, #resultB{ overflow:hidden; }
+  .grid{
+    display:grid; grid-template-columns:1fr; grid-template-rows:auto auto auto 1fr auto; gap:6px;
+    min-height:0;
+  }
+  .poster{ width:100%; max-width:520px; margin:0 auto; display:block; aspect-ratio:2/3; object-fit:cover; border-radius:12px; background:#181818;
+    max-height:52vh; }
+  .title{ font-size:20px; font-weight:900; margin:2px 0 0; }
+  .tagline-inline{ color:#c4cbd2; font-size:13px; margin:0; }
+  .meta{ color:var(--muted); display:flex; gap:6px; align-items:center; flex-wrap:wrap; font-size:12px; }
+  .chip{ font-size:11px; background:#1a1a1a; border:1px solid #2a2a2a; padding:4px 8px; border-radius:999px; color:#cfe; }
+  .badges{ display:flex; gap:6px; flex-wrap:wrap; }
+  .badge{ font-size:11px; padding:3px 8px; border-radius:999px; border:1px solid #2a2a2a; background:#171717; color:#bfe; }
+  details#why{ margin:4px 0 0; }
+  details#why > summary{ list-style:none; cursor:pointer; color:#b6ffd1; font-weight:800; font-size:13px; }
+  details#why > summary::-webkit-details-marker{ display:none; }
+  .links{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; }
+  .links a{ display:block; padding:12px 10px; text-align:center; border-radius:10px; text-decoration:none; font-weight:900; font-size:14px; background:#1b1b1b; color:#c0ffd6; border:1px solid #2a2a2a; }
+
+  #err{ color:#ffb3b3; white-space:pre-wrap; font-size:12px; }
+
+  /* Modal for filters */
+  dialog{ border:1px solid var(--border); background:#0f0f0f; color:var(--fg); border-radius:16px; width:min(560px, 92vw); padding:12px; }
+  dialog::backdrop{ background:rgba(0,0,0,.6); }
+  .row{ display:flex; gap:8px; flex-wrap:wrap; }
   .seg{ display:flex; background:#161616; border:1px solid #2a2a2a; border-radius:999px; overflow:hidden; }
-  .seg button{ background:transparent; border:0; color:#cfe; padding:6px 10px; font-weight:800; font-size:13px; cursor:pointer; }
+  .seg button{ background:transparent; border:0; color:#cfe; padding:8px 10px; font-weight:800; font-size:13px; cursor:pointer; }
   .seg button.active{ background:#1f3327; color:#b6ffd1; }
+  .pill{ background:#161616; border:1px solid #2a2a2a; border-radius:999px; padding:8px 10px; font-weight:800; font-size:13px; }
+  .pill.active{ background:#242a24; color:#b6ffd1; }
 
-  .poster{ width:100%; max-width:520px; margin:8px auto 12px; display:block; aspect-ratio:2/3; object-fit:cover; border-radius:14px; background:#181818; }
-  .title{ font-size:26px; font-weight:900; margin:2px 0 2px; word-wrap:break-word; }
-  .tagline-inline{ color:#c4cbd2; font-size:15px; margin:0 0 8px; }
-  .meta{ color:var(--muted); margin-bottom:6px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .chip{ font-size:12px; background:#1a1a1a; border:1px solid #2a2a2a; padding:4px 8px; border-radius:999px; color:#cfe; }
-
-  .badges{ display:flex; gap:6px; flex-wrap:wrap; margin:6px 0 10px; }
-  .badge{ font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid #2a2a2a; background:#171717; color:#bfe; }
-
-  .links{ display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; }
-  .links a{ display:inline-block; padding:12px 14px; border-radius:12px; text-decoration:none; font-weight:900; font-size:15px; background:#1b1b1b; color:#c0ffd6; border:1px solid #2a2a2a; flex:1 1 220px; text-align:center; }
-
-  #err{ margin-top:10px; color:#ffb3b3; white-space:pre-wrap; }
   .skeleton{ animation:pulse 1.2s infinite ease-in-out; background: linear-gradient(90deg,#141414 25%,#1a1a1a 37%,#141414 63%); background-size:400% 100%; }
   @keyframes pulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
+
+  /* Tiny screens */
+  @media (max-width:430px){
+    .links{ grid-template-columns:1fr; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <main class="card" role="main" id="root">
-    <h1>🎲 Movie Roulette</h1>
-    <div class="muted">Slide mood. Pick vibes. No repeats until the deck is spent.</div>
+    <header>
+      <h1>🎲 Movie Roulette</h1>
+      <div class="sub">Slide mood. Pick vibes. No repeats.</div>
+    </header>
 
-    <div class="controls">
-      <div class="bar">
-        <button id="deal">Deal</button>
-        <button id="reroll" class="ghost" title="Another near this chaos">Re-roll nearby</button>
-        <button id="double" class="ghost" title="Main + palette cleanser">Double feature</button>
-        <div class="count muted">Deck: <span id="left">0</span> • Total: <span id="total">0</span></div>
-      </div>
-
-      <div class="dial" aria-label="order chaos control">
-        <div class="sliderrow" style="margin-top:8px;">
-          <span class="muted" style="width:56px;">Order</span>
-          <input id="cha" type="range" min="0" max="100" step="1" value="50" />
-          <span class="muted" style="width:56px; text-align:right;">Chaos</span>
-        </div>
-        <div class="ticks"><span>0</span><span>50</span><span>100</span></div>
-        <div class="mode" id="modeText">Neutral • pure shuffle</div>
-
-        <div class="seg" role="tablist" aria-label="variety" style="margin-top:8px;">
-          <button id="varT" class="active" role="tab" aria-selected="true">Tight</button>
-          <button id="varM" role="tab" aria-selected="false">Medium</button>
-          <button id="varW" role="tab" aria-selected="false">Wide</button>
-        </div>
-
-        <div class="seg" role="tablist" aria-label="themes" style="margin-top:8px;">
-          <button id="thAll" class="active">All</button>
-          <button id="thWitch">Witchy</button>
-          <button id="thBody">Body</button>
-          <button id="thFolk">Folk</button>
-          <button id="thFound">Found</button>
-          <button id="thNeon">Neon</button>
-        </div>
-
-        <div class="seg" role="tablist" aria-label="content flags" style="margin-top:8px;">
-          <button id="fNoGore">No gore</button>
-          <button id="fNoSV">No sexual violence</button>
-          <button id="fNoKids">No kids-in-peril</button>
-        </div>
-      </div>
+    <!-- Sticky compact control bar -->
+    <div class="bar">
+      <button id="deal" class="btn pri">Deal</button>
+      <button id="reroll" class="btn gh" title="Another near this chaos">Re-roll</button>
+      <button id="double" class="btn gh" title="Main + palette cleanser">Double</button>
+      <button id="openFilters" class="btn gh" title="Filters & themes">Filters</button>
+      <div class="count">Deck: <span id="left">0</span> • <span id="total">0</span></div>
     </div>
+
+    <!-- Tight slider row -->
+    <div class="dial" aria-label="order chaos control">
+      <div class="lab">Order</div>
+      <input id="cha" type="range" min="0" max="100" step="1" value="50" aria-label="Chaos" />
+      <div class="lab">Chaos</div>
+      <div class="lab" id="modeText">Neutral</div>
+    </div>
+
+    <!-- Result A -->
+    <section id="result" style="display:none;">
+      <div class="grid">
+        <img id="poster" class="poster skeleton" alt="Movie poster" crossorigin="anonymous" />
+        <div class="title" id="title">Loading…</div>
+        <p class="tagline-inline" id="taglineInline" style="display:none;"></p>
+
+        <div class="meta">
+          <span id="year"></span>
+          <span id="runChip" class="chip" style="display:none;"></span>
+          <span id="chaosChip" class="chip" style="display:none;"></span>
+        </div>
+
+        <div class="badges" id="streamBadges" style="display:none;"></div>
+
+        <details id="why">
+          <summary>Why this pick?</summary>
+          <div class="sub" id="whyText" style="margin-top:6px;"></div>
+        </details>
+
+        <div class="links" id="linksRow"></div>
+      </div>
+    </section>
+
+    <!-- Result B (palette cleanser) -->
+    <section id="resultB" style="display:none;">
+      <div class="grid">
+        <div class="sub" style="margin-bottom:4px;">Palette Cleanser</div>
+        <img id="posterB" class="poster skeleton" alt="Movie poster" crossorigin="anonymous" />
+        <div class="title" id="titleB">Loading…</div>
+        <p class="tagline-inline" id="taglineInlineB" style="display:none;"></p>
+
+        <div class="meta">
+          <span id="yearB"></span>
+          <span id="runChipB" class="chip" style="display:none;"></span>
+          <span id="chaosChipB" class="chip" style="display:none;"></span>
+        </div>
+        <div class="badges" id="streamBadgesB" style="display:none;"></div>
+        <div class="links" id="linksRowB"></div>
+      </div>
+    </section>
 
     <div id="err" role="alert" aria-live="polite"></div>
 
-    <section id="result" style="display:none; margin-top:10px;">
-      <img id="poster" class="poster skeleton" alt="Movie poster" crossorigin="anonymous" />
-      <div class="title" id="title">Loading…</div>
-      <div class="tagline-inline" id="taglineInline" style="display:none;"></div>
-      <div class="meta">
-        <span id="year"></span>
-        <span id="runChip" class="chip" style="display:none;"></span>
-        <span id="chaosChip" class="chip" style="display:none;"></span>
-      </div>
-      <div class="badges" id="streamBadges" style="display:none;"></div>
-
-      <details id="why" style="margin:6px 0 6px;">
-        <summary style="cursor:pointer; color:#b6ffd1; font-weight:800;">Why this pick?</summary>
-        <div class="muted" id="whyText" style="margin-top:6px;"></div>
-      </details>
-
-      <div class="links" id="linksRow"></div>
-    </section>
-
-    <section id="resultB" style="display:none; margin-top:18px; border-top:1px dashed #242424; padding-top:12px;">
-      <div class="muted" style="margin-bottom:4px;">Palette Cleanser</div>
-      <img id="posterB" class="poster skeleton" alt="Movie poster" crossorigin="anonymous" />
-      <div class="title" id="titleB">Loading…</div>
-      <div class="tagline-inline" id="taglineInlineB" style="display:none;"></div>
-      <div class="meta">
-        <span id="yearB"></span>
-        <span id="runChipB" class="chip" style="display:none;"></span>
-        <span id="chaosChipB" class="chip" style="display:none;"></span>
-      </div>
-      <div class="badges" id="streamBadgesB" style="display:none;"></div>
-      <div class="links" id="linksRowB"></div>
-    </section>
-
-    <p class="muted" style="margin-top:14px;">Tip: Add to Home Screen from Safari’s share menu.</p>
-    <p class="muted" style="margin-top:6px; font-size:12px;">This product uses the TMDb API but is not endorsed or certified by TMDb.</p>
+    <footer class="sub" style="margin-top:4px;">
+      Tip: Add to Home Screen from Safari’s share menu. • Uses TMDb but not endorsed.
+    </footer>
   </main>
 </div>
 
+<!-- Filters modal -->
+<dialog id="filtersDlg">
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+    <strong>Filters</strong>
+    <div class="sub" id="deckCountMini">Deck: 0</div>
+  </div>
+
+  <div class="row" style="margin-bottom:10px;">
+    <div class="seg" role="tablist" aria-label="variety">
+      <button id="varT" class="active" role="tab" aria-selected="true">Tight</button>
+      <button id="varM" role="tab" aria-selected="false">Medium</button>
+      <button id="varW" role="tab" aria-selected="false">Wide</button>
+    </div>
+    <button class="pill" id="resetAll">Reset</button>
+  </div>
+
+  <div class="row" style="margin-bottom:6px;">
+    <div class="pill active" id="thAll">All</div>
+    <div class="pill" id="thWitch">Witchy</div>
+    <div class="pill" id="thBody">Body</div>
+    <div class="pill" id="thFolk">Folk</div>
+    <div class="pill" id="thFound">Found</div>
+    <div class="pill" id="thNeon">Neon</div>
+  </div>
+
+  <div class="row" style="margin-bottom:6px;">
+    <div class="pill" id="fNoGore">No gore</div>
+    <div class="pill" id="fNoSV">No sexual violence</div>
+    <div class="pill" id="fNoKids">No kids-in-peril</div>
+  </div>
+
+  <div class="row" style="justify-content:flex-end; margin-top:12px;">
+    <button class="btn gh" id="closeFilters">Close</button>
+  </div>
+</dialog>
+
 <script>
+/* ====== Logic (unchanged, just wired to compact UI) ====== */
 const MY_SERVICES = new Set(["Netflix","Amazon Prime Video","Hulu","Max","Paramount+","Apple TV+","Tubi TV"]);
 const $ = s => document.querySelector(s);
 const err = (m="") => { const e=$("#err"); e.textContent=m; e.style.display = m ? "block" : "none"; };
@@ -146,22 +202,17 @@ const err = (m="") => { const e=$("#err"); e.textContent=m; e.style.display = m 
 const TMDB_IMG_CDN = "https://image.tmdb.org/t/p";
 const PLACEHOLDER_SVG = `data:image/svg+xml;utf8,` + encodeURIComponent(`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900">
-    <defs>
-      <linearGradient id="g" x1="0" x2="1">
-        <stop offset="0" stop-color="#181818"/>
-        <stop offset="1" stop-color="#131313"/>
-      </linearGradient>
-    </defs>
+    <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#181818"/><stop offset="1" stop-color="#131313"/></linearGradient></defs>
     <rect width="100%" height="100%" fill="url(#g)"/>
     <text x="50%" y="50%" fill="#6a6a6a" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif"
           font-size="36" text-anchor="middle" dominant-baseline="middle">NO POSTER</text>
   </svg>`);
 
-// Accepts either a full URL or a TMDb /path
+// Accepts either full URL or TMDb /path
 function posterURL(path, size="w500"){
   if (!path) return "";
   const p = String(path).trim();
-  if (p.startsWith("http://") || p.startsWith("https://")) return p;  // full URL already
+  if (p.startsWith("http")) return p;
   const clean = p.startsWith("/") ? p : ("/" + p);
   return `${TMDB_IMG_CDN}/${size}${clean}`;
 }
@@ -171,11 +222,7 @@ function setPosterImg(imgEl, posterPath, title){
   imgEl.src = url || PLACEHOLDER_SVG;
   imgEl.alt = title || "poster";
   imgEl.onload = () => imgEl.classList.remove("skeleton");
-  imgEl.onerror = (e) => {
-    console.warn("Poster failed, using placeholder:", {title, posterPath, url, err:e});
-    imgEl.src = PLACEHOLDER_SVG;
-    imgEl.classList.remove("skeleton");
-  };
+  imgEl.onerror = () => { imgEl.src = PLACEHOLDER_SVG; imgEl.classList.remove("skeleton"); };
 }
 
 let MOVIES=[], DECK=[];
@@ -244,18 +291,15 @@ function passesContentFlags(item){
   if (FILTERS.noKids && f.kids_in_peril) return false;
   return !item.unreleased_error; // hide unreleased
 }
-
-/* ---- Hard-banded deck around slider ---- */
 function bandForVariety(){ return VARIETY==="T" ? 7 : VARIETY==="M" ? 15 : 30; }
 
 function rebuildDeck(){
   if (!MOVIES.length) return;
   const target = CHAOS;
   const baseBand = bandForVariety();
-
   let band = baseBand;
-  let candidates = MOVIES
-    .map((m, i) => ({ m, i }))
+
+  let candidates = MOVIES.map((m,i)=>({m,i}))
     .filter(({m}) => passesTheme(m) && passesContentFlags(m) && Math.abs((m.chaos??50) - target) <= band);
 
   while (!candidates.length && band <= 50){
@@ -272,9 +316,9 @@ function rebuildDeck(){
   for (let i=deck.length-1;i>0;i--){ const j=rnd[i]%(i+1); [deck[i],deck[j]]=[deck[j],deck[i]]; }
   DECK = deck;
   $("#left").textContent = DECK.length;
+  $("#deckCountMini").textContent = "Deck: " + DECK.length;
 }
 
-/* ---- Render helpers ---- */
 function setText(el, txt){ el.textContent = txt; }
 function show(el, on){ el.style.display = on ? "" : "none"; }
 
@@ -311,7 +355,7 @@ function renderInto(prefix, item){
   const yearEl = document.getElementById(prefix==="A" ? "year" : "yearB");
   setText(yearEl, item.year ? `Year: ${item.year}${metaErr}` : metaErr);
 
-  const run = item.runtime ? `${item.runtime} min${item.runtime<=80?" (blessed)":(item.runtime>=150?" (punishment)":"")}` : "";
+  const run = item.runtime ? `${item.runtime} min` : "";
   const runEl = document.getElementById(prefix==="A" ? "runChip" : "runChipB");
   setText(runEl, run); show(runEl, !!run);
 
@@ -334,25 +378,23 @@ function renderInto(prefix, item){
   buildLinksRow(links, item);
 }
 
-/* ---- Deal + Reroll + Double ---- */
 function dealOne(fromIdx=null){
   err("");
   if (!MOVIES.length){ err("Data not loaded yet."); return; }
-
   let idx = fromIdx;
   if (idx==null){
     if (!DECK.length) rebuildDeck();
     idx = DECK.pop();
     $("#left").textContent = DECK.length;
+    $("#deckCountMini").textContent = "Deck: " + DECK.length;
   }
   lastPickIndex = idx;
   const item = MOVIES[idx];
 
-  document.getElementById("result").style.display = "block";
+  $("#result").style.display = "block";
   renderInto("A", item);
-  document.getElementById("resultB").style.display = "none";
+  $("#resultB").style.display = "none";
 }
-
 function neighborsAround(target, initial, max, step){
   for (let r=initial; r<=max; r+=step){
     const pool=[];
@@ -367,7 +409,6 @@ function neighborsAround(target, initial, max, step){
   }
   return MOVIES.map((m,i)=>({m,i})).filter(({m})=>passesTheme(m)&&passesContentFlags(m)).map(x=>x.i);
 }
-
 function rerollNearby(){
   if (lastPickIndex==null){ dealOne(); return; }
   const curr = MOVIES[lastPickIndex];
@@ -377,7 +418,6 @@ function rerollNearby(){
   const idx = pool[Math.floor(Math.random()*pool.length)];
   dealOne(idx);
 }
-
 function doubleFeature(){
   if (lastPickIndex==null){ dealOne(); }
   const main = MOVIES[lastPickIndex];
@@ -398,26 +438,38 @@ function doubleFeature(){
     pool = [bestIdx];
   }
   const idx = pool[Math.floor(Math.random()*pool.length)];
-  const item = MOVIES[idx];
-
-  document.getElementById("resultB").style.display = "block";
-  renderInto("B", item);
+  $("#resultB").style.display = "block";
+  renderInto("B", MOVIES[idx]);
 }
 
-/* ---- Wire up ---- */
+/* — Controls — */
 $("#deal").addEventListener("click", ()=>dealOne());
 $("#reroll").addEventListener("click", rerollNearby);
 $("#double").addEventListener("click", doubleFeature);
 
 const cha = $("#cha"), modeText = $("#modeText");
 function updateModeLabel(v){
-  if (v < 40)      modeText.textContent = "Order • bias toward low-chaos (newer/tame)";
-  else if (v > 60) modeText.textContent = "Chaos • bias toward high-chaos (older/weird)";
-  else             modeText.textContent = "Neutral • pure shuffle";
+  if (v < 40)      modeText.textContent = "Order";
+  else if (v > 60) modeText.textContent = "Chaos";
+  else             modeText.textContent = "Neutral";
 }
 cha.addEventListener("input", (e)=>{ CHAOS = Number(e.target.value)||50; updateModeLabel(CHAOS); });
 cha.addEventListener("change", ()=>{ rebuildDeck(); });
 
+/* Filters modal wiring */
+const dlg = $("#filtersDlg");
+$("#openFilters").onclick = ()=>dlg.showModal();
+$("#closeFilters").onclick = ()=>dlg.close();
+$("#resetAll").onclick = ()=>{
+  VARIETY="T"; THEME="all"; FILTERS={noGore:false,noSV:false,noKids:false};
+  ["varT","varM","varW"].forEach(id=>$("#"+id).classList.remove("active"));
+  $("#varT").classList.add("active");
+  ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active"));
+  $("#thAll").classList.add("active");
+  ["fNoGore","fNoSV","fNoKids"].forEach(id=>$("#"+id).classList.remove("active"));
+  rebuildDeck();
+  dlg.close();
+};
 function setVar(which){
   VARIETY = which;
   $("#varT").classList.toggle("active", which==="T");
@@ -431,12 +483,9 @@ $("#varW").onclick = ()=>setVar("W");
 
 function setTheme(which){
   THEME = which;
-  $("#thAll").classList.toggle("active", which==="all");
-  $("#thWitch").classList.toggle("active", which==="witch");
-  $("#thBody").classList.toggle("active", which==="body");
-  $("#thFolk").classList.toggle("active", which==="folk");
-  $("#thFound").classList.toggle("active", which==="found");
-  $("#thNeon").classList.toggle("active", which==="neon");
+  ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active"));
+  const map={all:"thAll", witch:"thWitch", body:"thBody", folk:"thFolk", found:"thFound", neon:"thNeon"};
+  $("#"+map[which]).classList.add("active");
   rebuildDeck();
 }
 $("#thAll").onclick  = ()=>setTheme("all");
@@ -446,14 +495,15 @@ $("#thFolk").onclick = ()=>setTheme("folk");
 $("#thFound").onclick= ()=>setTheme("found");
 $("#thNeon").onclick = ()=>setTheme("neon");
 
-function toggleFlag(btn, key){
-  btn.classList.toggle("active");
-  FILTERS[key] = btn.classList.contains("active");
+function togglePill(id, key){
+  const el = $("#"+id);
+  el.classList.toggle("active");
+  FILTERS[key] = el.classList.contains("active");
   rebuildDeck();
 }
-$("#fNoGore").onclick = (e)=>toggleFlag(e.currentTarget, "noGore");
-$("#fNoSV").onclick   = (e)=>toggleFlag(e.currentTarget, "noSV");
-$("#fNoKids").onclick = (e)=>toggleFlag(e.currentTarget, "noKids");
+$("#fNoGore").onclick = ()=>togglePill("fNoGore","noGore");
+$("#fNoSV").onclick   = ()=>togglePill("fNoSV","noSV");
+$("#fNoKids").onclick = ()=>togglePill("fNoKids","noKids");
 
 loadData();
 </script>
