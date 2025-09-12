@@ -10,124 +10,203 @@
 <style>
   :root{
     color-scheme: light dark;
-    --bg:#0b0b0b; --card:#111; --fg:#f4f4f4; --muted:#a2a7ad; --border:#242424;
-    --accent:#77ffa5; --accentFg:#05200f; --ghost:#1b1b1b; --radius:16px;
-    --shadow:0 10px 34px rgba(0,0,0,.45);
+    --bg:#0b0b0b; --panel:#101010; --fg:#f4f4f4; --muted:#a7adb3; --border:#222;
+    --accent:#77ffa5; --accentFg:#05200f; --ghost:#171717; --radius:16px;
+    --shadow:0 10px 30px rgba(0,0,0,.45);
+    --ok:#b6ffd1; --warn:#ffd36a; --bad:#ff8a8a;
   }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
-    font:16px/1.5 -apple-system, system-ui, Inter, Segoe UI, Roboto, sans-serif; }
-  .wrap{ min-height:100dvh; display:flex; padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
-  .card{ flex:1; max-width:760px; margin:auto; background:var(--card); border:1px solid var(--border);
-    border-radius:var(--radius); box-shadow:var(--shadow); display:grid; grid-template-rows:auto auto 1fr auto; gap:12px; padding:14px; }
+    font:16px/1.45 -apple-system, system-ui, Inter, Segoe UI, Roboto, sans-serif; }
+  /* Full viewport layout, no scroll */
+  .app{ height:100dvh; width:100%; display:grid; grid-template-rows:auto 1fr auto; gap:0; padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(env(safe-area-inset-bottom)) env(safe-area-inset-left); overflow:hidden; }
+  header{ display:flex; align-items:center; justify-content:space-between; padding:8px 12px 6px; }
+  h1{ font-size:18px; margin:0; letter-spacing:.2px; }
+  .sub{ color:var(--muted); font-size:12px; }
 
-  h1{ margin:0; font-size:20px; letter-spacing:.2px; }
-  .sub{ color:var(--muted); font-size:12px; margin-top:2px; }
+  /* Center stage: two cards side-by-side in landscape, stacked in portrait — but clipped to viewport */
+  .stage{ position:relative; display:grid; grid-template-columns:1fr; gap:10px; padding:8px 12px; overflow:hidden; }
+  @media (orientation:landscape) and (min-width:700px){
+    .stage{ grid-template-columns:1fr 0.9fr; }
+  }
+  .card{ height:100%; border:1px solid var(--border); border-radius:var(--radius); background:var(--panel); box-shadow:var(--shadow);
+         display:grid; grid-template-rows:auto 1fr auto; overflow:hidden; min-height:0; }
+  .cardHeader{ display:flex; align-items:center; justify-content:space-between; padding:8px 10px; gap:8px; border-bottom:1px solid #1a1a1a; }
+  .titleWrap{ min-width:0; overflow:hidden; }
+  .title{ font-size:17px; font-weight:900; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tagline{ color:#cfd6db; font-size:12px; margin:2px 0 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .meta{ color:var(--muted); font-size:11px; display:flex; gap:6px; flex-wrap:wrap; }
+  .chip{ font-size:11px; background:#151515; border:1px solid #262626; padding:3px 8px; border-radius:999px; color:#d8ffe8; }
 
-  .bar{ position:sticky; top:0; z-index:5; padding-top:8px; margin-top:-8px;
-    background:linear-gradient(#111, #111c); display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:10px; align-items:center; }
-  .btn{ appearance:none; border:0; border-radius:14px; padding:12px 12px; font-weight:900; cursor:pointer; font-size:15px; }
-  .btn.pri{ background:var(--accent); color:var(--accentFg); }
-  .btn.gh{ background:var(--ghost); color:var(--fg); border:1px solid #2a2a2a; }
-  .count{ justify-self:end; padding:7px 10px; border:1px solid #222; border-radius:10px; color:#cfe; font-size:12px; }
+  .cardBody{ position:relative; display:grid; grid-template-columns:110px 1fr; gap:10px; padding:10px; min-height:0; }
+  @media (max-width:430px){ .cardBody{ grid-template-columns:96px 1fr; gap:8px; } }
 
-  .dial{ display:grid; grid-template-columns:auto 1fr auto auto; gap:10px; align-items:center; }
-  .lab{ color:var(--muted); font-size:12px; }
-  input[type="range"]{ appearance:none; width:100%; height:10px; background:#161616; border:1px solid #2a2a2a; border-radius:999px;
-    background-image:linear-gradient(90deg, rgba(119,255,165,.25) 0%, rgba(119,255,165,.25) 49%, #161616 49%, #161616 51%, rgba(255,119,199,.25) 51%, rgba(255,119,199,.25) 100%); }
-  input[type="range"]::-webkit-slider-thumb{ -webkit-appearance:none; width:26px; height:26px; margin-top:-9px; border-radius:50%; background:var(--accent); border:2px solid #083; }
-
-  .grid{ display:grid; grid-template-columns:1fr; gap:8px; min-height:0; }
-  .poster{ width:100%; max-width:520px; margin:2px auto 8px; display:block; aspect-ratio:2/3; object-fit:cover;
-    border-radius:12px; background:#181818; max-height:65vh; }
-  .title{ font-size:22px; font-weight:900; margin:0; }
-  .tagline-inline{ color:#cfd6db; font-size:14px; margin:0; }
-  .meta{ color:var(--muted); display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:12px; }
-  .chip{ font-size:12px; background:#1a1a1a; border:1px solid #2a2a2a; padding:4px 8px; border-radius:999px; color:#cfe; }
-  .badges{ display:flex; gap:6px; flex-wrap:wrap; }
-  .badge{ font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid #2a2a2a; background:#171717; color:#bfe; }
-  details#why{ margin:4px 0 0; }
-  details#why > summary{ list-style:none; cursor:pointer; color:#b6ffd1; font-weight:800; font-size:13px; }
-  details#why > summary::-webkit-details-marker{ display:none; }
-  .links{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; }
-  .links a{ display:block; padding:12px 10px; text-align:center; border-radius:12px; text-decoration:none; font-weight:900; font-size:14px; background:#1b1b1b; color:#c0ffd6; border:1px solid #2a2a2a; }
-  #err{ color:#ffb3b3; white-space:pre-wrap; font-size:12px; }
-
-  dialog{ border:1px solid var(--border); background:#0f0f0f; color:var(--fg); border-radius:16px; width:min(560px, 92vw); padding:14px; }
-  dialog::backdrop{ background:rgba(0,0,0,.6); }
-  .row{ display:flex; gap:8px; flex-wrap:wrap; }
-  .seg{ display:flex; background:#161616; border:1px solid #2a2a2a; border-radius:999px; overflow:hidden; }
-  .seg button{ background:transparent; border:0; color:#cfe; padding:8px 10px; font-weight:800; font-size:13px; cursor:pointer; }
-  .seg button.active{ background:#1f3327; color:#b6ffd1; }
-  .pill{ background:#161616; border:1px solid #2a2a2a; border-radius:999px; padding:8px 10px; font-weight:800; font-size:13px; }
-  .pill.active{ background:#242a24; color:#b6ffd1; }
-
+  .posterWrap{ position:relative; }
+  .poster{ display:block; width:100%; aspect-ratio:2/3; object-fit:cover; border-radius:12px; background:#121212; }
   .skeleton{ animation:pulse 1.2s infinite ease-in-out; background: linear-gradient(90deg,#141414 25%,#1a1a1a 37%,#141414 63%); background-size:400% 100%; }
   @keyframes pulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
 
+  .info{ display:grid; grid-template-rows:1fr auto; min-height:0; }
+  .why{ color:#b6ffd1; font-weight:800; font-size:12px; margin:0 0 6px; }
+  .whyText{ color:var(--muted); font-size:12px; line-height:1.35; max-height:6.5em; overflow:hidden; text-overflow:ellipsis; }
+
+  .badges{ display:flex; gap:6px; flex-wrap:wrap; align-self:end; }
+  .badge{ font-size:10px; padding:4px 8px; border-radius:999px; border:1px solid #2a2a2a; background:#171717; color:#cfe; }
+
+  .links{ display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:8px 10px 10px; border-top:1px solid #1a1a1a; }
+  .links a{ display:block; text-align:center; text-decoration:none; font-weight:900; font-size:14px; padding:10px 10px; border-radius:12px; border:1px solid #2a2a2a; background:#161616; color:#c0ffd6; }
   @media (max-width:430px){ .links{ grid-template-columns:1fr; } }
+
+  /* Bottom control bar — fixed height so nothing scrolls */
+  .dock{ position:relative; display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:10px; padding:10px 12px 12px; border-top:1px solid #1a1a1a; background:linear-gradient(#0d0d0d, #0d0d0de6); }
+  .leftGroup{ display:flex; gap:8px; align-items:center; }
+  .btn{ appearance:none; border:0; border-radius:14px; padding:12px 12px; font-weight:900; cursor:pointer; font-size:15px; }
+  .btn.pri{ background:var(--accent); color:var(--accentFg); }
+  .btn.gh{ background:var(--ghost); color:var(--fg); border:1px solid #2a2a2a; }
+
+  /* Chaos segment (no slider) */
+  .seg{ display:flex; background:#141414; border:1px solid #262626; border-radius:999px; overflow:hidden; }
+  .seg button{ background:transparent; border:0; color:#d9fbe8; padding:8px 10px; font-weight:900; font-size:12px; cursor:pointer; }
+  .seg button.active{ background:#1f3327; color:#b6ffd1; }
+  .nudge{ display:flex; gap:6px; }
+  .nud{ width:34px; height:34px; border-radius:10px; border:1px solid #262626; background:#141414; color:#b6ffd1; font-weight:900; font-size:16px; }
+
+  .count{ justify-self:end; padding:6px 8px; border:1px solid #222; border-radius:10px; color:#cfe; font-size:12px; }
+
+  /* Dialog */
+  dialog{ border:1px solid var(--border); background:#0f0f0f; color:var(--fg); border-radius:16px; width:min(560px, 92vw); padding:14px; }
+  dialog::backdrop{ background:rgba(0,0,0,.6); }
+  .row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .pill{ background:#161616; border:1px solid #2a2a2a; border-radius:999px; padding:8px 10px; font-weight:800; font-size:13px; color:#d9fbe8; }
+  .pill.active{ background:#242a24; color:#b6ffd1; }
+  .seg2{ display:flex; background:#141414; border:1px solid #262626; border-radius:999px; overflow:hidden; }
+  .seg2 button{ background:transparent; border:0; color:#d9fbe8; padding:8px 10px; font-weight:900; font-size:13px; cursor:pointer; }
+  .seg2 button.active{ background:#1f3327; color:#b6ffd1; }
+
+  #err{ color:var(--bad); white-space:pre-wrap; font-size:12px; padding:0 12px; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <main class="card" id="root">
-    <header><h1>🎲 Movie Roulette</h1><div class="sub">Slide mood. Pick vibes. No repeats.</div></header>
+<div class="app">
+  <header>
+    <div>
+      <h1>🎲 Movie Roulette</h1>
+      <div class="sub">Thumb-first. No scrolling. Mischief optional.</div>
+    </div>
+    <div class="count">Deck: <span id="left">0</span>/<span id="total">0</span></div>
+  </header>
 
-    <div class="bar">
+  <section class="stage" id="stage">
+    <!-- MAIN PICK -->
+    <article class="card" id="cardA" aria-label="Main pick">
+      <div class="cardHeader">
+        <div class="titleWrap">
+          <h2 class="title" id="title">Loading…</h2>
+          <p class="tagline" id="taglineInline" style="display:none;"></p>
+          <div class="meta"><span id="year"></span><span id="runChip" class="chip" style="display:none;"></span><span id="chaosChip" class="chip" style="display:none;"></span></div>
+        </div>
+      </div>
+      <div class="cardBody">
+        <div class="posterWrap"><img id="poster" class="poster skeleton" referrerpolicy="no-referrer" alt="Poster"></div>
+        <div class="info">
+          <div>
+            <p class="why" id="whyTitle" style="display:none;">Why this pick</p>
+            <div class="whyText" id="whyText"></div>
+          </div>
+          <div class="badges" id="streamBadges" style="display:none;"></div>
+        </div>
+      </div>
+      <div class="links" id="linksRow"></div>
+    </article>
+
+    <!-- DOUBLE FEATURE -->
+    <article class="card" id="cardB" aria-label="Palette cleanser" style="display:none;">
+      <div class="cardHeader">
+        <div class="titleWrap">
+          <h2 class="title" id="titleB">Loading…</h2>
+          <p class="tagline" id="taglineInlineB" style="display:none;"></p>
+          <div class="meta"><span id="yearB"></span><span id="runChipB" class="chip" style="display:none;"></span><span id="chaosChipB" class="chip" style="display:none;"></span></div>
+        </div>
+      </div>
+      <div class="cardBody">
+        <div class="posterWrap"><img id="posterB" class="poster skeleton" referrerpolicy="no-referrer" alt="Poster"></div>
+        <div class="info">
+          <div class="whyText sub">A calmer counterpoint (or a bigger dare) to your main pick. I’m trying to balance tone and chaos.</div>
+          <div class="badges" id="streamBadgesB" style="display:none;"></div>
+        </div>
+      </div>
+      <div class="links" id="linksRowB"></div>
+    </article>
+  </section>
+
+  <div id="err" role="alert" aria-live="polite"></div>
+
+  <!-- Bottom action dock -->
+  <nav class="dock">
+    <div class="leftGroup">
       <button id="deal" class="btn pri">Deal</button>
       <button id="reroll" class="btn gh">Re-roll</button>
       <button id="double" class="btn gh">Double</button>
-      <button id="openFilters" class="btn gh">Filters</button>
-      <div class="count">Deck: <span id="left">0</span> • <span id="total">0</span></div>
     </div>
 
-    <div class="dial"><div class="lab">Order</div><input id="cha" type="range" min="0" max="100" step="1" value="50" /><div class="lab">Chaos</div><div class="lab" id="modeText">Neutral</div></div>
+    <div class="seg" id="chaosSeg">
+      <!-- five discrete modes -->
+      <button data-chaos="15" id="c0">🧊 Order</button>
+      <button data-chaos="35" id="c1">🧂 Lean</button>
+      <button data-chaos="50" id="c2" class="active">⚖️ Neutral</button>
+      <button data-chaos="65" id="c3">🔥 Lean</button>
+      <button data-chaos="90" id="c4">💥 Chaos</button>
+    </div>
 
-    <section id="result" style="display:none;">
-      <div class="grid">
-        <img id="poster" class="poster skeleton" referrerpolicy="no-referrer" alt="Movie poster"/>
-        <div class="title" id="title">Loading…</div>
-        <p class="tagline-inline" id="taglineInline" style="display:none;"></p>
-        <div class="meta"><span id="year"></span><span id="runChip" class="chip" style="display:none;"></span><span id="chaosChip" class="chip" style="display:none;"></span></div>
-        <div class="badges" id="streamBadges" style="display:none;"></div>
-        <details id="why"><summary>Why this pick?</summary><div class="sub" id="whyText" style="margin-top:6px;"></div></details>
-        <div class="links" id="linksRow"></div>
-      </div>
-    </section>
-
-    <section id="resultB" style="display:none;">
-      <div class="grid">
-        <div class="sub">Palette Cleanser</div>
-        <img id="posterB" class="poster skeleton" referrerpolicy="no-referrer" alt="Movie poster"/>
-        <div class="title" id="titleB">Loading…</div>
-        <p class="tagline-inline" id="taglineInlineB" style="display:none;"></p>
-        <div class="meta"><span id="yearB"></span><span id="runChipB" class="chip" style="display:none;"></span><span id="chaosChipB" class="chip" style="display:none;"></span></div>
-        <div class="badges" id="streamBadgesB" style="display:none;"></div>
-        <div class="links" id="linksRowB"></div>
-      </div>
-    </section>
-
-    <div id="err" role="alert" aria-live="polite"></div>
-    <footer class="sub" style="margin-top:6px;">Tip: Add to Home Screen from Safari’s share menu. • Uses TMDb but not endorsed.</footer>
-  </main>
+    <div class="nudge">
+      <button class="nud" id="minus">−</button>
+      <button class="nud" id="plus">＋</button>
+      <button class="btn gh" id="openFilters">Filters</button>
+    </div>
+  </nav>
 </div>
 
+<!-- Filters Dialog -->
 <dialog id="filtersDlg">
-  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
     <strong>Filters</strong><div class="sub" id="deckCountMini">Deck: 0</div>
   </div>
-  <div class="row" style="margin-bottom:10px;">
-    <div class="seg"><button id="varT" class="active">Tight</button><button id="varM">Medium</button><button id="varW">Wide</button></div>
+
+  <div class="row" style="margin-bottom:8px;">
+    <div class="seg2">
+      <button id="varT" class="active">Tight</button>
+      <button id="varM">Medium</button>
+      <button id="varW">Wide</button>
+    </div>
     <button class="pill" id="resetAll">Reset</button>
   </div>
-  <div class="row" style="margin-bottom:6px;"><div class="pill active" id="thAll">All</div><div class="pill" id="thWitch">Witchy</div><div class="pill" id="thBody">Body</div><div class="pill" id="thFolk">Folk</div><div class="pill" id="thFound">Found</div><div class="pill" id="thNeon">Neon</div></div>
-  <div class="row" style="margin-bottom:6px;"><div class="pill" id="fNoGore">No gore</div><div class="pill" id="fNoSV">No sexual violence</div><div class="pill" id="fNoKids">No kids-in-peril</div></div>
-  <div class="row" style="justify-content:flex-end; margin-top:12px;"><button class="btn gh" id="closeFilters">Close</button></div>
+
+  <div class="row" style="margin-bottom:6px;">
+    <div class="pill active" id="thAll">All</div>
+    <div class="pill" id="thWitch">Witchy</div>
+    <div class="pill" id="thBody">Body</div>
+    <div class="pill" id="thFolk">Folk</div>
+    <div class="pill" id="thFound">Found</div>
+    <div class="pill" id="thNeon">Neon</div>
+  </div>
+
+  <div class="row" style="margin-bottom:6px;">
+    <div class="pill" id="fNoGore">No gore</div>
+    <div class="pill" id="fNoSV">No sexual violence</div>
+    <div class="pill" id="fNoKids">No kids-in-peril</div>
+  </div>
+
+  <div class="row" style="justify-content:flex-end; margin-top:12px;">
+    <button class="btn gh" id="closeFilters">Close</button>
+  </div>
 </dialog>
 
 <script>
+/* ---------- CONFIG ---------- */
 const MY_SERVICES = new Set(["Netflix","Amazon Prime Video","Hulu","Max","Paramount+","Apple TV+","Tubi TV"]);
 const TMDB_IMG = "https://image.tmdb.org/t/p";
+
+/* ---------- UTIL ---------- */
 const $ = s => document.querySelector(s);
 const err = (m="") => { const e=$("#err"); e.textContent=m; e.style.display = m ? "block" : "none"; };
 
@@ -153,28 +232,28 @@ function setPoster(imgEl, posterPath, title){
   }
   imgEl.alt = title || "poster";
   imgEl.classList.add("skeleton");
-  imgEl.onerror = () => {
-    i++;
-    if (i < sizes.length) tryNext();
-    else { setFallback(); imgEl.classList.remove("skeleton"); }
-  };
+  imgEl.onerror = () => { i++; if (i < sizes.length) tryNext(); else { setFallback(); imgEl.classList.remove("skeleton"); } };
   imgEl.onload = () => imgEl.classList.remove("skeleton");
   tryNext();
 }
 
+/* ---------- STATE ---------- */
 let MOVIES=[], DECK=[];
-let CHAOS=50, VARIETY="T"; let THEME="all";
+let CHAOS=50;          // 0–100
+let VARIETY="T";       // Tight / Medium / Wide
+let THEME="all";
 let FILTERS={ noGore:false, noSV:false, noKids:false };
 let lastPickIndex=null;
 
+/* ---------- LOAD DATA ---------- */
 async function loadData(){
   try{
     const r = await fetch("./movies.json?v="+Date.now(), {cache:"no-store"});
-    const txt = await r.text(); if(!r.ok) throw new Error(`HTTP ${r.status}: ${txt.slice(0,180)}`);
+    const txt = await r.text(); if(!r.ok) throw new Error(`HTTP ${r.status}: ${txt.slice(0,200)}`);
     const raw = JSON.parse(txt);
     MOVIES = raw.map(x => ({
       ...x,
-      poster: x.poster || x.poster_path || "", // support either
+      poster: x.poster || x.poster_path || "", // accept either
       chaos: (typeof x.chaos === "number") ? x.chaos
             : (x.Chaos!==undefined && x.Chaos!=="") ? Number(x.Chaos) : null
     }));
@@ -183,12 +262,13 @@ async function loadData(){
   }catch(e){ err("Could not load movies.json.\n"+(e.message||e)); }
 }
 
+/* ---------- FILTER LOGIC ---------- */
 function providerMatches(p){
   if (!p?.name) return false;
   const n = String(p.name).trim();
   if (MY_SERVICES.has(n)) return true;
-  if (n === "HBO Max" && MY_SERVICES.has("Max")) return true;
-  if (n === "Max" && MY_SERVICES.has("HBO Max")) return true;
+  if (n==="HBO Max" && MY_SERVICES.has("Max")) return true;
+  if (n==="Max" && MY_SERVICES.has("HBO Max")) return true;
   return false;
 }
 function availabilityNames(item){
@@ -205,7 +285,6 @@ function buildBadges(container, item){
     container.style.display="";
   } else container.style.display="none";
 }
-
 function passesTheme(item){
   const f = item.flags || {};
   if (THEME==="all") return true;
@@ -225,6 +304,7 @@ function passesContent(item){
 }
 function band(){ return VARIETY==="T"?7: VARIETY==="M"?15:30; }
 
+/* ---------- DECK ---------- */
 function rebuildDeck(){
   if (!MOVIES.length) return;
   const target = CHAOS;
@@ -241,6 +321,7 @@ function rebuildDeck(){
     cands = MOVIES.map((m,i)=>({m,i})).filter(({m}) => passesTheme(m) && passesContent(m));
   }
   const deck = cands.map(x=>x.i);
+  // shuffle
   const rnd = new Uint32Array(deck.length); crypto.getRandomValues(rnd);
   for (let i=deck.length-1;i>0;i--){ const j=rnd[i]%(i+1); [deck[i],deck[j]]=[deck[j],deck[i]]; }
   DECK=deck;
@@ -248,82 +329,76 @@ function rebuildDeck(){
   $("#deckCountMini").textContent = "Deck: " + DECK.length;
 }
 
-const cha=$("#cha"), modeText=$("#modeText");
-function mode(v){ if (v<40) return "Order"; if (v>60) return "Chaos"; return "Neutral"; }
-cha.addEventListener("input",(e)=>{ CHAOS=Number(e.target.value)||50; modeText.textContent=mode(CHAOS); });
-cha.addEventListener("change", ()=>rebuildDeck());
-
+/* ---------- RENDER ---------- */
 function setText(el, t){ el.textContent=t; }
 function show(el, on){ el.style.display = on ? "" : "none"; }
-
 function links(container, item){
   container.innerHTML = "";
   const lb=document.createElement("a");
-  lb.textContent="Open on Letterboxd"; lb.href=item.link||"#"; lb.target="_blank"; lb.rel="noopener";
+  lb.textContent="Open on Letterboxd";
+  lb.href=item.link||"#"; lb.target="_blank"; lb.rel="noopener";
   container.appendChild(lb);
 
   const names = availabilityNames(item);
   if (!names.length){
     const q=encodeURIComponent(`${item.title} full movie site:archive.org OR site:youtube.com OR torrent`);
     const s=document.createElement("a");
-    s.textContent="Search elsewhere"; s.href="https://www.google.com/search?q="+q; s.target="_blank"; s.rel="noopener";
+    s.textContent="Search elsewhere";
+    s.href="https://www.google.com/search?q="+q; s.target="_blank"; s.rel="noopener";
+    container.appendChild(s);
+  } else {
+    const s=document.createElement("a");
+    s.textContent="Where to watch";
+    s.href=`https://www.justwatch.com/us/search?q=${encodeURIComponent(item.title)}`;
+    s.target="_blank"; s.rel="noopener";
     container.appendChild(s);
   }
 }
-
 function render(prefix,item){
   const p = document.getElementById(prefix==="A"?"poster":"posterB");
   setPoster(p, item.poster, item.title);
 
-  setText(document.getElementById(prefix==="A"?"title":"titleB"), item.title||"Untitled");
+  const tId = prefix==="A"?"title":"titleB";
+  setText(document.getElementById(tId), item.title||"Untitled");
 
-  const tg=(item.tagline||"").trim(); const tEl=document.getElementById(prefix==="A"?"taglineInline":"taglineInlineB");
-  setText(tEl, tg); show(tEl, !!tg);
+  const tg=(item.tagline||"").trim();
+  const tgId = prefix==="A"?"taglineInline":"taglineInlineB";
+  setText(document.getElementById(tgId), tg); show(document.getElementById(tgId), !!tg);
 
   const metaErr = item.unreleased_error ? ` — ${item.unreleased_error}` : "";
-  const yEl=document.getElementById(prefix==="A"?"year":"yearB");
-  setText(yEl, item.year ? `Year: ${item.year}${metaErr}` : metaErr);
+  const yId = prefix==="A"?"year":"yearB";
+  setText(document.getElementById(yId), item.year ? `Year: ${item.year}${metaErr}` : metaErr);
 
   const run=item.runtime?`${item.runtime} min`:"";
-  const rEl=document.getElementById(prefix==="A"?"runChip":"runChipB");
-  setText(rEl, run); show(rEl, !!run);
+  const rId = prefix==="A"?"runChip":"runChipB";
+  setText(document.getElementById(rId), run); show(document.getElementById(rId), !!run);
 
-  const c=item.chaos; const cEl=document.getElementById(prefix==="A"?"chaosChip":"chaosChipB");
-  if (typeof c==="number"){ setText(cEl, `Chaos: ${c}`); show(cEl,true);} else show(cEl,false);
+  const c=item.chaos; const cId = prefix==="A"?"chaosChip":"chaosChipB";
+  if (typeof c==="number"){ setText(document.getElementById(cId), `Chaos: ${c}`); show(document.getElementById(cId),true);} else show(document.getElementById(cId),false);
 
   const bEl=document.getElementById(prefix==="A"?"streamBadges":"streamBadgesB");
   buildBadges(bEl,item);
 
   if (prefix==="A"){
     const why=(item.chaos_reason||"").trim();
-    const wBox=$("#why"), wText=$("#whyText");
+    const wTitle=$("#whyTitle"), wText=$("#whyText");
     setText(wText, why || "");
-    wBox.style.display = why ? "" : "none";
+    show(wTitle, !!why); // keep compact; no details element, saves space
   }
   const lEl=document.getElementById(prefix==="A"?"linksRow":"linksRowB");
   links(lEl,item);
 }
 
-function passesTheme(item){
-  const f = item.flags || {};
-  if (THEME==="all") return true;
-  if (THEME==="witch") return f.theme_witchy;
-  if (THEME==="body")  return f.theme_body_horror;
-  if (THEME==="folk")  return f.theme_folk;
-  if (THEME==="found") return f.theme_found_footage;
-  if (THEME==="neon")  return f.theme_neon;
-  return true;
-}
-
+/* ---------- PICK LOGIC ---------- */
 function dealOne(fromIdx=null){
   err("");
   if (!MOVIES.length){ err("Data not loaded yet."); return; }
   let idx=fromIdx;
   if (idx==null){ if (!DECK.length) rebuildDeck(); idx=DECK.pop(); $("#left").textContent=DECK.length; $("#deckCountMini").textContent="Deck: "+DECK.length; }
   lastPickIndex=idx;
-  $("#result").style.display="block";
+  $("#cardA").style.display="grid";
   render("A", MOVIES[idx]);
-  $("#resultB").style.display="none";
+  $("#cardB").style.display="none";
 }
 function neighbors(target,initial,max,step){
   for (let r=initial;r<=max;r+=step){
@@ -360,11 +435,37 @@ function doubleFeature(){
     if (idx==null){ err("No suitable cleanser with current filters."); return; }
     pool=[idx];
   }
-  $("#resultB").style.display="block";
+  $("#cardB").style.display="grid";
   render("B", MOVIES[ pool[Math.floor(Math.random()*pool.length)] ]);
 }
 
-/* Filters */
+/* ---------- CHAOS CONTROL (SEGMENT + NUDGE) ---------- */
+const seg=$("#chaosSeg");
+seg.querySelectorAll("button").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    seg.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    CHAOS = Number(btn.dataset.chaos)||50;
+    rebuildDeck();
+  });
+});
+$("#minus").onclick = ()=>{
+  CHAOS = Math.max(0, CHAOS-3);
+  // set nearest segment active
+  const targets=[15,35,50,65,90]; let best=0,bd=1e9;
+  targets.forEach((t,i)=>{ const d=Math.abs(t-CHAOS); if (d<bd){ bd=d; best=i; } });
+  seg.querySelectorAll("button").forEach((b,i)=>b.classList.toggle("active", i===best));
+  rebuildDeck();
+};
+$("#plus").onclick = ()=>{
+  CHAOS = Math.min(100, CHAOS+3);
+  const targets=[15,35,50,65,90]; let best=0,bd=1e9;
+  targets.forEach((t,i)=>{ const d=Math.abs(t-CHAOS); if (d<bd){ bd=d; best=i; } });
+  seg.querySelectorAll("button").forEach((b,i)=>b.classList.toggle("active", i===best));
+  rebuildDeck();
+};
+
+/* ---------- FILTERS DIALOG ---------- */
 const dlg=$("#filtersDlg");
 $("#openFilters").onclick = ()=>dlg.showModal();
 $("#closeFilters").onclick = ()=>dlg.close();
@@ -384,10 +485,16 @@ function setTheme(w){ THEME=w; ["thAll","thWitch","thBody","thFolk","thFound","t
 $("#thAll").onclick=()=>setTheme("all"); $("#thWitch").onclick=()=>setTheme("witch"); $("#thBody").onclick=()=>setTheme("body");
 $("#thFolk").onclick=()=>setTheme("folk"); $("#thFound").onclick=()=>setTheme("found"); $("#thNeon").onclick=()=>setTheme("neon");
 
+$("#fNoGore").onclick=()=>{ FILTERS.noGore=!FILTERS.noGore; $("#fNoGore").classList.toggle("active", FILTERS.noGore); rebuildDeck(); };
+$("#fNoSV").onclick=()=>{ FILTERS.noSV=!FILTERS.noSV; $("#fNoSV").classList.toggle("active", FILTERS.noSV); rebuildDeck(); };
+$("#fNoKids").onclick=()=>{ FILTERS.noKids=!FILTERS.noKids; $("#fNoKids").classList.toggle("active", FILTERS.noKids); rebuildDeck(); };
+
+/* ---------- ACTIONS ---------- */
 $("#deal").onclick = ()=>dealOne();
 $("#reroll").onclick = rerollNearby;
 $("#double").onclick = doubleFeature;
 
+/* ---------- INIT ---------- */
 loadData();
 </script>
 </body>
