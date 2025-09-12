@@ -27,25 +27,20 @@ const fetchJson = async (url) => {
 };
 
 function parseCSV(text) {
-  // Minimal CSV parser that handles quoted fields with commas and newlines
   const rows = [];
   let i = 0, field = "", row = [], inQuotes = false;
 
   const pushField = () => { row.push(field); field = ""; };
   const pushRow = () => {
-    // trim BOM on first cell if present
-    if (rows.length === 0 && row.length) {
-      row[0] = row[0].replace(/^\uFEFF/, "");
-    }
-    rows.push(row);
-    row = [];
+    if (rows.length === 0 && row.length) { row[0] = row[0].replace(/^\uFEFF/, ""); }
+    rows.push(row); row = [];
   };
 
   while (i < text.length) {
     const ch = text[i];
     if (inQuotes) {
       if (ch === '"') {
-        if (text[i + 1] === '"') { field += '"'; i += 2; continue; } // escaped quote
+        if (text[i + 1] === '"') { field += '"'; i += 2; continue; }
         inQuotes = false; i++; continue;
       }
       field += ch; i++; continue;
@@ -56,45 +51,39 @@ function parseCSV(text) {
     if (ch === "\n") { pushField(); pushRow(); i++; continue; }
     field += ch; i++;
   }
-  // last field/row
   pushField();
   if (row.length > 1 || (row.length === 1 && row[0].trim() !== "")) pushRow();
 
-  // header + records
   const header = rows[0] || [];
   const recs = rows.slice(1).map((r, idx) => {
     const obj = {};
     header.forEach((h, j) => obj[h.trim()] = (r[j] ?? "").trim());
-    obj.__row = idx + 2; // for diagnostics (1-based w/ header)
+    obj.__row = idx + 2;
     return obj;
   });
   return { header, recs };
 }
 
 function normalizeTitle(s) {
-  return (s || "")
-    .toLowerCase()
+  return (s || "").toLowerCase()
     .replace(/&/g, "and")
     .replace(/[^a-z0-9]+/g, " ")
     .replace(/\b(the|a|an)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
-
 function scoreTitleMatch(q, cand) {
   const nq = normalizeTitle(q);
   const nc = normalizeTitle(cand);
   if (!nq || !nc) return 0;
   if (nq === nc) return 1.0;
   if (nc.includes(nq)) return 0.9;
-  // token overlap
   const tq = new Set(nq.split(" "));
   const tc = new Set(nc.split(" "));
   let hit = 0;
   for (const t of tq) if (tc.has(t)) hit++;
   return hit / Math.max(1, tq.size);
 }
-
 function cleanPosterPath(p) {
   if (!p) return "";
   const s = String(p).trim();
@@ -111,28 +100,20 @@ async function tmdbSearch(title, year) {
   const data = await fetchJson(url);
   return Array.isArray(data.results) ? data.results : [];
 }
-
 async function tmdbDetails(id) {
   return fetchJson(`https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_KEY}`);
 }
-
 async function tmdbProviders(id) {
   const d = await fetchJson(`https://api.themoviedb.org/3/movie/${id}/watch/providers?api_key=${TMDB_KEY}`);
-  const us = d.results?.US || d.results?.US || {};
-  // Flatten flatrate + ads + free into simple list of names/icons
+  const us = d.results?.US || {};
   const buckets = ["flatrate","ads","free","rent","buy"];
   const out = [];
   for (const b of buckets) {
     const arr = us[b] || [];
     for (const p of arr) out.push({ name: p.provider_name, logo: p.logo_path ? cleanPosterPath(p.logo_path) : "" });
   }
-  // de-dup
   const seen = new Set();
-  return out.filter(p => {
-    const k = p.name;
-    if (seen.has(k)) return false;
-    seen.add(k); return true;
-  });
+  return out.filter(p => { const k=p.name; if (seen.has(k)) return false; seen.add(k); return true; });
 }
 
 async function enrichOne(row) {
@@ -142,7 +123,6 @@ async function enrichOne(row) {
   const tagline = row["Tagline"] || "";
   const chaos = row["Chaos"] !== "" ? Number(row["Chaos"]) : null;
 
-  // flags (CSV uses 0/1)
   const flags = {
     theme_witchy: Number(row["Witchy"]||0) === 1,
     theme_body_horror: Number(row["Body"]||0) === 1,
@@ -154,62 +134,33 @@ async function enrichOne(row) {
     kids_in_peril: Number(row["KidsInPeril"]||0) === 1
   };
 
-  const base = {
-    title, year: year ? Number(year) : undefined, link, tagline,
-    chaos, flags,
-  };
+  const base = { title, year: year ? Number(year) : undefined, link, tagline, chaos, flags };
 
-  // unreleased rows: leave placeholders but try search anyway (in case TMDb has posters)
   let results = [];
   try {
     results = await tmdbSearch(title, year ? Number(year) : undefined);
-    await sleep(110); // be gentle
-  } catch (e) {
-    return { ...base, unreleased_error: `Search failed: ${e.message}` };
-  }
-  if (!results.length) {
-    return { ...base, unreleased_error: "Not found on TMDb" };
-  }
+    await sleep(110);
+  } catch (e) { return { ...base, unreleased_error: `Search failed: ${e.message}` }; }
+  if (!results.length) return { ...base, unreleased_error: "Not found on TMDb" };
 
-  // choose best candidate
-  let best = null, bestScore = -1;
+  let best=null, bestScore=-1;
   for (const r of results) {
     let s = scoreTitleMatch(title, r.title || r.original_title || "");
     if (year && r.release_date) {
       const ry = Number(String(r.release_date).slice(0,4));
       if (ry && Math.abs(ry - Number(year)) <= 1) s += 0.08;
     }
-    if (s > bestScore) { bestScore = s; best = r; }
+    if (s>bestScore){ bestScore=s; best=r; }
   }
-  if (!best) {
-    return { ...base, unreleased_error: "No acceptable match" };
-  }
+  if (!best) return { ...base, unreleased_error: "No acceptable match" };
 
-  // details
-  let details = {};
-  try {
-    details = await tmdbDetails(best.id);
-    await sleep(110);
-  } catch (e) { /* ignore, keep going */ }
-
-  // providers
-  let providers = [];
-  try {
-    providers = await tmdbProviders(best.id);
-    await sleep(110);
-  } catch (e) { /* ignore */ }
+  let details={}; try { details = await tmdbDetails(best.id); await sleep(110); } catch(e){}
+  let providers=[]; try { providers = await tmdbProviders(best.id); await sleep(110); } catch(e){}
 
   const poster_path = cleanPosterPath(best.poster_path || details.poster_path || "");
   const runtime = Number(details.runtime) || undefined;
 
-  return {
-    ...base,
-    tmdb_id: best.id,
-    poster_path,
-    poster: poster_path, // index.html prefers "poster" but we keep both
-    runtime,
-    providers
-  };
+  return { ...base, tmdb_id: best.id, poster_path, poster: poster_path, runtime, providers };
 }
 
 async function main() {
@@ -218,10 +169,7 @@ async function main() {
 
   const REQUIRED = ["Name","Year","Letterboxd URI","Tagline","Chaos","Witchy","Body","Folk","Found","Neon","Gore","SexualViolence","KidsInPeril"];
   const missing = REQUIRED.filter(h => !header.includes(h));
-  if (missing.length) {
-    console.error("❌ CSV header missing columns:", missing.join(", "));
-    process.exit(1);
-  }
+  if (missing.length) { console.error("❌ CSV header missing:", missing.join(", ")); process.exit(1); }
 
   console.log(`🟢 Rows: ${recs.length}. Enriching via TMDb…`);
   const out = [];
@@ -239,10 +187,7 @@ async function main() {
     }
   }
 
-  // write movies.json
-  const json = JSON.stringify(out, null, 2);
-  await fs.writeFile(OUT_PATH, json, "utf8");
+  await fs.writeFile(OUT_PATH, JSON.stringify(out, null, 2), "utf8");
   console.log(`✅ Wrote ${OUT_PATH} (${out.length} entries)`);
 }
-
 main().catch(e => { console.error("❌ Build failed:", e); process.exit(1); });
