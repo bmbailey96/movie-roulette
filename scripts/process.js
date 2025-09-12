@@ -80,12 +80,9 @@ async function tmdbProviders(id){
 
 /* ---------- YOUR TASTE: quick per-title nudges ---------- */
 const titleBias = new Map(Object.entries({
-  // Lower safe sequels:
   "fridaythe13thpartviiijasontakesmanhattan": -18,
   "tremors": -6,
   "thelaststarfighter": -8,
-
-  // Boost psychedelic/experimental/animated oddities:
   "belladonnaofsadness": +18,
   "catsoup": +16,
   "angelsegg": +18,
@@ -143,22 +140,18 @@ function chaosFromFeatures({ title, year, genres, keywords, overview, runtime, f
   let c = 18; const notes = [];
   const gset = new Set((genres||[]).map(s=>s.toLowerCase()));
   const kset = new Set((keywords||[]).map(s=>s.toLowerCase()));
-  const tN = norm(title||"");
 
   const add = (pts, why) => { c+=pts; notes.push(why); };
 
-  // Core boosts
   if (gset.has("horror")) add(18,"horror core");
   if (gset.has("science fiction") || gset.has("sci-fi")) add(6,"sci-fi oddity");
   if (gset.has("fantasy")) add(4,"fantasy tilt");
   if (gset.has("animation")) add(3,"animation");
 
-  // Psychedelic/experimental/“how did they make this”
   if (flags.hint_psych_anim) add(18,"psychedelic/experimental animation");
   const hwKeywords = ["surreal","experimental","avant-garde","stop motion","rotoscope","dream","hallucination"];
   for (const k of hwKeywords){ if (Array.from(kset).some(s=>s.includes(k))) add(5,k); }
 
-  // Body/witch/folk/found/gore etc.
   if (flags.extreme_gore) add(16,"extreme gore");
   if (flags.sexual_violence) add(12,"sexual violence");
   if (flags.kids_in_peril) add(6,"kids-in-peril");
@@ -168,30 +161,25 @@ function chaosFromFeatures({ title, year, genres, keywords, overview, runtime, f
   if (flags.theme_found_footage) add(6,"found-footage");
   if (flags.theme_neon) add(3,"neon grime");
 
-  // Era spice
   if (year){
     if (year <= 1975) add(6,"old weird");
     else if (year <= 1990) add(5,"80s cult patina");
   }
-
-  // Runtime spice
   if (runtime && runtime >= 150) add(3,"marathon");
 
-  // Franchise/Sequel/Safe slasher dampeners
   if (flags.hint_slasher) c -= 10;
   if (flags.hint_sequelish) c -= 8;
 
-  // Mainstream romcom/family dampeners
   const isRomCom = (gset.has("romance") && gset.has("comedy"));
   const isFamilyish = gset.has("family");
   if (isRomCom && !gset.has("horror")) c -= 30;
   if (isFamilyish && !gset.has("horror")) c -= 28;
 
-  // Popularity dampener if not spooky at all
   const spooky = (gset.has("horror") || flags.extreme_gore || flags.theme_body_horror || flags.theme_witchy || flags.theme_folk || flags.theme_found_footage || flags.hint_psych_anim);
   if (!spooky && vote_count>=10000 && popularity>=15) c -= 14;
 
   // Per-title bias
+  const tN = norm(title||"");
   if (titleBias.has(tN)) c += titleBias.get(tN);
 
   c = Math.max(0, Math.min(100, Math.round(c)));
@@ -265,7 +253,6 @@ async function main(){
         title:f.title, year:f.year || Number(releaseYear)||undefined, genres, keywords, overview, runtime, flags, popularity, vote_count
       });
 
-      // --- Poster normalization (always ensure leading /) ---
       const rawPoster = det.poster_path || best.poster_path || "";
       const poster = rawPoster ? (rawPoster.startsWith("/") ? rawPoster : "/"+rawPoster) : "";
 
@@ -292,7 +279,6 @@ async function main(){
   await fs.writeFile(OUT_JSON, JSON.stringify(enriched, null, 2), "utf8");
   console.log(`Wrote ${OUT_JSON}`);
 
-  // scored CSV for inspection
   const scoredRows = enriched
     .slice()
     .sort((a,b)=> (b.chaos??0) - (a.chaos??0))
