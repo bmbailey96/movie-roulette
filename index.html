@@ -157,20 +157,18 @@ const PLACEHOLDER_SVG = `data:image/svg+xml;utf8,` + encodeURIComponent(`
           font-size="36" text-anchor="middle" dominant-baseline="middle">NO POSTER</text>
   </svg>`);
 
+// Accepts either a full URL or a TMDb /path
 function posterURL(path, size="w500"){
   if (!path) return "";
-  const p = String(path);
+  const p = String(path).trim();
+  if (p.startsWith("http://") || p.startsWith("https://")) return p;  // full URL already
   const clean = p.startsWith("/") ? p : ("/" + p);
   return `${TMDB_IMG_CDN}/${size}${clean}`;
 }
 function setPosterImg(imgEl, posterPath, title){
   const url = posterURL(posterPath);
   imgEl.classList.add("skeleton");
-  if (url){
-    imgEl.src = url;
-  } else {
-    imgEl.src = PLACEHOLDER_SVG;
-  }
+  imgEl.src = url || PLACEHOLDER_SVG;
   imgEl.alt = title || "poster";
   imgEl.onload = () => imgEl.classList.remove("skeleton");
   imgEl.onerror = (e) => {
@@ -184,7 +182,7 @@ let MOVIES=[], DECK=[];
 let CHAOS=50, VARIETY="T"; // Tight|Medium|Wide
 let THEME="all";
 let FILTERS={ noGore:false, noSV:false, noKids:false };
-let lastPickIndex=null; // <-- single declaration
+let lastPickIndex=null;
 
 async function loadData(){
   try{
