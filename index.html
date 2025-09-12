@@ -51,10 +51,6 @@
   #err{ margin-top:10px; color:#ffb3b3; white-space:pre-wrap; }
   .skeleton{ animation:pulse 1.2s infinite ease-in-out; background: linear-gradient(90deg,#141414 25%,#1a1a1a 37%,#141414 63%); background-size:400% 100%; }
   @keyframes pulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
-
-  .hist{ margin-top:14px; background:#121212; border:1px solid #222; border-radius:12px; padding:10px; }
-  .hist svg{ width:100%; height:80px; display:block; }
-  .hist .labels{ display:flex; justify-content:space-between; font-size:11px; color:#9aa0a6; margin-top:4px; }
 </style>
 </head>
 <body>
@@ -138,12 +134,6 @@
       <div class="links" id="linksRowB"></div>
     </section>
 
-    <div class="hist" id="histBox" style="display:none;">
-      <div class="muted">Chaos spread</div>
-      <svg id="hist"></svg>
-      <div class="labels"><span>0</span><span>50</span><span>100</span></div>
-    </div>
-
     <p class="muted" style="margin-top:14px;">Tip: Add to Home Screen from Safari’s share menu.</p>
     <p class="muted" style="margin-top:6px; font-size:12px;">This product uses the TMDb API but is not endorsed or certified by TMDb.</p>
   </main>
@@ -152,7 +142,6 @@
 <script>
 const MY_SERVICES = new Set(["Netflix","Amazon Prime Video","Hulu","Max","Paramount+","Apple TV+","Tubi TV"]);
 const $ = s => document.querySelector(s);
-const TMDB_IMG = (path, size="w500") => path ? `https://image.tmdb.org/t/p/${size}${path}` : "";
 const err = (m="") => { const e=$("#err"); e.textContent=m; e.style.display = m ? "block" : "none"; };
 
 let MOVIES=[], DECK=[];
@@ -167,7 +156,6 @@ async function loadData(){
     const txt = await r.text(); if(!r.ok) throw new Error(`HTTP ${r.status}: ${txt.slice(0,180)}`);
     MOVIES = JSON.parse(txt);
     $("#total").textContent = MOVIES.length;
-    buildHistogram();
     rebuildDeck();
   }catch(e){ err("Could not load movies.json.\n"+(e.message||e)); }
 }
@@ -205,7 +193,6 @@ function buildBadges(container, item){
   } else container.style.display="none";
 }
 
-/* ---- Filters ---- */
 function passesTheme(item){
   const f = item.flags || {};
   if (THEME==="all") return true;
@@ -232,7 +219,6 @@ function rebuildDeck(){
   const target = CHAOS;
   const baseBand = bandForVariety();
 
-  // start with strict band; widen until we have candidates
   let band = baseBand;
   let candidates = MOVIES
     .map((m, i) => ({ m, i }))
@@ -247,7 +233,6 @@ function rebuildDeck(){
     candidates = MOVIES.map((m,i)=>({m,i})).filter(({m}) => passesTheme(m) && passesContentFlags(m));
   }
 
-  // shuffle unique indices
   const deck = candidates.map(x=>x.i);
   const rnd = new Uint32Array(deck.length); crypto.getRandomValues(rnd);
   for (let i=deck.length-1;i>0;i--){ const j=rnd[i]%(i+1); [deck[i],deck[j]]=[deck[j],deck[i]]; }
@@ -259,35 +244,7 @@ function rebuildDeck(){
 function setText(el, txt){ el.textContent = txt; }
 function show(el, on){ el.style.display = on ? "" : "none"; }
 function posterLoad(el){ el.classList.add("skeleton"); el.onload = el.onerror = ()=> el.classList.remove("skeleton"); }
-function setPoster(imgEl, path, title){
-  if (path){
-    imgEl.classList.remove("placeholder");
-    imgEl.src = `https://image.tmdb.org/t/p/w500${path}`;
-    imgEl.alt = title || "poster";
-    posterLoad(imgEl);
-  } else {
-    imgEl.classList.add("placeholder");
-    imgEl.removeAttribute("src");
-    imgEl.alt = "No poster";
-    imgEl.style.background = "#1a1a1a";
-    imgEl.innerHTML = ""; // ensure clean
-    // simple text placeholder:
-    const ph = document.createElement("div");
-    ph.style.height = "100%"; ph.style.display="grid"; ph.style.placeItems="center"; ph.textContent = "NO POSTER";
-    imgEl.replaceWith(imgEl.cloneNode(false)); // reset img (for Safari)
-    const fresh = document.querySelector("#"+imgEl.id);
-    fresh.className = "poster placeholder";
-    fresh.style.background = "#1a1a1a";
-    fresh.alt = "No poster";
-  }
-}
-function runtimeLabel(min){
-  if (!min) return "";
-  const s = `${min} min`;
-  if (min<=80) return `${s} (blessed)`;
-  if (min>=150) return `${s} (punishment)`;
-  return s;
-}
+
 function buildLinksRow(container, item){
   container.innerHTML = "";
   const lbBtn = document.createElement("a");
@@ -307,7 +264,6 @@ function buildLinksRow(container, item){
   }
 }
 
-/* ---- Deal + Reroll ---- */
 function dealOne(fromIdx=null){
   err("");
   if (!MOVIES.length){ err("Data not loaded yet."); return; }
@@ -324,13 +280,10 @@ function dealOne(fromIdx=null){
   $("#result").style.display = "block";
   const poster = $("#poster");
   if (item.poster) {
-    poster.classList.remove("placeholder");
     poster.src = `https://image.tmdb.org/t/p/w500${item.poster}`;
     poster.alt = item.title || "poster"; posterLoad(poster);
   } else {
-    poster.classList.add("placeholder");
-    poster.removeAttribute("src");
-    poster.alt = "No poster";
+    poster.removeAttribute("src"); poster.alt = "No poster";
   }
 
   setText($("#title"), item.title || "Untitled");
@@ -339,7 +292,8 @@ function dealOne(fromIdx=null){
 
   const metaErr = item.unreleased_error ? ` — ${item.unreleased_error}` : "";
   setText($("#year"), item.year ? `Year: ${item.year}${metaErr}` : metaErr);
-  const runText = runtimeLabel(item.runtime);
+
+  const runText = item.runtime ? `${item.runtime} min${item.runtime<=80?" (blessed)":(item.runtime>=150?" (punishment)":"")}` : "";
   setText($("#runChip"), runText); show($("#runChip"), !!runText);
 
   const chaos = typeof item.chaos==="number" ? item.chaos : null;
@@ -353,7 +307,6 @@ function dealOne(fromIdx=null){
   whyBox.style.display = why ? "" : "none";
 
   buildLinksRow($("#linksRow"), item);
-  drawHistogramMarker(chaos, CHAOS);
 
   $("#resultB").style.display = "none";
 }
@@ -410,13 +363,10 @@ function doubleFeature(){
   $("#resultB").style.display = "block";
   const poster = $("#posterB");
   if (item.poster) {
-    poster.classList.remove("placeholder");
     poster.src = `https://image.tmdb.org/t/p/w500${item.poster}`;
     poster.alt = item.title || "poster"; posterLoad(poster);
   } else {
-    poster.classList.add("placeholder");
-    poster.removeAttribute("src");
-    poster.alt = "No poster";
+    poster.removeAttribute("src"); poster.alt = "No poster";
   }
 
   setText($("#titleB"), item.title || "Untitled");
@@ -424,7 +374,8 @@ function doubleFeature(){
   setText($("#taglineInlineB"), tag); show($("#taglineInlineB"), !!tag);
 
   setText($("#yearB"), item.year ? `Year: ${item.year}` : "");
-  const runText = runtimeLabel(item.runtime);
+
+  const runText = item.runtime ? `${item.runtime} min${item.runtime<=80?" (blessed)":(item.runtime>=150?" (punishment)":"")}` : "";
   setText($("#runChipB"), runText); show($("#runChipB"), !!runText);
 
   const chaos = typeof item.chaos==="number" ? item.chaos : null;
@@ -432,41 +383,6 @@ function doubleFeature(){
 
   buildBadges($("#streamBadgesB"), item);
   buildLinksRow($("#linksRowB"), item);
-}
-
-/* ---- Histogram ---- */
-function buildHistogram(){
-  if (!MOVIES.length) return;
-  const bins = new Array(10).fill(0);
-  for (const m of MOVIES){
-    const c = typeof m.chaos==="number" ? m.chaos : 50;
-    const b = Math.max(0, Math.min(9, Math.floor(c/10)));
-    bins[b]++;
-  }
-  const max = Math.max(...bins, 1);
-  const w = 680, h = 80, pad = 8;
-  const barW = (w - pad*2) / bins.length;
-
-  const svg = [];
-  svg.push(`<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">`);
-  for (let i=0;i<bins.length;i++){
-    const x = pad + i*barW + 2;
-    const bh = Math.round((bins[i]/max) * (h - 20));
-    const y = h - bh - 6;
-    svg.push(`<rect x="${x}" y="${y}" width="${barW-4}" height="${bh}" fill="#2a2a2a" rx="3" />`);
-  }
-  const tx = pad + (CHAOS/100)*(w - pad*2);
-  svg.push(`<line x1="${tx}" y1="4" x2="${tx}" y2="${h-4}" stroke="${'#77ffa5'}" stroke-width="2" stroke-dasharray="4 3"/>`);
-  svg.push(`<circle id="currDot" cx="-10" cy="${12}" r="4" fill="${'#ff77c7'}" />`);
-  svg.push(`</svg>`);
-  $("#hist").innerHTML = svg.join("");
-  $("#histBox").style.display = "block";
-}
-function drawHistogramMarker(currentChaos){
-  const svg = $("#hist").querySelector("svg"); if (!svg) return;
-  const w = 680, pad=8;
-  const x = currentChaos!=null ? (pad + (currentChaos/100)*(w - pad*2)) : -10;
-  const dot = svg.querySelector("#currDot"); if (dot) dot.setAttribute("cx", String(x));
 }
 
 /* ---- Wire up ---- */
@@ -480,7 +396,7 @@ function updateModeLabel(v){
   else if (v > 60) modeText.textContent = "Chaos • bias toward high-chaos (older/weird)";
   else             modeText.textContent = "Neutral • pure shuffle";
 }
-cha.addEventListener("input", (e)=>{ CHAOS = Number(e.target.value)||50; updateModeLabel(CHAOS); buildHistogram(); });
+cha.addEventListener("input", (e)=>{ CHAOS = Number(e.target.value)||50; updateModeLabel(CHAOS); });
 cha.addEventListener("change", ()=>{ rebuildDeck(); });
 
 function setVar(which){
