@@ -36,7 +36,6 @@
   .seg button.active{ background:#1f3327; color:#b6ffd1; }
 
   .poster{ width:100%; max-width:520px; margin:8px auto 12px; display:block; aspect-ratio:2/3; object-fit:cover; border-radius:14px; background:#181818; }
-  .poster.placeholder{ display:grid; place-items:center; color:#7a7a7a; font-weight:800; letter-spacing:.5px; }
   .title{ font-size:26px; font-weight:900; margin:2px 0 2px; word-wrap:break-word; }
   .tagline-inline{ color:#c4cbd2; font-size:15px; margin:0 0 8px; }
   .meta{ color:var(--muted); margin-bottom:6px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
@@ -102,7 +101,7 @@
     <div id="err" role="alert" aria-live="polite"></div>
 
     <section id="result" style="display:none; margin-top:10px;">
-      <img id="poster" class="poster skeleton" alt="Movie poster" />
+      <img id="poster" class="poster skeleton" alt="Movie poster" crossorigin="anonymous" />
       <div class="title" id="title">Loading…</div>
       <div class="tagline-inline" id="taglineInline" style="display:none;"></div>
       <div class="meta">
@@ -122,7 +121,7 @@
 
     <section id="resultB" style="display:none; margin-top:18px; border-top:1px dashed #242424; padding-top:12px;">
       <div class="muted" style="margin-bottom:4px;">Palette Cleanser</div>
-      <img id="posterB" class="poster skeleton" alt="Movie poster" />
+      <img id="posterB" class="poster skeleton" alt="Movie poster" crossorigin="anonymous" />
       <div class="title" id="titleB">Loading…</div>
       <div class="tagline-inline" id="taglineInlineB" style="display:none;"></div>
       <div class="meta">
@@ -143,6 +142,43 @@
 const MY_SERVICES = new Set(["Netflix","Amazon Prime Video","Hulu","Max","Paramount+","Apple TV+","Tubi TV"]);
 const $ = s => document.querySelector(s);
 const err = (m="") => { const e=$("#err"); e.textContent=m; e.style.display = m ? "block" : "none"; };
+
+const TMDB_IMG_CDN = "https://image.tmdb.org/t/p";
+const PLACEHOLDER_SVG = `data:image/svg+xml;utf8,` + encodeURIComponent(`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900">
+    <defs>
+      <linearGradient id="g" x1="0" x2="1">
+        <stop offset="0" stop-color="#181818"/>
+        <stop offset="1" stop-color="#131313"/>
+      </linearGradient>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#g)"/>
+    <text x="50%" y="50%" fill="#6a6a6a" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif"
+          font-size="36" text-anchor="middle" dominant-baseline="middle">NO POSTER</text>
+  </svg>`);
+
+function posterURL(path, size="w500"){
+  if (!path) return "";
+  const p = String(path);
+  const clean = p.startsWith("/") ? p : ("/" + p);
+  return `${TMDB_IMG_CDN}/${size}${clean}`;
+}
+function setPosterImg(imgEl, posterPath, title){
+  const url = posterURL(posterPath);
+  imgEl.classList.add("skeleton");
+  if (url){
+    imgEl.src = url;
+  } else {
+    imgEl.src = PLACEHOLDER_SVG;
+  }
+  imgEl.alt = title || "poster";
+  imgEl.onload = () => imgEl.classList.remove("skeleton");
+  imgEl.onerror = (e) => {
+    console.warn("Poster failed, using placeholder:", {title, posterPath, url, err:e});
+    imgEl.src = PLACEHOLDER_SVG;
+    imgEl.classList.remove("skeleton");
+  };
+}
 
 let MOVIES=[], DECK=[];
 let CHAOS=50, VARIETY="T"; // Tight|Medium|Wide
@@ -243,7 +279,6 @@ function rebuildDeck(){
 /* ---- Render helpers ---- */
 function setText(el, txt){ el.textContent = txt; }
 function show(el, on){ el.style.display = on ? "" : "none"; }
-function posterLoad(el){ el.classList.add("skeleton"); el.onload = el.onerror = ()=> el.classList.remove("skeleton"); }
 
 function buildLinksRow(container, item){
   container.innerHTML = "";
@@ -264,6 +299,46 @@ function buildLinksRow(container, item){
   }
 }
 
+function renderInto(prefix, item){
+  const poster = document.getElementById(prefix==="A" ? "poster" : "posterB");
+  setPosterImg(poster, item.poster, item.title);
+
+  setText(document.getElementById(prefix==="A" ? "title" : "titleB"), item.title || "Untitled");
+
+  const tag = (item.tagline||"").trim();
+  const tagEl = document.getElementById(prefix==="A" ? "taglineInline" : "taglineInlineB");
+  setText(tagEl, tag); show(tagEl, !!tag);
+
+  const metaErr = item.unreleased_error ? ` — ${item.unreleased_error}` : "";
+  const yearEl = document.getElementById(prefix==="A" ? "year" : "yearB");
+  setText(yearEl, item.year ? `Year: ${item.year}${metaErr}` : metaErr);
+
+  const run = item.runtime ? `${item.runtime} min${item.runtime<=80?" (blessed)":(item.runtime>=150?" (punishment)":"")}` : "";
+  const runEl = document.getElementById(prefix==="A" ? "runChip" : "runChipB");
+  setText(runEl, run); show(runEl, !!run);
+
+  const chaos = typeof item.chaos==="number" ? item.chaos : null;
+  const chipEl = document.getElementById(prefix==="A" ? "chaosChip" : "chaosChipB");
+  if (chaos!==null){ setText(chipEl, `Chaos: ${chaos}`); show(chipEl, true);} else show(chipEl, false);
+
+  const badges = document.getElementById(prefix==="A" ? "streamBadges" : "streamBadgesB");
+  buildBadges(badges, item);
+
+  if (prefix==="A"){
+    const why = (item.chaos_reason || "").trim();
+    const whyBox = document.getElementById("why");
+    const whyText = document.getElementById("whyText");
+    setText(whyText, why || "");
+    whyBox.style.display = why ? "" : "none";
+  }
+
+  const links = document.getElementById(prefix==="A" ? "linksRow" : "linksRowB");
+  buildLinksRow(links, item);
+}
+
+/* ---- Deal + Reroll ---- */
+let lastPickIndex=null;
+
 function dealOne(fromIdx=null){
   err("");
   if (!MOVIES.length){ err("Data not loaded yet."); return; }
@@ -277,38 +352,9 @@ function dealOne(fromIdx=null){
   lastPickIndex = idx;
   const item = MOVIES[idx];
 
-  $("#result").style.display = "block";
-  const poster = $("#poster");
-  if (item.poster) {
-    poster.src = `https://image.tmdb.org/t/p/w500${item.poster}`;
-    poster.alt = item.title || "poster"; posterLoad(poster);
-  } else {
-    poster.removeAttribute("src"); poster.alt = "No poster";
-  }
-
-  setText($("#title"), item.title || "Untitled");
-  const tag = (item.tagline||"").trim();
-  setText($("#taglineInline"), tag); show($("#taglineInline"), !!tag);
-
-  const metaErr = item.unreleased_error ? ` — ${item.unreleased_error}` : "";
-  setText($("#year"), item.year ? `Year: ${item.year}${metaErr}` : metaErr);
-
-  const runText = item.runtime ? `${item.runtime} min${item.runtime<=80?" (blessed)":(item.runtime>=150?" (punishment)":"")}` : "";
-  setText($("#runChip"), runText); show($("#runChip"), !!runText);
-
-  const chaos = typeof item.chaos==="number" ? item.chaos : null;
-  const chip = $("#chaosChip"); if (chaos!==null){ setText(chip, `Chaos: ${chaos}`); show(chip, true);} else show(chip, false);
-
-  buildBadges($("#streamBadges"), item);
-
-  const why = (item.chaos_reason || "").trim();
-  const whyBox = $("#why");
-  setText($("#whyText"), why || "");
-  whyBox.style.display = why ? "" : "none";
-
-  buildLinksRow($("#linksRow"), item);
-
-  $("#resultB").style.display = "none";
+  document.getElementById("result").style.display = "block";
+  renderInto("A", item);
+  document.getElementById("resultB").style.display = "none";
 }
 
 function neighborsAround(target, initial, max, step){
@@ -360,29 +406,8 @@ function doubleFeature(){
   const idx = pool[Math.floor(Math.random()*pool.length)];
   const item = MOVIES[idx];
 
-  $("#resultB").style.display = "block";
-  const poster = $("#posterB");
-  if (item.poster) {
-    poster.src = `https://image.tmdb.org/t/p/w500${item.poster}`;
-    poster.alt = item.title || "poster"; posterLoad(poster);
-  } else {
-    poster.removeAttribute("src"); poster.alt = "No poster";
-  }
-
-  setText($("#titleB"), item.title || "Untitled");
-  const tag = (item.tagline||"").trim();
-  setText($("#taglineInlineB"), tag); show($("#taglineInlineB"), !!tag);
-
-  setText($("#yearB"), item.year ? `Year: ${item.year}` : "");
-
-  const runText = item.runtime ? `${item.runtime} min${item.runtime<=80?" (blessed)":(item.runtime>=150?" (punishment)":"")}` : "";
-  setText($("#runChipB"), runText); show($("#runChipB"), !!runText);
-
-  const chaos = typeof item.chaos==="number" ? item.chaos : null;
-  const chip = $("#chaosChipB"); if (chaos!==null){ setText(chip, `Chaos: ${chaos}`); show(chip, true);} else show(chip, false);
-
-  buildBadges($("#streamBadgesB"), item);
-  buildLinksRow($("#linksRowB"), item);
+  document.getElementById("resultB").style.display = "block";
+  renderInto("B", item);
 }
 
 /* ---- Wire up ---- */
