@@ -12,59 +12,56 @@
     color-scheme: light dark;
     --bg:#0b0b0b; --card:#111; --fg:#f4f4f4; --muted:#a2a7ad; --border:#242424;
     --accent:#77ffa5; --accentFg:#05200f; --ghost:#1b1b1b; --radius:16px;
+    --shadow:0 10px 34px rgba(0,0,0,.45);
   }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
-    font:16px/1.45 -apple-system, system-ui, Inter, Segoe UI, Roboto, sans-serif; }
-  .wrap{ height:100dvh; padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); display:flex; }
-  .card{ flex:1; max-width:760px; margin:auto; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); display:grid; grid-template-rows:auto auto 1fr auto; gap:8px; padding:10px; }
+    font:16px/1.5 -apple-system, system-ui, Inter, Segoe UI, Roboto, sans-serif; }
+  .wrap{ min-height:100dvh; display:flex; padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+  .card{ flex:1; max-width:760px; margin:auto; background:var(--card); border:1px solid var(--border);
+    border-radius:var(--radius); box-shadow:var(--shadow); display:grid; grid-template-rows:auto auto 1fr auto; gap:12px; padding:14px; }
 
-  /* Header */
-  h1{ margin:0; font-size:18px; letter-spacing:.2px; }
+  h1{ margin:0; font-size:20px; letter-spacing:.2px; }
   .sub{ color:var(--muted); font-size:12px; margin-top:2px; }
 
-  /* Top bar: compact, sticky */
+  /* Sticky control bar */
   .bar{
-    position:sticky; top:0; z-index:5; padding-top:6px; margin-top:-6px;
+    position:sticky; top:0; z-index:5; padding-top:8px; margin-top:-8px;
     background:linear-gradient(#111, #111c);
-    display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:8px; align-items:center;
+    display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:10px; align-items:center;
   }
-  .btn{ appearance:none; border:0; border-radius:12px; padding:10px 10px; font-weight:900; cursor:pointer; font-size:14px; }
+  .btn{ appearance:none; border:0; border-radius:14px; padding:12px 12px; font-weight:900; cursor:pointer; font-size:15px; }
   .btn.pri{ background:var(--accent); color:var(--accentFg); }
   .btn.gh{ background:var(--ghost); color:var(--fg); border:1px solid #2a2a2a; }
-  .count{ justify-self:end; padding:6px 10px; border:1px solid #222; border-radius:10px; color:#cfe; font-size:12px; }
+  .count{ justify-self:end; padding:7px 10px; border:1px solid #222; border-radius:10px; color:#cfe; font-size:12px; }
 
-  /* Slider row tight */
-  .dial{ display:grid; grid-template-columns:auto 1fr auto auto; gap:8px; align-items:center; }
+  /* Slider */
+  .dial{ display:grid; grid-template-columns:auto 1fr auto auto; gap:10px; align-items:center; }
   .lab{ color:var(--muted); font-size:12px; }
-  input[type="range"]{ appearance:none; width:100%; height:8px; background:#161616; border:1px solid #2a2a2a; border-radius:999px;
+  input[type="range"]{ appearance:none; width:100%; height:10px; background:#161616; border:1px solid #2a2a2a; border-radius:999px;
     background-image:linear-gradient(90deg, rgba(119,255,165,.25) 0%, rgba(119,255,165,.25) 49%, #161616 49%, #161616 51%, rgba(255,119,199,.25) 51%, rgba(255,119,199,.25) 100%); }
-  input[type="range"]::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:24px; height:24px; margin-top:-8px; border-radius:50%; background:var(--accent); border:2px solid #083; }
+  input[type="range"]::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:26px; height:26px; margin-top:-9px; border-radius:50%; background:var(--accent); border:2px solid #083; }
 
-  /* Result area fits without scrolling */
-  #result, #resultB{ overflow:hidden; }
-  .grid{
-    display:grid; grid-template-columns:1fr; grid-template-rows:auto auto auto 1fr auto; gap:6px;
-    min-height:0;
-  }
-  .poster{ width:100%; max-width:520px; margin:0 auto; display:block; aspect-ratio:2/3; object-fit:cover; border-radius:12px; background:#181818;
-    max-height:52vh; }
-  .title{ font-size:20px; font-weight:900; margin:2px 0 0; }
-  .tagline-inline{ color:#c4cbd2; font-size:13px; margin:0; }
-  .meta{ color:var(--muted); display:flex; gap:6px; align-items:center; flex-wrap:wrap; font-size:12px; }
-  .chip{ font-size:11px; background:#1a1a1a; border:1px solid #2a2a2a; padding:4px 8px; border-radius:999px; color:#cfe; }
+  /* Result area */
+  .grid{ display:grid; grid-template-columns:1fr; gap:8px; min-height:0; }
+  .poster{ width:100%; max-width:520px; margin:2px auto 8px; display:block; aspect-ratio:2/3; object-fit:cover;
+    border-radius:12px; background:#181818; max-height:65vh; }
+  .title{ font-size:22px; font-weight:900; margin:0; }
+  .tagline-inline{ color:#cfd6db; font-size:14px; margin:0; }
+  .meta{ color:var(--muted); display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:12px; }
+  .chip{ font-size:12px; background:#1a1a1a; border:1px solid #2a2a2a; padding:4px 8px; border-radius:999px; color:#cfe; }
   .badges{ display:flex; gap:6px; flex-wrap:wrap; }
-  .badge{ font-size:11px; padding:3px 8px; border-radius:999px; border:1px solid #2a2a2a; background:#171717; color:#bfe; }
+  .badge{ font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid #2a2a2a; background:#171717; color:#bfe; }
   details#why{ margin:4px 0 0; }
   details#why > summary{ list-style:none; cursor:pointer; color:#b6ffd1; font-weight:800; font-size:13px; }
   details#why > summary::-webkit-details-marker{ display:none; }
-  .links{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; }
-  .links a{ display:block; padding:12px 10px; text-align:center; border-radius:10px; text-decoration:none; font-weight:900; font-size:14px; background:#1b1b1b; color:#c0ffd6; border:1px solid #2a2a2a; }
+  .links{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; }
+  .links a{ display:block; padding:12px 10px; text-align:center; border-radius:12px; text-decoration:none; font-weight:900; font-size:14px; background:#1b1b1b; color:#c0ffd6; border:1px solid #2a2a2a; }
 
   #err{ color:#ffb3b3; white-space:pre-wrap; font-size:12px; }
 
-  /* Modal for filters */
-  dialog{ border:1px solid var(--border); background:#0f0f0f; color:var(--fg); border-radius:16px; width:min(560px, 92vw); padding:12px; }
+  /* Filters modal */
+  dialog{ border:1px solid var(--border); background:#0f0f0f; color:var(--fg); border-radius:16px; width:min(560px, 92vw); padding:14px; }
   dialog::backdrop{ background:rgba(0,0,0,.6); }
   .row{ display:flex; gap:8px; flex-wrap:wrap; }
   .seg{ display:flex; background:#161616; border:1px solid #2a2a2a; border-radius:999px; overflow:hidden; }
@@ -76,10 +73,7 @@
   .skeleton{ animation:pulse 1.2s infinite ease-in-out; background: linear-gradient(90deg,#141414 25%,#1a1a1a 37%,#141414 63%); background-size:400% 100%; }
   @keyframes pulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
 
-  /* Tiny screens */
-  @media (max-width:430px){
-    .links{ grid-template-columns:1fr; }
-  }
+  @media (max-width:430px){ .links{ grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -90,16 +84,14 @@
       <div class="sub">Slide mood. Pick vibes. No repeats.</div>
     </header>
 
-    <!-- Sticky compact control bar -->
     <div class="bar">
       <button id="deal" class="btn pri">Deal</button>
-      <button id="reroll" class="btn gh" title="Another near this chaos">Re-roll</button>
-      <button id="double" class="btn gh" title="Main + palette cleanser">Double</button>
-      <button id="openFilters" class="btn gh" title="Filters & themes">Filters</button>
+      <button id="reroll" class="btn gh">Re-roll</button>
+      <button id="double" class="btn gh">Double</button>
+      <button id="openFilters" class="btn gh">Filters</button>
       <div class="count">Deck: <span id="left">0</span> • <span id="total">0</span></div>
     </div>
 
-    <!-- Tight slider row -->
     <div class="dial" aria-label="order chaos control">
       <div class="lab">Order</div>
       <input id="cha" type="range" min="0" max="100" step="1" value="50" aria-label="Chaos" />
@@ -107,10 +99,9 @@
       <div class="lab" id="modeText">Neutral</div>
     </div>
 
-    <!-- Result A -->
     <section id="result" style="display:none;">
       <div class="grid">
-        <img id="poster" class="poster skeleton" alt="Movie poster" crossorigin="anonymous" />
+        <img id="poster" class="poster skeleton" alt="Movie poster"/>
         <div class="title" id="title">Loading…</div>
         <p class="tagline-inline" id="taglineInline" style="display:none;"></p>
 
@@ -131,14 +122,12 @@
       </div>
     </section>
 
-    <!-- Result B (palette cleanser) -->
     <section id="resultB" style="display:none;">
       <div class="grid">
-        <div class="sub" style="margin-bottom:4px;">Palette Cleanser</div>
-        <img id="posterB" class="poster skeleton" alt="Movie poster" crossorigin="anonymous" />
+        <div class="sub">Palette Cleanser</div>
+        <img id="posterB" class="poster skeleton" alt="Movie poster"/>
         <div class="title" id="titleB">Loading…</div>
         <p class="tagline-inline" id="taglineInlineB" style="display:none;"></p>
-
         <div class="meta">
           <span id="yearB"></span>
           <span id="runChipB" class="chip" style="display:none;"></span>
@@ -151,7 +140,7 @@
 
     <div id="err" role="alert" aria-live="polite"></div>
 
-    <footer class="sub" style="margin-top:4px;">
+    <footer class="sub" style="margin-top:6px;">
       Tip: Add to Home Screen from Safari’s share menu. • Uses TMDb but not endorsed.
     </footer>
   </main>
@@ -194,40 +183,31 @@
 </dialog>
 
 <script>
-/* ====== Logic (unchanged, just wired to compact UI) ====== */
+/* ====== Uses CSV-driven chaos/tags from movies.json (built by process.js) ====== */
 const MY_SERVICES = new Set(["Netflix","Amazon Prime Video","Hulu","Max","Paramount+","Apple TV+","Tubi TV"]);
 const $ = s => document.querySelector(s);
 const err = (m="") => { const e=$("#err"); e.textContent=m; e.style.display = m ? "block" : "none"; };
 
-const TMDB_IMG_CDN = "https://image.tmdb.org/t/p";
-const PLACEHOLDER_SVG = `data:image/svg+xml;utf8,` + encodeURIComponent(`
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900">
-    <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#181818"/><stop offset="1" stop-color="#131313"/></linearGradient></defs>
-    <rect width="100%" height="100%" fill="url(#g)"/>
-    <text x="50%" y="50%" fill="#6a6a6a" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif"
-          font-size="36" text-anchor="middle" dominant-baseline="middle">NO POSTER</text>
-  </svg>`);
+const TMDB_IMG = "https://image.tmdb.org/t/p";
 
-// Accepts either full URL or TMDb /path
-function posterURL(path, size="w500"){
-  if (!path) return "";
-  const p = String(path).trim();
-  if (p.startsWith("http")) return p;
-  const clean = p.startsWith("/") ? p : ("/" + p);
-  return `${TMDB_IMG_CDN}/${size}${clean}`;
+function posterURL(p, size="w500"){
+  if (!p) return "";
+  const s = String(p).trim();
+  if (s.startsWith("http")) return s;
+  const clean = s.startsWith("/") ? s : ("/"+s);
+  return `${TMDB_IMG}/${size}${clean}`;
 }
-function setPosterImg(imgEl, posterPath, title){
+function setPoster(el, posterPath, title){
   const url = posterURL(posterPath);
-  imgEl.classList.add("skeleton");
-  imgEl.src = url || PLACEHOLDER_SVG;
-  imgEl.alt = title || "poster";
-  imgEl.onload = () => imgEl.classList.remove("skeleton");
-  imgEl.onerror = () => { imgEl.src = PLACEHOLDER_SVG; imgEl.classList.remove("skeleton"); };
+  el.classList.add("skeleton");
+  el.src = url || `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900"><rect width="100%" height="100%" fill="#141414"/></svg>')}`;
+  el.alt = title || "poster";
+  el.onload = () => el.classList.remove("skeleton");
+  el.onerror = () => { el.src = `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900"><rect width="100%" height="100%" fill="#141414"/></svg>')}`; el.classList.remove("skeleton"); };
 }
 
 let MOVIES=[], DECK=[];
-let CHAOS=50, VARIETY="T"; // Tight|Medium|Wide
-let THEME="all";
+let CHAOS=50, VARIETY="T"; let THEME="all";
 let FILTERS={ noGore:false, noSV:false, noKids:false };
 let lastPickIndex=null;
 
@@ -235,13 +215,20 @@ async function loadData(){
   try{
     const r = await fetch("./movies.json?v="+Date.now(), {cache:"no-store"});
     const txt = await r.text(); if(!r.ok) throw new Error(`HTTP ${r.status}: ${txt.slice(0,180)}`);
-    MOVIES = JSON.parse(txt);
+    MOVIES = JSON.parse(txt).map(x => ({
+      ...x,
+      // accept either 'poster' or 'poster_path'
+      poster: x.poster || x.poster_path || "",
+      chaos: (typeof x.chaos === "number") ? x.chaos
+            : (typeof x.Chaos === "number") ? x.Chaos
+            : (x.Chaos ? Number(x.Chaos) : null),
+    }));
     $("#total").textContent = MOVIES.length;
     rebuildDeck();
   }catch(e){ err("Could not load movies.json.\n"+(e.message||e)); }
 }
 
-function providerMatchesMyServices(p){
+function providerMatches(p){
   if (!p?.name) return false;
   const n = String(p.name).trim();
   if (MY_SERVICES.has(n)) return true;
@@ -252,24 +239,14 @@ function providerMatchesMyServices(p){
 function availabilityNames(item){
   const prov = Array.isArray(item.providers) ? item.providers : [];
   const names=[]; const seen=new Set();
-  for (const p of prov){
-    if (providerMatchesMyServices(p)){
-      const nm = String(p.name).trim();
-      if (!seen.has(nm)){ seen.add(nm); names.push(nm); }
-    }
-  }
+  for (const p of prov){ if (providerMatches(p)){ const nm = String(p.name).trim(); if (!seen.has(nm)){ seen.add(nm); names.push(nm); } } }
   return names;
 }
 function buildBadges(container, item){
   const names = availabilityNames(item);
   container.innerHTML = "";
   if (names.length){
-    for (const n of names){
-      const span = document.createElement("span");
-      span.className="badge";
-      span.textContent = n;
-      container.appendChild(span);
-    }
+    for (const n of names){ const s=document.createElement("span"); s.className="badge"; s.textContent=n; container.appendChild(s); }
     container.style.display="";
   } else container.style.display="none";
 }
@@ -284,180 +261,150 @@ function passesTheme(item){
   if (THEME==="neon")  return f.theme_neon;
   return true;
 }
-function passesContentFlags(item){
-  const f = item.flags || {};
+function passesContent(item){
+  const f=item.flags||{};
   if (FILTERS.noGore && f.extreme_gore) return false;
   if (FILTERS.noSV && f.sexual_violence) return false;
   if (FILTERS.noKids && f.kids_in_peril) return false;
-  return !item.unreleased_error; // hide unreleased
+  return !item.unreleased_error;
 }
-function bandForVariety(){ return VARIETY==="T" ? 7 : VARIETY==="M" ? 15 : 30; }
+function band(){ return VARIETY==="T"?7: VARIETY==="M"?15:30; }
 
 function rebuildDeck(){
   if (!MOVIES.length) return;
   const target = CHAOS;
-  const baseBand = bandForVariety();
-  let band = baseBand;
+  let b = band();
+  let cands = MOVIES.map((m,i)=>({m,i}))
+    .filter(({m}) => passesTheme(m) && passesContent(m) && (typeof m.chaos==="number") && Math.abs(m.chaos - target) <= b);
 
-  let candidates = MOVIES.map((m,i)=>({m,i}))
-    .filter(({m}) => passesTheme(m) && passesContentFlags(m) && Math.abs((m.chaos??50) - target) <= band);
-
-  while (!candidates.length && band <= 50){
-    band += 10;
-    candidates = MOVIES.map((m,i)=>({m,i}))
-      .filter(({m}) => passesTheme(m) && passesContentFlags(m) && Math.abs((m.chaos??50) - target) <= band);
+  while (!cands.length && b <= 50){
+    b+=10;
+    cands = MOVIES.map((m,i)=>({m,i}))
+      .filter(({m}) => passesTheme(m) && passesContent(m) && (typeof m.chaos==="number") && Math.abs(m.chaos - target) <= b);
   }
-  if (!candidates.length){
-    candidates = MOVIES.map((m,i)=>({m,i})).filter(({m}) => passesTheme(m) && passesContentFlags(m));
+  if (!cands.length){
+    cands = MOVIES.map((m,i)=>({m,i})).filter(({m}) => passesTheme(m) && passesContent(m));
   }
-
-  const deck = candidates.map(x=>x.i);
+  const deck = cands.map(x=>x.i);
   const rnd = new Uint32Array(deck.length); crypto.getRandomValues(rnd);
   for (let i=deck.length-1;i>0;i--){ const j=rnd[i]%(i+1); [deck[i],deck[j]]=[deck[j],deck[i]]; }
-  DECK = deck;
+  DECK=deck;
   $("#left").textContent = DECK.length;
   $("#deckCountMini").textContent = "Deck: " + DECK.length;
 }
 
-function setText(el, txt){ el.textContent = txt; }
+function setText(el, t){ el.textContent=t; }
 function show(el, on){ el.style.display = on ? "" : "none"; }
 
-function buildLinksRow(container, item){
+function links(container, item){
   container.innerHTML = "";
-  const lbBtn = document.createElement("a");
-  lbBtn.textContent = "Open on Letterboxd";
-  lbBtn.href = item.link || "#";
-  lbBtn.target="_blank"; lbBtn.rel="noopener";
-  container.appendChild(lbBtn);
+  const lb=document.createElement("a");
+  lb.textContent="Open on Letterboxd"; lb.href=item.link||"#"; lb.target="_blank"; lb.rel="noopener";
+  container.appendChild(lb);
 
   const names = availabilityNames(item);
   if (!names.length){
-    const q = encodeURIComponent(`${item.title} full movie site:archive.org OR site:youtube.com OR torrent`);
-    const searchBtn = document.createElement("a");
-    searchBtn.textContent = "Search elsewhere";
-    searchBtn.href = "https://www.google.com/search?q="+q;
-    searchBtn.target="_blank"; searchBtn.rel="noopener";
-    container.appendChild(searchBtn);
+    const q=encodeURIComponent(`${item.title} full movie site:archive.org OR site:youtube.com OR torrent`);
+    const s=document.createElement("a");
+    s.textContent="Search elsewhere"; s.href="https://www.google.com/search?q="+q; s.target="_blank"; s.rel="noopener";
+    container.appendChild(s);
   }
 }
 
-function renderInto(prefix, item){
-  const poster = document.getElementById(prefix==="A" ? "poster" : "posterB");
-  setPosterImg(poster, item.poster, item.title);
+function render(prefix,item){
+  const p = document.getElementById(prefix==="A"?"poster":"posterB");
+  setPoster(p, item.poster, item.title);
 
-  setText(document.getElementById(prefix==="A" ? "title" : "titleB"), item.title || "Untitled");
+  setText(document.getElementById(prefix==="A"?"title":"titleB"), item.title||"Untitled");
 
-  const tag = (item.tagline||"").trim();
-  const tagEl = document.getElementById(prefix==="A" ? "taglineInline" : "taglineInlineB");
-  setText(tagEl, tag); show(tagEl, !!tag);
+  const tg=(item.tagline||"").trim(); const tEl=document.getElementById(prefix==="A"?"taglineInline":"taglineInlineB");
+  setText(tEl, tg); show(tEl, !!tg);
 
   const metaErr = item.unreleased_error ? ` — ${item.unreleased_error}` : "";
-  const yearEl = document.getElementById(prefix==="A" ? "year" : "yearB");
-  setText(yearEl, item.year ? `Year: ${item.year}${metaErr}` : metaErr);
+  const yEl=document.getElementById(prefix==="A"?"year":"yearB");
+  setText(yEl, item.year ? `Year: ${item.year}${metaErr}` : metaErr);
 
-  const run = item.runtime ? `${item.runtime} min` : "";
-  const runEl = document.getElementById(prefix==="A" ? "runChip" : "runChipB");
-  setText(runEl, run); show(runEl, !!run);
+  const run=item.runtime?`${item.runtime} min`:"";
+  const rEl=document.getElementById(prefix==="A"?"runChip":"runChipB");
+  setText(rEl, run); show(rEl, !!run);
 
-  const chaos = typeof item.chaos==="number" ? item.chaos : null;
-  const chipEl = document.getElementById(prefix==="A" ? "chaosChip" : "chaosChipB");
-  if (chaos!==null){ setText(chipEl, `Chaos: ${chaos}`); show(chipEl, true);} else show(chipEl, false);
+  const c=item.chaos; const cEl=document.getElementById(prefix==="A"?"chaosChip":"chaosChipB");
+  if (typeof c==="number"){ setText(cEl, `Chaos: ${c}`); show(cEl,true);} else show(cEl,false);
 
-  const badges = document.getElementById(prefix==="A" ? "streamBadges" : "streamBadgesB");
-  buildBadges(badges, item);
+  const bEl=document.getElementById(prefix==="A"?"streamBadges":"streamBadgesB");
+  buildBadges(bEl,item);
 
   if (prefix==="A"){
-    const why = (item.chaos_reason || "").trim();
-    const whyBox = document.getElementById("why");
-    const whyText = document.getElementById("whyText");
-    setText(whyText, why || "");
-    whyBox.style.display = why ? "" : "none";
+    const why=(item.chaos_reason||"").trim();
+    const wBox=$("#why"), wText=$("#whyText");
+    setText(wText, why || "");
+    wBox.style.display = why ? "" : "none";
   }
-
-  const links = document.getElementById(prefix==="A" ? "linksRow" : "linksRowB");
-  buildLinksRow(links, item);
+  const lEl=document.getElementById(prefix==="A"?"linksRow":"linksRowB");
+  links(lEl,item);
 }
 
 function dealOne(fromIdx=null){
   err("");
   if (!MOVIES.length){ err("Data not loaded yet."); return; }
-  let idx = fromIdx;
-  if (idx==null){
-    if (!DECK.length) rebuildDeck();
-    idx = DECK.pop();
-    $("#left").textContent = DECK.length;
-    $("#deckCountMini").textContent = "Deck: " + DECK.length;
-  }
-  lastPickIndex = idx;
-  const item = MOVIES[idx];
-
-  $("#result").style.display = "block";
-  renderInto("A", item);
-  $("#resultB").style.display = "none";
+  let idx=fromIdx;
+  if (idx==null){ if (!DECK.length) rebuildDeck(); idx=DECK.pop(); $("#left").textContent=DECK.length; $("#deckCountMini").textContent="Deck: "+DECK.length; }
+  lastPickIndex=idx;
+  $("#result").style.display="block";
+  render("A", MOVIES[idx]);
+  $("#resultB").style.display="none";
 }
-function neighborsAround(target, initial, max, step){
-  for (let r=initial; r<=max; r+=step){
+function neighbors(target,initial,max,step){
+  for (let r=initial;r<=max;r+=step){
     const pool=[];
     for (let i=0;i<MOVIES.length;i++){
       if (i===lastPickIndex) continue;
-      const it = MOVIES[i];
-      if (!passesTheme(it) || !passesContentFlags(it)) continue;
-      const c = typeof it.chaos==="number" ? it.chaos : 50;
-      if (Math.abs(c - target) <= r) pool.push(i);
+      const m=MOVIES[i]; if (!passesTheme(m) || !passesContent(m)) continue;
+      const c=typeof m.chaos==="number"?m.chaos:50;
+      if (Math.abs(c-target)<=r) pool.push(i);
     }
     if (pool.length) return pool;
   }
-  return MOVIES.map((m,i)=>({m,i})).filter(({m})=>passesTheme(m)&&passesContentFlags(m)).map(x=>x.i);
+  return MOVIES.map((m,i)=>({m,i})).filter(({m})=>passesTheme(m)&&passesContent(m)).map(x=>x.i);
 }
 function rerollNearby(){
   if (lastPickIndex==null){ dealOne(); return; }
-  const curr = MOVIES[lastPickIndex];
-  const c = typeof curr.chaos==="number" ? curr.chaos : 50;
-  const pool = neighborsAround(c, 10, 40, 5);
+  const curr=MOVIES[lastPickIndex], c=typeof curr.chaos==="number"?curr.chaos:50;
+  const pool=neighbors(c,10,40,5);
   if (!pool.length){ err("No nearby picks with current filters."); return; }
-  const idx = pool[Math.floor(Math.random()*pool.length)];
-  dealOne(idx);
+  dealOne(pool[Math.floor(Math.random()*pool.length)]);
 }
 function doubleFeature(){
   if (lastPickIndex==null){ dealOne(); }
-  const main = MOVIES[lastPickIndex];
-  const mainChaos = typeof main.chaos==="number" ? main.chaos : 50;
-  const target = Math.max(0, Math.min(100, 100 - mainChaos));
-
-  let pool = neighborsAround(target, 12, 48, 6);
+  const main=MOVIES[lastPickIndex], mc=typeof main.chaos==="number"?main.chaos:50;
+  const target=Math.max(0, Math.min(100, 100-mc));
+  let pool=neighbors(target,12,48,6);
   if (!pool.length){
-    let bestIdx = null, bestDist = -1;
+    let best=-1, idx=null;
     for (let i=0;i<MOVIES.length;i++){
       if (i===lastPickIndex) continue;
-      const it = MOVIES[i];
-      if (!passesTheme(it) || !passesContentFlags(it)) continue;
-      const d = Math.abs((it.chaos??50) - mainChaos);
-      if (d > bestDist){ bestDist = d; bestIdx = i; }
+      const m=MOVIES[i]; if (!passesTheme(m)||!passesContent(m)) continue;
+      const d=Math.abs((m.chaos??50)-mc); if (d>best){ best=d; idx=i; }
     }
-    if (bestIdx==null){ err("No suitable cleanser with current filters."); return; }
-    pool = [bestIdx];
+    if (idx==null){ err("No suitable cleanser with current filters."); return; }
+    pool=[idx];
   }
-  const idx = pool[Math.floor(Math.random()*pool.length)];
-  $("#resultB").style.display = "block";
-  renderInto("B", MOVIES[idx]);
+  $("#resultB").style.display="block";
+  render("B", MOVIES[ pool[Math.floor(Math.random()*pool.length)] ]);
 }
 
-/* — Controls — */
-$("#deal").addEventListener("click", ()=>dealOne());
-$("#reroll").addEventListener("click", rerollNearby);
-$("#double").addEventListener("click", doubleFeature);
+/* Wire up */
+$("#deal").onclick = ()=>dealOne();
+$("#reroll").onclick = rerollNearby;
+$("#double").onclick = doubleFeature;
 
-const cha = $("#cha"), modeText = $("#modeText");
-function updateModeLabel(v){
-  if (v < 40)      modeText.textContent = "Order";
-  else if (v > 60) modeText.textContent = "Chaos";
-  else             modeText.textContent = "Neutral";
-}
-cha.addEventListener("input", (e)=>{ CHAOS = Number(e.target.value)||50; updateModeLabel(CHAOS); });
-cha.addEventListener("change", ()=>{ rebuildDeck(); });
+const cha=$("#cha"), modeText=$("#modeText");
+function mode(v){ if (v<40) return "Order"; if (v>60) return "Chaos"; return "Neutral"; }
+cha.addEventListener("input",(e)=>{ CHAOS=Number(e.target.value)||50; modeText.textContent=mode(CHAOS); });
+cha.addEventListener("change", ()=>rebuildDeck());
 
-/* Filters modal wiring */
-const dlg = $("#filtersDlg");
+/* Filters modal */
+const dlg=$("#filtersDlg");
 $("#openFilters").onclick = ()=>dlg.showModal();
 $("#closeFilters").onclick = ()=>dlg.close();
 $("#resetAll").onclick = ()=>{
@@ -467,43 +414,18 @@ $("#resetAll").onclick = ()=>{
   ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active"));
   $("#thAll").classList.add("active");
   ["fNoGore","fNoSV","fNoKids"].forEach(id=>$("#"+id).classList.remove("active"));
-  rebuildDeck();
-  dlg.close();
+  rebuildDeck(); dlg.close();
 };
-function setVar(which){
-  VARIETY = which;
-  $("#varT").classList.toggle("active", which==="T");
-  $("#varM").classList.toggle("active", which==="M");
-  $("#varW").classList.toggle("active", which==="W");
-  rebuildDeck();
-}
-$("#varT").onclick = ()=>setVar("T");
-$("#varM").onclick = ()=>setVar("M");
-$("#varW").onclick = ()=>setVar("W");
-
-function setTheme(which){
-  THEME = which;
-  ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active"));
-  const map={all:"thAll", witch:"thWitch", body:"thBody", folk:"thFolk", found:"thFound", neon:"thNeon"};
-  $("#"+map[which]).classList.add("active");
-  rebuildDeck();
-}
-$("#thAll").onclick  = ()=>setTheme("all");
-$("#thWitch").onclick= ()=>setTheme("witch");
-$("#thBody").onclick = ()=>setTheme("body");
-$("#thFolk").onclick = ()=>setTheme("folk");
-$("#thFound").onclick= ()=>setTheme("found");
-$("#thNeon").onclick = ()=>setTheme("neon");
-
-function togglePill(id, key){
-  const el = $("#"+id);
-  el.classList.toggle("active");
-  FILTERS[key] = el.classList.contains("active");
-  rebuildDeck();
-}
-$("#fNoGore").onclick = ()=>togglePill("fNoGore","noGore");
-$("#fNoSV").onclick   = ()=>togglePill("fNoSV","noSV");
-$("#fNoKids").onclick = ()=>togglePill("fNoKids","noKids");
+function setVar(w){ VARIETY=w; $("#varT").classList.toggle("active",w==="T"); $("#varM").classList.toggle("active",w==="M"); $("#varW").classList.toggle("active",w==="W"); rebuildDeck(); }
+$("#varT").onclick=()=>setVar("T"); $("#varM").onclick=()=>setVar("M"); $("#varW").onclick=()=>setVar("W");
+function setTheme(w){ THEME=w; ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active"));
+  const map={all:"thAll",witch:"thWitch",body:"thBody",folk:"thFolk",found:"thFound",neon:"thNeon"}; $("#"+map[w]).classList.add("active"); rebuildDeck(); }
+$("#thAll").onclick=()=>setTheme("all"); $("#thWitch").onclick=()=>setTheme("witch"); $("#thBody").onclick=()=>setTheme("body");
+$("#thFolk").onclick=()=>setTheme("folk"); $("#thFound").onclick=()=>setTheme("found"); $("#thNeon").onclick=()=>setTheme("neon");
+function togglePill(id,key){ const el=$("#"+id); el.classList.toggle("active"); FILTERS[key]=el.classList.contains("active"); rebuildDeck(); }
+$("#fNoGore").onclick=()=>togglePill("fNoGore","noGore");
+$("#fNoSV").onclick=()=>togglePill("fNoSV","noSV");
+$("#fNoKids").onclick=()=>togglePill("fNoKids","noKids");
 
 loadData();
 </script>
