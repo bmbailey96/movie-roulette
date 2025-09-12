@@ -24,25 +24,19 @@
   h1{ margin:0; font-size:20px; letter-spacing:.2px; }
   .sub{ color:var(--muted); font-size:12px; margin-top:2px; }
 
-  /* Sticky control bar */
-  .bar{
-    position:sticky; top:0; z-index:5; padding-top:8px; margin-top:-8px;
-    background:linear-gradient(#111, #111c);
-    display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:10px; align-items:center;
-  }
+  .bar{ position:sticky; top:0; z-index:5; padding-top:8px; margin-top:-8px;
+    background:linear-gradient(#111, #111c); display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:10px; align-items:center; }
   .btn{ appearance:none; border:0; border-radius:14px; padding:12px 12px; font-weight:900; cursor:pointer; font-size:15px; }
   .btn.pri{ background:var(--accent); color:var(--accentFg); }
   .btn.gh{ background:var(--ghost); color:var(--fg); border:1px solid #2a2a2a; }
   .count{ justify-self:end; padding:7px 10px; border:1px solid #222; border-radius:10px; color:#cfe; font-size:12px; }
 
-  /* Slider */
   .dial{ display:grid; grid-template-columns:auto 1fr auto auto; gap:10px; align-items:center; }
   .lab{ color:var(--muted); font-size:12px; }
   input[type="range"]{ appearance:none; width:100%; height:10px; background:#161616; border:1px solid #2a2a2a; border-radius:999px;
     background-image:linear-gradient(90deg, rgba(119,255,165,.25) 0%, rgba(119,255,165,.25) 49%, #161616 49%, #161616 51%, rgba(255,119,199,.25) 51%, rgba(255,119,199,.25) 100%); }
-  input[type="range"]::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:26px; height:26px; margin-top:-9px; border-radius:50%; background:var(--accent); border:2px solid #083; }
+  input[type="range"]::-webkit-slider-thumb{ -webkit-appearance:none; width:26px; height:26px; margin-top:-9px; border-radius:50%; background:var(--accent); border:2px solid #083; }
 
-  /* Result area */
   .grid{ display:grid; grid-template-columns:1fr; gap:8px; min-height:0; }
   .poster{ width:100%; max-width:520px; margin:2px auto 8px; display:block; aspect-ratio:2/3; object-fit:cover;
     border-radius:12px; background:#181818; max-height:65vh; }
@@ -57,10 +51,8 @@
   details#why > summary::-webkit-details-marker{ display:none; }
   .links{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; }
   .links a{ display:block; padding:12px 10px; text-align:center; border-radius:12px; text-decoration:none; font-weight:900; font-size:14px; background:#1b1b1b; color:#c0ffd6; border:1px solid #2a2a2a; }
-
   #err{ color:#ffb3b3; white-space:pre-wrap; font-size:12px; }
 
-  /* Filters modal */
   dialog{ border:1px solid var(--border); background:#0f0f0f; color:var(--fg); border-radius:16px; width:min(560px, 92vw); padding:14px; }
   dialog::backdrop{ background:rgba(0,0,0,.6); }
   .row{ display:flex; gap:8px; flex-wrap:wrap; }
@@ -78,11 +70,8 @@
 </head>
 <body>
 <div class="wrap">
-  <main class="card" role="main" id="root">
-    <header>
-      <h1>🎲 Movie Roulette</h1>
-      <div class="sub">Slide mood. Pick vibes. No repeats.</div>
-    </header>
+  <main class="card" id="root">
+    <header><h1>🎲 Movie Roulette</h1><div class="sub">Slide mood. Pick vibes. No repeats.</div></header>
 
     <div class="bar">
       <button id="deal" class="btn pri">Deal</button>
@@ -92,32 +81,16 @@
       <div class="count">Deck: <span id="left">0</span> • <span id="total">0</span></div>
     </div>
 
-    <div class="dial" aria-label="order chaos control">
-      <div class="lab">Order</div>
-      <input id="cha" type="range" min="0" max="100" step="1" value="50" aria-label="Chaos" />
-      <div class="lab">Chaos</div>
-      <div class="lab" id="modeText">Neutral</div>
-    </div>
+    <div class="dial"><div class="lab">Order</div><input id="cha" type="range" min="0" max="100" step="1" value="50" /><div class="lab">Chaos</div><div class="lab" id="modeText">Neutral</div></div>
 
     <section id="result" style="display:none;">
       <div class="grid">
-        <img id="poster" class="poster skeleton" alt="Movie poster"/>
+        <img id="poster" class="poster skeleton" referrerpolicy="no-referrer" alt="Movie poster"/>
         <div class="title" id="title">Loading…</div>
         <p class="tagline-inline" id="taglineInline" style="display:none;"></p>
-
-        <div class="meta">
-          <span id="year"></span>
-          <span id="runChip" class="chip" style="display:none;"></span>
-          <span id="chaosChip" class="chip" style="display:none;"></span>
-        </div>
-
+        <div class="meta"><span id="year"></span><span id="runChip" class="chip" style="display:none;"></span><span id="chaosChip" class="chip" style="display:none;"></span></div>
         <div class="badges" id="streamBadges" style="display:none;"></div>
-
-        <details id="why">
-          <summary>Why this pick?</summary>
-          <div class="sub" id="whyText" style="margin-top:6px;"></div>
-        </details>
-
+        <details id="why"><summary>Why this pick?</summary><div class="sub" id="whyText" style="margin-top:6px;"></div></details>
         <div class="links" id="linksRow"></div>
       </div>
     </section>
@@ -125,85 +98,68 @@
     <section id="resultB" style="display:none;">
       <div class="grid">
         <div class="sub">Palette Cleanser</div>
-        <img id="posterB" class="poster skeleton" alt="Movie poster"/>
+        <img id="posterB" class="poster skeleton" referrerpolicy="no-referrer" alt="Movie poster"/>
         <div class="title" id="titleB">Loading…</div>
         <p class="tagline-inline" id="taglineInlineB" style="display:none;"></p>
-        <div class="meta">
-          <span id="yearB"></span>
-          <span id="runChipB" class="chip" style="display:none;"></span>
-          <span id="chaosChipB" class="chip" style="display:none;"></span>
-        </div>
+        <div class="meta"><span id="yearB"></span><span id="runChipB" class="chip" style="display:none;"></span><span id="chaosChipB" class="chip" style="display:none;"></span></div>
         <div class="badges" id="streamBadgesB" style="display:none;"></div>
         <div class="links" id="linksRowB"></div>
       </div>
     </section>
 
     <div id="err" role="alert" aria-live="polite"></div>
-
-    <footer class="sub" style="margin-top:6px;">
-      Tip: Add to Home Screen from Safari’s share menu. • Uses TMDb but not endorsed.
-    </footer>
+    <footer class="sub" style="margin-top:6px;">Tip: Add to Home Screen from Safari’s share menu. • Uses TMDb but not endorsed.</footer>
   </main>
 </div>
 
-<!-- Filters modal -->
 <dialog id="filtersDlg">
   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-    <strong>Filters</strong>
-    <div class="sub" id="deckCountMini">Deck: 0</div>
+    <strong>Filters</strong><div class="sub" id="deckCountMini">Deck: 0</div>
   </div>
-
   <div class="row" style="margin-bottom:10px;">
-    <div class="seg" role="tablist" aria-label="variety">
-      <button id="varT" class="active" role="tab" aria-selected="true">Tight</button>
-      <button id="varM" role="tab" aria-selected="false">Medium</button>
-      <button id="varW" role="tab" aria-selected="false">Wide</button>
-    </div>
+    <div class="seg"><button id="varT" class="active">Tight</button><button id="varM">Medium</button><button id="varW">Wide</button></div>
     <button class="pill" id="resetAll">Reset</button>
   </div>
-
-  <div class="row" style="margin-bottom:6px;">
-    <div class="pill active" id="thAll">All</div>
-    <div class="pill" id="thWitch">Witchy</div>
-    <div class="pill" id="thBody">Body</div>
-    <div class="pill" id="thFolk">Folk</div>
-    <div class="pill" id="thFound">Found</div>
-    <div class="pill" id="thNeon">Neon</div>
-  </div>
-
-  <div class="row" style="margin-bottom:6px;">
-    <div class="pill" id="fNoGore">No gore</div>
-    <div class="pill" id="fNoSV">No sexual violence</div>
-    <div class="pill" id="fNoKids">No kids-in-peril</div>
-  </div>
-
-  <div class="row" style="justify-content:flex-end; margin-top:12px;">
-    <button class="btn gh" id="closeFilters">Close</button>
-  </div>
+  <div class="row" style="margin-bottom:6px;"><div class="pill active" id="thAll">All</div><div class="pill" id="thWitch">Witchy</div><div class="pill" id="thBody">Body</div><div class="pill" id="thFolk">Folk</div><div class="pill" id="thFound">Found</div><div class="pill" id="thNeon">Neon</div></div>
+  <div class="row" style="margin-bottom:6px;"><div class="pill" id="fNoGore">No gore</div><div class="pill" id="fNoSV">No sexual violence</div><div class="pill" id="fNoKids">No kids-in-peril</div></div>
+  <div class="row" style="justify-content:flex-end; margin-top:12px;"><button class="btn gh" id="closeFilters">Close</button></div>
 </dialog>
 
 <script>
-/* ====== Uses CSV-driven chaos/tags from movies.json (built by process.js) ====== */
 const MY_SERVICES = new Set(["Netflix","Amazon Prime Video","Hulu","Max","Paramount+","Apple TV+","Tubi TV"]);
+const TMDB_IMG = "https://image.tmdb.org/t/p";
 const $ = s => document.querySelector(s);
 const err = (m="") => { const e=$("#err"); e.textContent=m; e.style.display = m ? "block" : "none"; };
 
-const TMDB_IMG = "https://image.tmdb.org/t/p";
-
-function posterURL(p, size="w500"){
-  if (!p) return "";
-  const s = String(p).trim();
-  if (s.startsWith("http")) return s;
-  const clean = s.startsWith("/") ? s : ("/"+s);
+function posterURL(path, size="w500"){
+  if (!path) return "";
+  const s = String(path).trim();
+  if (!s || s==="null" || s==="undefined") return "";
+  if (s.startsWith("http://")) return s.replace("http://","https://");
+  if (s.startsWith("https://")) return s;
+  const clean = s.startsWith("/") ? s : "/"+s;
   return `${TMDB_IMG}/${size}${clean}`;
 }
-function setPoster(el, posterPath, title){
-  const url = posterURL(posterPath);
-  el.classList.add("skeleton");
-  el.src = url || `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900"><rect width="100%" height="100%" fill="#141414"/></svg>')}`;
-  el.alt = title || "poster";
-  el.onload = () => el.classList.remove("skeleton");
-  el.onerror = () => { el.src = `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900"><rect width="100%" height="100%" fill="#141414"/></svg>')}`; el.classList.remove("skeleton"); };
+function setPoster(imgEl, posterPath, title){
+  const sizes = ["w342","w500","w780","original"];
+  let i = 0;
+  function tryNext(){
+    const u = posterURL(posterPath, sizes[i]);
+    if (!u){ setFallback(); return; }
+    imgEl.src = u;
+  }
+  function setFallback(){
+    imgEl.src = `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900"><rect width="100%" height="100%" fill="#141414"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#5a5a5a" font-family="system-ui, -apple-system, Segoe UI, Roboto" font-size="28">NO POSTER</text></svg>')}`;
+  }
+  imgEl.alt = title || "poster";
+  imgEl.classList.add("skeleton");
+  imgEl.onerror = () => {
+    i++;
+    if (i < sizes.length) tryNext();
+    else { setFallback(); imgEl.classList.remove("skeleton"); }
+  };
+  imgEl.onload = () => imgEl.classList.remove("skeleton");
+  tryNext();
 }
 
 let MOVIES=[], DECK=[];
@@ -215,13 +171,12 @@ async function loadData(){
   try{
     const r = await fetch("./movies.json?v="+Date.now(), {cache:"no-store"});
     const txt = await r.text(); if(!r.ok) throw new Error(`HTTP ${r.status}: ${txt.slice(0,180)}`);
-    MOVIES = JSON.parse(txt).map(x => ({
+    const raw = JSON.parse(txt);
+    MOVIES = raw.map(x => ({
       ...x,
-      // accept either 'poster' or 'poster_path'
-      poster: x.poster || x.poster_path || "",
+      poster: x.poster || x.poster_path || "", // support either
       chaos: (typeof x.chaos === "number") ? x.chaos
-            : (typeof x.Chaos === "number") ? x.Chaos
-            : (x.Chaos ? Number(x.Chaos) : null),
+            : (x.Chaos!==undefined && x.Chaos!=="") ? Number(x.Chaos) : null
     }));
     $("#total").textContent = MOVIES.length;
     rebuildDeck();
@@ -293,6 +248,11 @@ function rebuildDeck(){
   $("#deckCountMini").textContent = "Deck: " + DECK.length;
 }
 
+const cha=$("#cha"), modeText=$("#modeText");
+function mode(v){ if (v<40) return "Order"; if (v>60) return "Chaos"; return "Neutral"; }
+cha.addEventListener("input",(e)=>{ CHAOS=Number(e.target.value)||50; modeText.textContent=mode(CHAOS); });
+cha.addEventListener("change", ()=>rebuildDeck());
+
 function setText(el, t){ el.textContent=t; }
 function show(el, on){ el.style.display = on ? "" : "none"; }
 
@@ -344,6 +304,17 @@ function render(prefix,item){
   links(lEl,item);
 }
 
+function passesTheme(item){
+  const f = item.flags || {};
+  if (THEME==="all") return true;
+  if (THEME==="witch") return f.theme_witchy;
+  if (THEME==="body")  return f.theme_body_horror;
+  if (THEME==="folk")  return f.theme_folk;
+  if (THEME==="found") return f.theme_found_footage;
+  if (THEME==="neon")  return f.theme_neon;
+  return true;
+}
+
 function dealOne(fromIdx=null){
   err("");
   if (!MOVIES.length){ err("Data not loaded yet."); return; }
@@ -393,17 +364,7 @@ function doubleFeature(){
   render("B", MOVIES[ pool[Math.floor(Math.random()*pool.length)] ]);
 }
 
-/* Wire up */
-$("#deal").onclick = ()=>dealOne();
-$("#reroll").onclick = rerollNearby;
-$("#double").onclick = doubleFeature;
-
-const cha=$("#cha"), modeText=$("#modeText");
-function mode(v){ if (v<40) return "Order"; if (v>60) return "Chaos"; return "Neutral"; }
-cha.addEventListener("input",(e)=>{ CHAOS=Number(e.target.value)||50; modeText.textContent=mode(CHAOS); });
-cha.addEventListener("change", ()=>rebuildDeck());
-
-/* Filters modal */
+/* Filters */
 const dlg=$("#filtersDlg");
 $("#openFilters").onclick = ()=>dlg.showModal();
 $("#closeFilters").onclick = ()=>dlg.close();
@@ -422,10 +383,10 @@ function setTheme(w){ THEME=w; ["thAll","thWitch","thBody","thFolk","thFound","t
   const map={all:"thAll",witch:"thWitch",body:"thBody",folk:"thFolk",found:"thFound",neon:"thNeon"}; $("#"+map[w]).classList.add("active"); rebuildDeck(); }
 $("#thAll").onclick=()=>setTheme("all"); $("#thWitch").onclick=()=>setTheme("witch"); $("#thBody").onclick=()=>setTheme("body");
 $("#thFolk").onclick=()=>setTheme("folk"); $("#thFound").onclick=()=>setTheme("found"); $("#thNeon").onclick=()=>setTheme("neon");
-function togglePill(id,key){ const el=$("#"+id); el.classList.toggle("active"); FILTERS[key]=el.classList.contains("active"); rebuildDeck(); }
-$("#fNoGore").onclick=()=>togglePill("fNoGore","noGore");
-$("#fNoSV").onclick=()=>togglePill("fNoSV","noSV");
-$("#fNoKids").onclick=()=>togglePill("fNoKids","noKids");
+
+$("#deal").onclick = ()=>dealOne();
+$("#reroll").onclick = rerollNearby;
+$("#double").onclick = doubleFeature;
 
 loadData();
 </script>
