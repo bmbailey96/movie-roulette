@@ -8,51 +8,35 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b0b0b">
 <style>
-  :root{
-    color-scheme: light dark;
+  :root{ color-scheme: light dark;
     --bg:#0b0b0b; --card:#111; --fg:#f4f4f4; --muted:#9aa0a6; --border:#232323; --accent:#77ffa5; --accent2:#ff77c7;
-    --radius:16px; --shadow:0 12px 40px rgba(0,0,0,.45);
-  }
+    --radius:16px; --shadow:0 12px 40px rgba(0,0,0,.45); }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 -apple-system, system-ui, Inter, Segoe UI, Roboto, sans-serif; }
-  .wrap{ min-height:100%; display:flex; align-items:flex-start; justify-content:center; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+  html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 -apple-system,system-ui,Inter,Segoe UI,Roboto,sans-serif; }
+  .wrap{ min-height:100%; display:flex; align-items:flex-start; justify-content:center; padding:max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
   .card{ width:100%; max-width:760px; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; }
-
   h1{ margin:0 0 8px; font-size:20px; letter-spacing:.2px; }
   .muted{ color:var(--muted); font-size:13px; }
 
   .controls{ position:sticky; top:0; background:linear-gradient(#111, #111cc); padding-top:6px; margin-top:-6px; z-index:5; }
   .bar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-  .bar button{
-    appearance:none; border:0; border-radius:14px; padding:14px 16px; font-weight:900; cursor:pointer;
-    background:var(--accent); color:#05200f; font-size:16px;
-  }
+  .bar button{ appearance:none; border:0; border-radius:14px; padding:14px 16px; font-weight:900; cursor:pointer; background:var(--accent); color:#05200f; font-size:16px; }
   .ghost{ background:#1b1b1b; color:var(--fg); border:1px solid #2a2a2a; }
   .count{ margin-left:auto; font-weight:600; padding:8px 12px; border:1px solid #222; border-radius:12px; color:#cfe; }
 
   .dial{ margin-top:10px; }
   .sliderrow{ display:flex; gap:10px; align-items:center; width:100%; }
-  .sliderrow input[type="range"]{
-    flex:1 1 auto; appearance:none; height:10px; background:#161616; border:1px solid #2a2a2a; border-radius:999px;
-    background-image: linear-gradient(90deg,
-      rgba(119,255,165,.25) 0%, rgba(119,255,165,.25) 49%,
-      #161616 49%, #161616 51%,
-      rgba(255,119,199,.25) 51%, rgba(255,119,199,.25) 100%);
-  }
-  .sliderrow input[type="range"]::-webkit-slider-thumb{
-    -webkit-appearance:none; appearance:none; width:28px; height:28px; margin-top:-10px; border-radius:50%;
-    background:var(--accent); border:2px solid #083; box-shadow:0 1px 4px rgba(0,0,0,.35);
-  }
+  .sliderrow input[type="range"]{ flex:1 1 auto; appearance:none; height:10px; background:#161616; border:1px solid #2a2a2a; border-radius:999px;
+    background-image:linear-gradient(90deg, rgba(119,255,165,.25) 0%, rgba(119,255,165,.25) 49%, #161616 49%, #161616 51%, rgba(255,119,199,.25) 51%, rgba(255,119,199,.25) 100%); }
+  .sliderrow input[type="range"]::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:28px; height:28px; margin-top:-10px; border-radius:50%; background:var(--accent); border:2px solid #083; box-shadow:0 1px 4px rgba(0,0,0,.35); }
   .ticks{ display:flex; justify-content:space-between; margin-top:4px; color:var(--muted); font-size:12px; }
   .mode{ margin-top:6px; font-size:13px; color:#c4cbd2; }
-
   .seg{ display:flex; background:#161616; border:1px solid #2a2a2a; border-radius:999px; overflow:hidden; }
-  .seg button{
-    background:transparent; border:0; color:#cfe; padding:6px 10px; font-weight:800; font-size:13px; cursor:pointer;
-  }
+  .seg button{ background:transparent; border:0; color:#cfe; padding:6px 10px; font-weight:800; font-size:13px; cursor:pointer; }
   .seg button.active{ background:#1f3327; color:#b6ffd1; }
 
   .poster{ width:100%; max-width:520px; margin:8px auto 12px; display:block; aspect-ratio:2/3; object-fit:cover; border-radius:14px; background:#181818; }
+  .poster.placeholder{ display:grid; place-items:center; color:#7a7a7a; font-weight:800; letter-spacing:.5px; }
   .title{ font-size:26px; font-weight:900; margin:2px 0 2px; word-wrap:break-word; }
   .tagline-inline{ color:#c4cbd2; font-size:15px; margin:0 0 8px; }
   .meta{ color:var(--muted); margin-bottom:6px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
@@ -62,13 +46,10 @@
   .badge{ font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid #2a2a2a; background:#171717; color:#bfe; }
 
   .links{ display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; }
-  .links a{
-    display:inline-block; padding:12px 14px; border-radius:12px; text-decoration:none; font-weight:900; font-size:15px;
-    background:#1b1b1b; color:#c0ffd6; border:1px solid #2a2a2a; flex:1 1 220px; text-align:center;
-  }
+  .links a{ display:inline-block; padding:12px 14px; border-radius:12px; text-decoration:none; font-weight:900; font-size:15px; background:#1b1b1b; color:#c0ffd6; border:1px solid #2a2a2a; flex:1 1 220px; text-align:center; }
 
   #err{ margin-top:10px; color:#ffb3b3; white-space:pre-wrap; }
-  .skeleton{ animation: pulse 1.2s infinite ease-in-out; background: linear-gradient(90deg,#141414 25%,#1a1a1a 37%,#141414 63%); background-size:400% 100%; }
+  .skeleton{ animation:pulse 1.2s infinite ease-in-out; background: linear-gradient(90deg,#141414 25%,#1a1a1a 37%,#141414 63%); background-size:400% 100%; }
   @keyframes pulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
 
   .hist{ margin-top:14px; background:#121212; border:1px solid #222; border-radius:12px; padding:10px; }
@@ -105,7 +86,7 @@
           <button id="varW" role="tab" aria-selected="false">Wide</button>
         </div>
 
-        <div class="seg" role="tablist" aria-label="theme nights" style="margin-top:8px;">
+        <div class="seg" role="tablist" aria-label="themes" style="margin-top:8px;">
           <button id="thAll" class="active">All</button>
           <button id="thWitch">Witchy</button>
           <button id="thBody">Body</button>
@@ -115,9 +96,9 @@
         </div>
 
         <div class="seg" role="tablist" aria-label="content flags" style="margin-top:8px;">
-          <button id="fNoGore" class="">No gore</button>
-          <button id="fNoSV" class="">No sexual violence</button>
-          <button id="fNoKids" class="">No kids-in-peril</button>
+          <button id="fNoGore">No gore</button>
+          <button id="fNoSV">No sexual violence</button>
+          <button id="fNoKids">No kids-in-peril</button>
         </div>
       </div>
     </div>
@@ -163,26 +144,23 @@
       <div class="labels"><span>0</span><span>50</span><span>100</span></div>
     </div>
 
-    <p class="muted" style="margin-top:14px;">Tip: Add to Home Screen from Safari’s share menu for full-screen app mode.</p>
+    <p class="muted" style="margin-top:14px;">Tip: Add to Home Screen from Safari’s share menu.</p>
     <p class="muted" style="margin-top:6px; font-size:12px;">This product uses the TMDb API but is not endorsed or certified by TMDb.</p>
   </main>
 </div>
 
 <script>
-/* --- Services you actually have --- */
 const MY_SERVICES = new Set(["Netflix","Amazon Prime Video","Hulu","Max","Paramount+","Apple TV+","Tubi TV"]);
-
 const $ = s => document.querySelector(s);
 const TMDB_IMG = (path, size="w500") => path ? `https://image.tmdb.org/t/p/${size}${path}` : "";
 const err = (m="") => { const e=$("#err"); e.textContent=m; e.style.display = m ? "block" : "none"; };
 
 let MOVIES=[], DECK=[];
-let CHAOS=50, VARIETY="T";             // Tight|Medium|Wide
-let THEME="all";                       // all|witch|body|folk|found|neon
+let CHAOS=50, VARIETY="T"; // Tight|Medium|Wide
+let THEME="all";
 let FILTERS={ noGore:false, noSV:false, noKids:false };
 let lastPickIndex=null;
 
-/* ---- Data load ---- */
 async function loadData(){
   try{
     const r = await fetch("./movies.json?v="+Date.now(), {cache:"no-store"});
@@ -194,7 +172,6 @@ async function loadData(){
   }catch(e){ err("Could not load movies.json.\n"+(e.message||e)); }
 }
 
-/* ---- Providers / streaming badges ---- */
 function providerMatchesMyServices(p){
   if (!p?.name) return false;
   const n = String(p.name).trim();
@@ -203,25 +180,25 @@ function providerMatchesMyServices(p){
   if (n === "Max" && MY_SERVICES.has("HBO Max")) return true;
   return false;
 }
-function availabilityBuckets(item){
+function availabilityNames(item){
   const prov = Array.isArray(item.providers) ? item.providers : [];
-  const res = { myNames:[] }; const seen = new Set();
+  const names=[]; const seen=new Set();
   for (const p of prov){
     if (providerMatchesMyServices(p)){
       const nm = String(p.name).trim();
-      if (!seen.has(nm)){ seen.add(nm); res.myNames.push(nm); }
+      if (!seen.has(nm)){ seen.add(nm); names.push(nm); }
     }
   }
-  return res;
+  return names;
 }
 function buildBadges(container, item){
-  const b = availabilityBuckets(item);
+  const names = availabilityNames(item);
   container.innerHTML = "";
-  if (b.myNames.length){
-    for (const name of b.myNames){
+  if (names.length){
+    for (const n of names){
       const span = document.createElement("span");
       span.className="badge";
-      span.textContent = name;
+      span.textContent = n;
       container.appendChild(span);
     }
     container.style.display="";
@@ -247,33 +224,33 @@ function passesContentFlags(item){
   return !item.unreleased_error; // hide unreleased
 }
 
-/* ---- Deck building ---- */
-function gaussianWeight(x, mu, sigma){ const d=x-mu; return Math.exp(-(d*d)/(2*sigma*sigma)); }
-function sigmaForVariety(){ return VARIETY==="T" ? 10 : VARIETY==="M" ? 18 : 30; }
+/* ---- Hard-banded deck around slider ---- */
+function bandForVariety(){ return VARIETY==="T" ? 7 : VARIETY==="M" ? 15 : 30; }
 
 function rebuildDeck(){
   if (!MOVIES.length) return;
-  const target = CHAOS, sigma = sigmaForVariety();
-  const bucket = [];
+  const target = CHAOS;
+  const baseBand = bandForVariety();
 
-  for (let i=0;i<MOVIES.length;i++){
-    const it = MOVIES[i];
-    if (!passesTheme(it) || !passesContentFlags(it)) continue;
+  // start with strict band; widen until we have candidates
+  let band = baseBand;
+  let candidates = MOVIES
+    .map((m, i) => ({ m, i }))
+    .filter(({m}) => passesTheme(m) && passesContentFlags(m) && Math.abs((m.chaos??50) - target) <= band);
 
-    const chaos = typeof it.chaos==="number" ? it.chaos : 50;
-    let weight = 1 + 2.2*gaussianWeight(chaos, target, sigma);
-    weight = Math.max(0.2, Math.min(3.0, weight));
-    const times = Math.max(1, Math.min(10, Math.round(weight * 3)));
-    for (let t=0;t<times;t++) bucket.push(i);
+  while (!candidates.length && band <= 50){
+    band += 10;
+    candidates = MOVIES.map((m,i)=>({m,i}))
+      .filter(({m}) => passesTheme(m) && passesContentFlags(m) && Math.abs((m.chaos??50) - target) <= band);
+  }
+  if (!candidates.length){
+    candidates = MOVIES.map((m,i)=>({m,i})).filter(({m}) => passesTheme(m) && passesContentFlags(m));
   }
 
-  if (!bucket.length){ for (let i=0;i<MOVIES.length;i++) bucket.push(i); }
-
-  const rnd = new Uint32Array(bucket.length); crypto.getRandomValues(rnd);
-  for (let i=bucket.length-1;i>0;i--){ const j=rnd[i]%(i+1); [bucket[i],bucket[j]]=[bucket[j],bucket[i]]; }
-
-  const seen=new Set(), deck=[];
-  for (const idx of bucket){ if(!seen.has(idx)){ seen.add(idx); deck.push(idx); } }
+  // shuffle unique indices
+  const deck = candidates.map(x=>x.i);
+  const rnd = new Uint32Array(deck.length); crypto.getRandomValues(rnd);
+  for (let i=deck.length-1;i>0;i--){ const j=rnd[i]%(i+1); [deck[i],deck[j]]=[deck[j],deck[i]]; }
   DECK = deck;
   $("#left").textContent = DECK.length;
 }
@@ -282,6 +259,28 @@ function rebuildDeck(){
 function setText(el, txt){ el.textContent = txt; }
 function show(el, on){ el.style.display = on ? "" : "none"; }
 function posterLoad(el){ el.classList.add("skeleton"); el.onload = el.onerror = ()=> el.classList.remove("skeleton"); }
+function setPoster(imgEl, path, title){
+  if (path){
+    imgEl.classList.remove("placeholder");
+    imgEl.src = `https://image.tmdb.org/t/p/w500${path}`;
+    imgEl.alt = title || "poster";
+    posterLoad(imgEl);
+  } else {
+    imgEl.classList.add("placeholder");
+    imgEl.removeAttribute("src");
+    imgEl.alt = "No poster";
+    imgEl.style.background = "#1a1a1a";
+    imgEl.innerHTML = ""; // ensure clean
+    // simple text placeholder:
+    const ph = document.createElement("div");
+    ph.style.height = "100%"; ph.style.display="grid"; ph.style.placeItems="center"; ph.textContent = "NO POSTER";
+    imgEl.replaceWith(imgEl.cloneNode(false)); // reset img (for Safari)
+    const fresh = document.querySelector("#"+imgEl.id);
+    fresh.className = "poster placeholder";
+    fresh.style.background = "#1a1a1a";
+    fresh.alt = "No poster";
+  }
+}
 function runtimeLabel(min){
   if (!min) return "";
   const s = `${min} min`;
@@ -297,9 +296,8 @@ function buildLinksRow(container, item){
   lbBtn.target="_blank"; lbBtn.rel="noopener";
   container.appendChild(lbBtn);
 
-  // If not on your services, add "Search elsewhere" (archive/youtube/torrent hint)
-  const b = availabilityBuckets(item);
-  if (!b.myNames.length){
+  const names = availabilityNames(item);
+  if (!names.length){
     const q = encodeURIComponent(`${item.title} full movie site:archive.org OR site:youtube.com OR torrent`);
     const searchBtn = document.createElement("a");
     searchBtn.textContent = "Search elsewhere";
@@ -321,14 +319,19 @@ function dealOne(fromIdx=null){
     $("#left").textContent = DECK.length;
   }
   lastPickIndex = idx;
-
   const item = MOVIES[idx];
 
-  // main card
   $("#result").style.display = "block";
   const poster = $("#poster");
-  poster.src = item.poster ? TMDB_IMG(item.poster, "w500") : "";
-  poster.alt = item.title || "poster"; posterLoad(poster);
+  if (item.poster) {
+    poster.classList.remove("placeholder");
+    poster.src = `https://image.tmdb.org/t/p/w500${item.poster}`;
+    poster.alt = item.title || "poster"; posterLoad(poster);
+  } else {
+    poster.classList.add("placeholder");
+    poster.removeAttribute("src");
+    poster.alt = "No poster";
+  }
 
   setText($("#title"), item.title || "Untitled");
   const tag = (item.tagline||"").trim();
@@ -350,42 +353,33 @@ function dealOne(fromIdx=null){
   whyBox.style.display = why ? "" : "none";
 
   buildLinksRow($("#linksRow"), item);
-
   drawHistogramMarker(chaos, CHAOS);
 
-  // clear cleanser
   $("#resultB").style.display = "none";
 }
 
-function neighborsAroundChaos(target, initial=10, max=35, step=5){
-  // widen window until we have candidates
-  for (let radius=initial; radius<=max; radius+=step){
+function neighborsAround(target, initial, max, step){
+  for (let r=initial; r<=max; r+=step){
     const pool=[];
     for (let i=0;i<MOVIES.length;i++){
       if (i===lastPickIndex) continue;
       const it = MOVIES[i];
       if (!passesTheme(it) || !passesContentFlags(it)) continue;
       const c = typeof it.chaos==="number" ? it.chaos : 50;
-      if (Math.abs(c - target) <= radius) pool.push(i);
+      if (Math.abs(c - target) <= r) pool.push(i);
     }
     if (pool.length) return pool;
   }
-  // final fallback: return *all* valid indices
-  const all=[];
-  for (let i=0;i<MOVIES.length;i++){
-    if (i===lastPickIndex) continue;
-    const it = MOVIES[i];
-    if (passesTheme(it) && passesContentFlags(it)) all.push(i);
-  }
-  return all;
+  // fallback: everything valid
+  return MOVIES.map((m,i)=>({m,i})).filter(({m})=>passesTheme(m)&&passesContentFlags(m)).map(x=>x.i);
 }
 
 function rerollNearby(){
   if (lastPickIndex==null){ dealOne(); return; }
   const curr = MOVIES[lastPickIndex];
   const c = typeof curr.chaos==="number" ? curr.chaos : 50;
-  const pool = neighborsAroundChaos(c, 10, 35, 5);
-  if (!pool.length){ err("No nearby picks available with current filters."); return; }
+  const pool = neighborsAround(c, 10, 40, 5);
+  if (!pool.length){ err("No nearby picks with current filters."); return; }
   const idx = pool[Math.floor(Math.random()*pool.length)];
   dealOne(idx);
 }
@@ -394,10 +388,9 @@ function doubleFeature(){
   if (lastPickIndex==null){ dealOne(); }
   const main = MOVIES[lastPickIndex];
   const mainChaos = typeof main.chaos==="number" ? main.chaos : 50;
-  const target = Math.max(0, Math.min(100, 100 - mainChaos)); // inverted
+  const target = Math.max(0, Math.min(100, 100 - mainChaos));
 
-  // progressively widen ± window; if still nothing, pick the farthest chaos from main
-  let pool = neighborsAroundChaos(target, 12, 48, 6);
+  let pool = neighborsAround(target, 12, 48, 6);
   if (!pool.length){
     // farthest-from-main fallback
     let bestIdx = null, bestDist = -1;
@@ -405,21 +398,26 @@ function doubleFeature(){
       if (i===lastPickIndex) continue;
       const it = MOVIES[i];
       if (!passesTheme(it) || !passesContentFlags(it)) continue;
-      const c = typeof it.chaos==="number" ? it.chaos : 50;
-      const d = Math.abs(c - mainChaos);
+      const d = Math.abs((it.chaos??50) - mainChaos);
       if (d > bestDist){ bestDist = d; bestIdx = i; }
     }
     if (bestIdx==null){ err("No suitable cleanser with current filters."); return; }
     pool = [bestIdx];
   }
-
   const idx = pool[Math.floor(Math.random()*pool.length)];
   const item = MOVIES[idx];
 
   $("#resultB").style.display = "block";
   const poster = $("#posterB");
-  poster.src = item.poster ? TMDB_IMG(item.poster, "w500") : "";
-  poster.alt = item.title || "poster"; posterLoad(poster);
+  if (item.poster) {
+    poster.classList.remove("placeholder");
+    poster.src = `https://image.tmdb.org/t/p/w500${item.poster}`;
+    poster.alt = item.title || "poster"; posterLoad(poster);
+  } else {
+    poster.classList.add("placeholder");
+    poster.removeAttribute("src");
+    poster.alt = "No poster";
+  }
 
   setText($("#titleB"), item.title || "Untitled");
   const tag = (item.tagline||"").trim();
@@ -464,7 +462,7 @@ function buildHistogram(){
   $("#hist").innerHTML = svg.join("");
   $("#histBox").style.display = "block";
 }
-function drawHistogramMarker(currentChaos, targetChaos){
+function drawHistogramMarker(currentChaos){
   const svg = $("#hist").querySelector("svg"); if (!svg) return;
   const w = 680, pad=8;
   const x = currentChaos!=null ? (pad + (currentChaos/100)*(w - pad*2)) : -10;
