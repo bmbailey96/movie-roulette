@@ -184,7 +184,7 @@ let MOVIES=[], DECK=[];
 let CHAOS=50, VARIETY="T"; // Tight|Medium|Wide
 let THEME="all";
 let FILTERS={ noGore:false, noSV:false, noKids:false };
-let lastPickIndex=null;
+let lastPickIndex=null; // <-- single declaration
 
 async function loadData(){
   try{
@@ -336,9 +336,7 @@ function renderInto(prefix, item){
   buildLinksRow(links, item);
 }
 
-/* ---- Deal + Reroll ---- */
-let lastPickIndex=null;
-
+/* ---- Deal + Reroll + Double ---- */
 function dealOne(fromIdx=null){
   err("");
   if (!MOVIES.length){ err("Data not loaded yet."); return; }
@@ -369,7 +367,6 @@ function neighborsAround(target, initial, max, step){
     }
     if (pool.length) return pool;
   }
-  // fallback: everything valid
   return MOVIES.map((m,i)=>({m,i})).filter(({m})=>passesTheme(m)&&passesContentFlags(m)).map(x=>x.i);
 }
 
@@ -391,7 +388,6 @@ function doubleFeature(){
 
   let pool = neighborsAround(target, 12, 48, 6);
   if (!pool.length){
-    // farthest-from-main fallback
     let bestIdx = null, bestDist = -1;
     for (let i=0;i<MOVIES.length;i++){
       if (i===lastPickIndex) continue;
