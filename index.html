@@ -18,7 +18,6 @@
   html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
     font:15px/1.45 system-ui, -apple-system, Inter, Segoe UI, Roboto, Arial, sans-serif; overflow:hidden; }
 
-  /* Full-screen app frame */
   .wrap{
     height:100dvh; display:flex;
     padding:calc(env(safe-area-inset-top)) calc(env(safe-area-inset-right)) calc(env(safe-area-inset-bottom)) calc(env(safe-area-inset-left));
@@ -29,13 +28,11 @@
     display:grid; grid-template-rows:auto auto 1fr auto; gap:8px; padding:10px; overflow:hidden;
   }
 
-  /* Header */
   header{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .appTitle{ font-weight:900; letter-spacing:.2px; font-size:20px; margin:0; }
   .sub{ color:var(--muted); font-size:12px; margin-top:-4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .deck{ color:#cfe; font-size:12px; padding:6px 10px; border:1px solid #263; border-radius:10px; background:#0f1a14; }
 
-  /* Always-visible mode/bias toolbar */
   .toolbar{ display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
   .group{ display:flex; gap:8px; align-items:center; }
   .label{ color:#9ab; font-size:12px; margin-right:2px; }
@@ -43,7 +40,6 @@
   .seg button{ background:transparent; border:0; color:#dfffe8; padding:8px 12px; font-weight:900; font-size:13px; cursor:pointer; }
   .seg button.active{ background:#203626; color:#b8ffd1; }
 
-  /* Stage: 2 columns, no page scroll */
   .stage{
     min-height:0; display:grid; grid-template-columns:minmax(44%, 46%) 1fr; gap:12px;
     align-items:start; overflow:hidden; width:100%;
@@ -54,7 +50,6 @@
   .poster.skeleton{ animation:pulse 1.2s infinite ease-in-out; background: linear-gradient(90deg,#141414 25%,#1a1a1a 37%,#141414 63%); background-size:400% 100%; }
   @keyframes pulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
 
-  /* Info column */
   .infoCol{
     min-width:0; min-height:0; display:grid; grid-template-rows:auto auto auto 1fr auto; gap:8px;
     overflow:auto; padding-right:2px; word-break:break-word;
@@ -67,7 +62,6 @@
   .badge{ font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid #2a2a2a; background:#171717; color:#bfe; }
   .whyBox{ background:#0f1511; border:1px dashed #294; border-radius:10px; padding:8px; color:#bff5d7; font-size:12px; display:none; }
 
-  /* Links */
   .links{ display:grid; grid-template-columns:1fr; gap:8px; }
   .links a{ display:block; padding:12px; text-align:center; border-radius:12px; text-decoration:none; font-weight:900; font-size:15px; background:#1b1b1b; color:#c0ffd6; border:1px solid #2a2a2a; }
 
@@ -82,7 +76,6 @@
   .miniRow{ display:flex; gap:8px; }
   .miniBtn{ appearance:none; border:1px solid #2a2a2a; background:#171717; color:#e9fff3; padding:8px 10px; border-radius:10px; font-weight:800; font-size:12px; }
 
-  /* Bottom dock */
   .dock{
     display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; align-items:center;
     padding-bottom:calc(env(safe-area-inset-bottom) + 2px);
@@ -91,7 +84,6 @@
   .btn.pri{ background:var(--accent); color:var(--accentFg); }
   .btn.gh{ background:var(--ghost); color:var(--fg); border:1px solid #262626; }
 
-  /* Filters dialog (themes + content only) */
   dialog{ border:1px solid var(--border); background:#0f0f0f; color:#fff; border-radius:16px; width:min(560px, 92vw); padding:14px; }
   dialog::backdrop{ background:rgba(0,0,0,.6); }
   .rowFilt{ display:flex; gap:8px; flex-wrap:wrap; }
@@ -104,7 +96,6 @@
 <body>
 <div class="wrap">
   <main class="card" id="root">
-    <!-- Header -->
     <header>
       <div>
         <h1 class="appTitle">🎲 Movie Roulette</h1>
@@ -113,7 +104,6 @@
       <div class="deck">Deck: <span id="left">0</span>/<span id="total">0</span></div>
     </header>
 
-    <!-- Always-visible controls -->
     <div class="toolbar">
       <div class="group">
         <span class="label">Mood</span>
@@ -133,7 +123,6 @@
       </div>
     </div>
 
-    <!-- Stage -->
     <section class="stage" aria-live="polite">
       <img id="poster" class="poster skeleton" referrerpolicy="no-referrer" alt="Movie poster"/>
       <div class="infoCol">
@@ -165,7 +154,6 @@
       </div>
     </section>
 
-    <!-- Bottom dock -->
     <nav class="dock">
       <button id="deal" class="btn pri">Deal</button>
       <button id="reroll" class="btn gh">Re-roll</button>
@@ -175,7 +163,6 @@
   </main>
 </div>
 
-<!-- Filters (Themes + Content only) -->
 <dialog id="filtersDlg">
   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
     <strong>Filters</strong><div class="kicker" id="deckCountMini">Deck: 0</div>
@@ -213,7 +200,7 @@ const TMDB_IMG = "https://image.tmdb.org/t/p";
 const $ = s => document.querySelector(s);
 function setUIError(m=""){ const e=$("#err"); e.textContent=m; e.style.color=m?"#ffb3b3":"#9ab"; }
 
-/* Poster helper: no API calls, just paths/URLs already in movies.json */
+/* Poster helper (no API calls) */
 function posterURL(path, size="w500"){
   if (!path) return "";
   const s = String(path).trim();
@@ -248,9 +235,9 @@ let VARIETY="T";  // T | M | W
 let THEME="all";
 let FILTERS={ noGore:false, noSV:false, noKids:false };
 let lastPickIndex=null;
-let lastPairIndex=null; // holds the mini double index
+let lastPairIndex=null;
 
-/* ====== LOAD DATA (no external APIs) ====== */
+/* ====== DATA ====== */
 async function loadData(){
   try{
     const r = await fetch("./movies.json?v="+Date.now(), {cache:"no-store"});
@@ -258,7 +245,7 @@ async function loadData(){
     const raw = JSON.parse(txt);
     MOVIES = raw.map(x => ({
       ...x,
-      poster: x.poster || x.poster_path || "",  // allow either field
+      poster: x.poster || x.poster_path || "",
       chaos: (typeof x.chaos === "number") ? x.chaos
             : (x.Chaos!==undefined && x.Chaos!=="") ? Number(x.Chaos) : null
     }));
@@ -293,9 +280,17 @@ function buildBadges(container, item){
     container.style.display="";
   } else container.style.display="none";
 }
-function passesTheme(item){
-  const f = item.flags || {};
-  if (THEME==="all") return true;
+function contentPass(item, relax=false){
+  if (relax) return !item.unreleased_error;
+  const f=item.flags||{};
+  if (FILTERS.noGore && f.extreme_gore) return false;
+  if (FILTERS.noSV && f.sexual_violence) return false;
+  if (FILTERS.noKids && f.kids_in_peril) return false;
+  return !item.unreleased_error;
+}
+function themePass(item, relax=false){
+  if (relax || THEME==="all") return true;
+  const f=item.flags||{};
   if (THEME==="witch") return f.theme_witchy;
   if (THEME==="body")  return f.theme_body_horror;
   if (THEME==="folk")  return f.theme_folk;
@@ -303,19 +298,12 @@ function passesTheme(item){
   if (THEME==="neon")  return f.theme_neon;
   return true;
 }
-function passesContent(item){
-  const f=item.flags||{};
-  if (FILTERS.noGore && f.extreme_gore) return false;
-  if (FILTERS.noSV && f.sexual_violence) return false;
-  if (FILTERS.noKids && f.kids_in_peril) return false;
-  return !item.unreleased_error;
-}
 
 /* ====== CHAOS TARGETING ====== */
 function chaosTarget(){ return MODE==="order" ? 15 : MODE==="chaos" ? 85 : 50; }
 function band(){ return VARIETY==="T"?7: VARIETY==="M"?15:30; }
 
-/* ====== DECK (never empty) ====== */
+/* ====== DECK ====== */
 function rebuildDeck(){
   try{
     if (!MOVIES.length) return;
@@ -323,21 +311,20 @@ function rebuildDeck(){
     let b = band();
 
     let cands = MOVIES.map((m,i)=>({m,i}))
-      .filter(({m}) => passesTheme(m) && passesContent(m) && (typeof m.chaos==="number") && Math.abs(m.chaos - target) <= b);
+      .filter(({m}) => themePass(m,false) && contentPass(m,false) && (typeof m.chaos==="number") && Math.abs(m.chaos - target) <= b);
 
     while (!cands.length && b <= 60){
       b+=10;
       cands = MOVIES.map((m,i)=>({m,i}))
-        .filter(({m}) => passesTheme(m) && passesContent(m) && (typeof m.chaos==="number") && Math.abs(m.chaos - target) <= b);
+        .filter(({m}) => themePass(m,false) && contentPass(m,false) && (typeof m.chaos==="number") && Math.abs(m.chaos - target) <= b);
     }
     if (!cands.length){
       cands = MOVIES.map((m,i)=>({m,i}))
-        .filter(({m}) => passesTheme(m) && passesContent(m));
+        .filter(({m}) => themePass(m,false) && contentPass(m,false));
     }
     if (!cands.length){ cands = MOVIES.map((m,i)=>({m,i})); }
 
     const deck = cands.map(x=>x.i);
-    // Shuffle
     try{
       const rnd = new Uint32Array(deck.length);
       if (crypto?.getRandomValues) crypto.getRandomValues(rnd);
@@ -389,8 +376,7 @@ function render(item){
   const why=(item.chaos_reason||"").trim(); const w=$("#whyBox");
   if (why){ w.textContent=why; w.style.display="block"; } else w.style.display="none";
   links($("#linksRow"), item);
-  // clear any old pair shown
-  show($("#miniPair"), false);
+  show($("#miniPair"), false); // clear any old pair
 }
 
 /* ====== PICKING ====== */
@@ -410,54 +396,67 @@ function dealOne(){
   render(MOVIES[idx]);
 }
 
-/* Helper: find neighbors & opposite-energy pairing */
-function neighbors(target,initial,max,step){
-  for (let r=initial;r<=max;r+=step){
-    const pool=[];
-    for (let i=0;i<MOVIES.length;i++){
-      if (i===lastPickIndex) continue;
-      const m=MOVIES[i]; if (!passesTheme(m) || !passesContent(m)) continue;
-      const c=typeof m.chaos==="number"?m.chaos:50;
-      if (Math.abs(c-target)<=r) pool.push(i);
+/* ====== FLEXIBLE PAIR FINDER ====== */
+function findPairFlexible(){
+  if (lastPickIndex==null) return {idx:null, note:null};
+  const main = MOVIES[lastPickIndex];
+  const mc = typeof main.chaos === "number" ? main.chaos : 50;
+
+  // 1) try opposite-energy with current filters, expanding radius
+  let note = null;
+  for (let relaxTheme=false; relaxTheme<=1; relaxTheme++){
+    for (let relaxContent=false; relaxContent<=1; relaxContent++){
+      let radius = 12;
+      while (radius <= 60){
+        const pool=[];
+        for (let i=0;i<MOVIES.length;i++){
+          if (i===lastPickIndex) continue;
+          const m=MOVIES[i];
+          if (!themePass(m, !!relaxTheme)) continue;
+          if (!contentPass(m, !!relaxContent)) continue;
+          const c = typeof m.chaos==="number" ? m.chaos : 50;
+          if (Math.abs(c - (100 - mc)) <= radius) pool.push(i);
+        }
+        if (pool.length){
+          if (relaxTheme || relaxContent || radius>20){
+            const bits=[];
+            if (radius>20) bits.push(`wider band (±${radius})`);
+            if (relaxTheme) bits.push("ignored theme");
+            if (relaxContent) bits.push("ignored content filters");
+            note = "Pair found with " + bits.join(", ") + ".";
+          }
+          return { idx: pool[Math.floor(Math.random()*pool.length)], note };
+        }
+        radius += 8;
+      }
     }
-    if (pool.length) return pool;
   }
-  return MOVIES.map((m,i)=>({m,i})).filter(({m})=>passesTheme(m)&&passesContent(m)).map(x=>x.i);
+  // 2) nothing? take most different chaos from *anywhere* except main
+  let best=-1, idx=null;
+  for (let i=0;i<MOVIES.length;i++){
+    if (i===lastPickIndex) continue;
+    const m=MOVIES[i];
+    const d=Math.abs((m.chaos??50)-mc);
+    if (d>best){ best=d; idx=i; }
+  }
+  return { idx, note: "Pair ignores filters (no matches) — max contrast." };
 }
 
-/* ====== DOUBLE FEATURE (mini preview, non-destructive) ====== */
-function computePairIndex(){
-  if (lastPickIndex==null){ dealOne(); }
-  const main=MOVIES[lastPickIndex], mc=typeof main.chaos==="number"?main.chaos:50;
-  const target=Math.max(0, Math.min(100, 100-mc)); // cleanser by default (opposite energy)
-  let pool=neighbors(target,12,48,6);
-  if (!pool.length){
-    // fallback: most different chaos
-    let best=-1, idx=null;
-    for (let i=0;i<MOVIES.length;i++){
-      if (i===lastPickIndex) continue;
-      const m=MOVIES[i]; if (!passesTheme(m)||!passesContent(m)) continue;
-      const d=Math.abs((m.chaos??50)-mc); if (d>best){ best=d; idx=i; }
-    }
-    if (idx==null) return null;
-    pool=[idx];
-  }
-  return pool[Math.floor(Math.random()*pool.length)];
-}
-function showPair(idx){
-  if (idx==null){ setUIError("No suitable pair found with current filters."); return; }
-  lastPairIndex = idx;
-  const item = MOVIES[idx];
-  const mini = $("#miniPair");
+/* ====== DOUBLE FEATURE (preview) ====== */
+function showPair(index, note){
+  if (index==null){ setUIError("No suitable pair found."); return; }
+  lastPairIndex = index;
+  const item = MOVIES[index];
   setPoster($("#miniPoster"), item.poster, item.title);
   setText($("#miniTitle"), item.title||"Untitled");
-  $("#miniTag").textContent = (item.tagline||"").trim() || (item.chaos_reason||"").trim() || "Good counter-point.";
-  show(mini, true);
+  const tag = (item.tagline||"").trim() || (item.chaos_reason||"").trim() || "Good counter-point.";
+  $("#miniTag").textContent = note ? `${tag}  ·  ${note}` : tag;
+  show($("#miniPair"), true);
 }
-function doublePreview(){ // triggered by Double button
-  if (lastPickIndex==null){ dealOne(); return; }
-  const idx = computePairIndex();
-  showPair(idx);
+function doublePreview(){
+  if (lastPickIndex==null) dealOne();
+  const {idx, note} = findPairFlexible();
+  showPair(idx, note);
 }
 function swapIn(){
   if (lastPairIndex==null) return;
@@ -467,19 +466,26 @@ function swapIn(){
 
 /* ====== WIRES ====== */
 $("#deal").onclick = dealOne;
-$("#reroll").onclick = ()=>{ show($("#miniPair"), false); // hide pair on reroll
+$("#reroll").onclick = ()=>{ show($("#miniPair"), false);
   if (lastPickIndex==null){ dealOne(); return; }
   const curr=MOVIES[lastPickIndex], c=typeof curr.chaos==="number"?curr.chaos:50;
-  const pool=neighbors(c,10,40,5);
-  if (!pool.length){ setUIError("No nearby picks with current filters."); return; }
+  // small-radius neighbor with current filters
+  let pool=[];
+  for (let i=0;i<MOVIES.length;i++){
+    if (i===lastPickIndex) continue;
+    const m=MOVIES[i]; if (!themePass(m,false) || !contentPass(m,false)) continue;
+    const cc=typeof m.chaos==="number"?m.chaos:50;
+    if (Math.abs(cc-c)<=15) pool.push(i);
+  }
+  if (!pool.length){ pool = MOVIES.map((m,i)=>i).filter(i=>i!==lastPickIndex && themePass(MOVIES[i],false) && contentPass(MOVIES[i],false)); }
+  if (!pool.length){ pool = MOVIES.map((_,i)=>i).filter(i=>i!==lastPickIndex); }
   const idx = pool[Math.floor(Math.random()*pool.length)];
-  lastPickIndex = idx;
-  render(MOVIES[idx]);
+  lastPickIndex = idx; render(MOVIES[idx]);
 };
 $("#double").onclick = doublePreview;
 
 $("#swapIn").onclick = swapIn;
-$("#rerollPair").onclick = ()=>{ const idx = computePairIndex(); showPair(idx); };
+$("#rerollPair").onclick = ()=>{ const {idx, note} = findPairFlexible(); showPair(idx, note); };
 
 /* Filters dialog */
 const dlg=$("#filtersDlg");
@@ -494,17 +500,16 @@ $("#resetAll").onclick = ()=>{
   ["fNoGore","fNoSV","fNoKids"].forEach(id=>$("#"+id).classList.remove("active"));
   rebuildDeck(); dlg.close();
 };
-/* Top toggles */
 $("#modeSegTop").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return;
   MODE=e.target.dataset.mode; [...$("#modeSegTop").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); });
 $("#biasSegTop").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return;
   VARIETY=e.target.dataset.bias; [...$("#biasSegTop").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); });
-/* Theme chips */
+
 function setTheme(w){ THEME=w; ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active"));
   const map={all:"thAll",witch:"thWitch",body:"thBody",folk:"thFolk",found:"thFound",neon:"thNeon"}; $("#"+map[w]).classList.add("active"); rebuildDeck(); }
 $("#thAll").onclick=()=>setTheme("all"); $("#thWitch").onclick=()=>setTheme("witch"); $("#thBody").onclick=()=>setTheme("body");
 $("#thFolk").onclick=()=>setTheme("folk"); $("#thFound").onclick=()=>setTheme("found"); $("#thNeon").onclick=()=>setTheme("neon");
-/* Content toggles */
+
 $("#fNoGore").onclick =()=>{ FILTERS.noGore=!FILTERS.noGore; $("#fNoGore").classList.toggle("active",FILTERS.noGore); rebuildDeck(); };
 $("#fNoSV").onclick   =()=>{ FILTERS.noSV=!FILTERS.noSV; $("#fNoSV").classList.toggle("active",FILTERS.noSV); rebuildDeck(); };
 $("#fNoKids").onclick =()=>{ FILTERS.noKids=!FILTERS.noKids; $("#fNoKids").classList.toggle("active",FILTERS.noKids); rebuildDeck(); };
