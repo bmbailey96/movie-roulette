@@ -13,17 +13,18 @@
     --bg:#0b0b0b; --card:#101010; --fg:#f4f4f4; --muted:#a9b0b6; --border:#212121;
     --accent:#77ffa5; --accentFg:#051e11; --ghost:#151515;
     --radius:16px; --shadow:0 10px 34px rgba(0,0,0,.45);
+    --tick: drop-shadow(0 0 0 rgba(0,0,0,0));
   }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
-    font:15px/1.45 system-ui, -apple-system, Inter, Segoe UI, Roboto, Arial, sans-serif; overflow:hidden; }
+    font:15px/1.45 system-ui,-apple-system,Inter,Segoe UI,Roboto,Arial,sans-serif; overflow:hidden; }
 
-  .wrap{
-    height:100dvh; display:flex;
+  .wrap{ height:100dvh; display:flex;
     padding:calc(env(safe-area-inset-top)) calc(env(safe-area-inset-right)) calc(env(safe-area-inset-bottom)) calc(env(safe-area-inset-left));
   }
   .card{
-    margin:auto; width:min(860px,100%); height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 12px);
+    margin:auto; width:min(880px,100%);
+    height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 12px);
     background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow);
     display:grid; grid-template-rows:auto auto 1fr auto; gap:8px; padding:10px; overflow:hidden;
   }
@@ -33,22 +34,33 @@
   .sub{ color:var(--muted); font-size:12px; margin-top:-4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .deck{ color:#cfe; font-size:12px; padding:6px 10px; border:1px solid #263; border-radius:10px; background:#0f1a14; }
 
-  .toolbar{ display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+  .toolbar{
+    display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+  }
   .group{ display:flex; gap:8px; align-items:center; }
   .label{ color:#9ab; font-size:12px; margin-right:2px; }
   .seg{ display:flex; background:#141414; border:1px solid #262626; border-radius:999px; overflow:hidden; }
   .seg button{ background:transparent; border:0; color:#dfffe8; padding:8px 12px; font-weight:900; font-size:13px; cursor:pointer; }
   .seg button.active{ background:#203626; color:#b8ffd1; }
 
+  .presets{ display:flex; gap:8px; flex-wrap:wrap; }
+  .preset{ background:#141414; border:1px solid #262626; color:#dfffe8; font-weight:800; font-size:12px;
+           padding:6px 10px; border-radius:999px; cursor:pointer; }
+
   .stage{
-    min-height:0; display:grid; grid-template-columns:minmax(44%, 46%) 1fr; gap:12px;
+    min-height:0; display:grid; grid-template-columns:minmax(52%,58%) 1fr; gap:12px;
     align-items:start; overflow:hidden; width:100%;
   }
-  @media (max-width:480px){ .stage{ grid-template-columns:48% 1fr; } }
+  @media (max-width:420px){ .stage{ grid-template-columns:56% 1fr; } }
 
-  .poster{ width:100%; aspect-ratio:2/3; object-fit:cover; border-radius:14px; background:#181818; border:1px solid #1f1f1f; }
-  .poster.skeleton{ animation:pulse 1.2s infinite ease-in-out; background: linear-gradient(90deg,#141414 25%,#1a1a1a 37%,#141414 63%); background-size:400% 100%; }
+  .poster{
+    width:100%; aspect-ratio:2/3; object-fit:cover; border-radius:14px;
+    background:#181818; border:1px solid #1f1f1f; position:relative;
+  }
+  .poster.skeleton{ animation:pulse 1.2s infinite ease-in-out; background:linear-gradient(90deg,#141414 25%,#1a1a1a 37%,#141414 63%); background-size:400% 100%; }
   @keyframes pulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
+  .poster.tick{ animation:tick .18s ease; }
+  @keyframes tick{ 0%{transform:scale(.99)} 50%{transform:scale(1.01)} 100%{transform:scale(1)} }
 
   .infoCol{
     min-width:0; min-height:0; display:grid; grid-template-rows:auto auto auto 1fr auto; gap:8px;
@@ -65,17 +77,6 @@
   .links{ display:grid; grid-template-columns:1fr; gap:8px; }
   .links a{ display:block; padding:12px; text-align:center; border-radius:12px; text-decoration:none; font-weight:900; font-size:15px; background:#1b1b1b; color:#c0ffd6; border:1px solid #2a2a2a; }
 
-  /* Mini double-feature card */
-  .mini{
-    display:none; grid-template-columns:72px 1fr; gap:10px; align-items:center;
-    border:1px solid #2a2a2a; background:#121212; border-radius:14px; padding:8px;
-  }
-  .mini .miniPoster{ width:72px; height:108px; border-radius:10px; object-fit:cover; background:#181818; border:1px solid #1f1f1f; }
-  .miniTitle{ font-weight:900; margin:0; font-size:15px; line-height:1.1; }
-  .miniTag{ color:#cde5da; font-size:12px; margin:.25rem 0 .5rem; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-  .miniRow{ display:flex; gap:8px; }
-  .miniBtn{ appearance:none; border:1px solid #2a2a2a; background:#171717; color:#e9fff3; padding:8px 10px; border-radius:10px; font-weight:800; font-size:12px; }
-
   .dock{
     display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; align-items:center;
     padding-bottom:calc(env(safe-area-inset-bottom) + 2px);
@@ -91,6 +92,15 @@
   .pill.active{ background:#242a24; color:#b6ffd1; }
   .kicker{ color:#9ab; font-size:12px; }
   .small{ color:#9ab; font-size:11px; white-space:normal; }
+
+  /* toast */
+  .toast{
+    position:fixed; left:50%; bottom:calc(18px + env(safe-area-inset-bottom)); transform:translateX(-50%);
+    background:#0f1511; border:1px solid #2a3a2f; color:#caffe0; padding:10px 12px; border-radius:12px; font-weight:800;
+    display:none; z-index:50;
+  }
+  .toast.show{ display:block; animation:fade 2.4s ease both; }
+  @keyframes fade{ 0%{opacity:0; transform:translate(-50%, 8px)} 10%{opacity:1; transform:translate(-50%,0)} 90%{opacity:1} 100%{opacity:0} }
 </style>
 </head>
 <body>
@@ -121,11 +131,16 @@
           <button data-bias="W">Wide</button>
         </div>
       </div>
+      <div class="presets" id="presets">
+        <button class="preset" data-p="cozy">Cozy offbeat</button>
+        <button class="preset" data-p="midnight">Cult midnight</button>
+        <button class="preset" data-p="folk">Folk dread</button>
+      </div>
     </div>
 
     <section class="stage" aria-live="polite">
       <img id="poster" class="poster skeleton" referrerpolicy="no-referrer" alt="Movie poster"/>
-      <div class="infoCol">
+      <div class="infoCol" id="longPressArea">
         <h2 class="titleMovie" id="title">—</h2>
         <p class="tagline" id="taglineInline" style="display:none;"></p>
         <div class="micro">
@@ -136,20 +151,6 @@
         <div class="badges" id="streamBadges" style="display:none;"></div>
         <div class="whyBox" id="whyBox"></div>
         <div class="links" id="linksRow"></div>
-
-        <!-- Mini double-feature preview -->
-        <div class="mini" id="miniPair">
-          <img class="miniPoster" id="miniPoster" alt="Double feature poster"/>
-          <div>
-            <h3 class="miniTitle" id="miniTitle">—</h3>
-            <div class="miniTag" id="miniTag"></div>
-            <div class="miniRow">
-              <button class="miniBtn" id="swapIn">Swap in</button>
-              <button class="miniBtn" id="rerollPair">Re-roll pair</button>
-            </div>
-          </div>
-        </div>
-
         <div class="small" id="err" role="alert" aria-live="polite"></div>
       </div>
     </section>
@@ -157,8 +158,8 @@
     <nav class="dock">
       <button id="deal" class="btn pri">Deal</button>
       <button id="reroll" class="btn gh">Re-roll</button>
-      <button id="double" class="btn gh">Double</button>
       <button id="openFilters" class="btn gh">Filters</button>
+      <button id="undo" class="btn gh">Undo banish</button>
     </nav>
   </main>
 </div>
@@ -191,6 +192,8 @@
   </div>
 </dialog>
 
+<div class="toast" id="toast">Banished for today • Hold Undo</div>
+
 <script>
 /* ====== CONFIG ====== */
 const MY_SERVICES = new Set(["Netflix","Amazon Prime Video","Hulu","Max","Paramount+","Apple TV+","Tubi TV"]);
@@ -199,6 +202,17 @@ const TMDB_IMG = "https://image.tmdb.org/t/p";
 /* ====== UTIL ====== */
 const $ = s => document.querySelector(s);
 function setUIError(m=""){ const e=$("#err"); e.textContent=m; e.style.color=m?"#ffb3b3":"#9ab"; }
+function todayKey(){ const d=new Date(); return d.toISOString().slice(0,10); }
+function haptics(type="light"){
+  // Android: vibrate; iOS Safari: no Vibrate API, so we add a tiny visual tick on the poster.
+  if (navigator.vibrate) {
+    if (type==="heavy") navigator.vibrate([12,30,12]);
+    else if (type==="mid") navigator.vibrate(12);
+    else navigator.vibrate(8);
+  } else {
+    const p=$("#poster"); p.classList.add("tick"); setTimeout(()=>p.classList.remove("tick"),180);
+  }
+}
 
 /* Poster helper (no API calls) */
 function posterURL(path, size="w500"){
@@ -213,16 +227,11 @@ function posterURL(path, size="w500"){
 function setPoster(imgEl, posterPath, title){
   const sizes = ["w500","w780","original","w342"];
   let i = 0;
-  function tryNext(){
-    const u = posterURL(posterPath, sizes[i]);
-    if (!u){ setFallback(); return; }
-    imgEl.src = u;
-  }
+  function tryNext(){ const u = posterURL(posterPath, sizes[i]); if (!u){ setFallback(); return; } imgEl.src = u; }
   function setFallback(){
     imgEl.src = `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900"><rect width="100%" height="100%" fill="#141414"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#5a5a5a" font-family="system-ui, -apple-system, Segoe UI, Roboto" font-size="28">NO POSTER</text></svg>')}`;
   }
-  imgEl.alt = title || "poster";
-  imgEl.classList.add("skeleton");
+  imgEl.alt = title || "poster"; imgEl.classList.add("skeleton");
   imgEl.onerror = () => { i++; (i < sizes.length) ? tryNext() : (setFallback(), imgEl.classList.remove("skeleton")); };
   imgEl.onload  = () => imgEl.classList.remove("skeleton");
   tryNext();
@@ -235,11 +244,24 @@ let VARIETY="T";  // T | M | W
 let THEME="all";
 let FILTERS={ noGore:false, noSV:false, noKids:false };
 let lastPickIndex=null;
-let lastPairIndex=null;
+let banished = { date: todayKey(), ids: [] };
 
 /* ====== DATA ====== */
+function loadBanished(){
+  const raw = localStorage.getItem("mr_banished");
+  if (!raw) return;
+  try{
+    const obj = JSON.parse(raw);
+    if (obj.date === todayKey() && Array.isArray(obj.ids)) banished = obj;
+  }catch{}
+}
+function saveBanished(){ localStorage.setItem("mr_banished", JSON.stringify(banished)); }
+
+function idFor(m){ return `${m.title || ""}::${m.year || ""}`; }
+
 async function loadData(){
   try{
+    loadBanished();
     const r = await fetch("./movies.json?v="+Date.now(), {cache:"no-store"});
     const txt = await r.text(); if(!r.ok) throw new Error(`HTTP ${r.status}`);
     const raw = JSON.parse(txt);
@@ -257,7 +279,7 @@ async function loadData(){
   }
 }
 
-/* ====== FILTERS ====== */
+/* ====== FILTERS & PRESETS ====== */
 function providerMatches(p){
   if (!p?.name) return false;
   const n = String(p.name).trim();
@@ -280,23 +302,38 @@ function buildBadges(container, item){
     container.style.display="";
   } else container.style.display="none";
 }
-function contentPass(item, relax=false){
-  if (relax) return !item.unreleased_error;
+function themePass(item){
   const f=item.flags||{};
-  if (FILTERS.noGore && f.extreme_gore) return false;
-  if (FILTERS.noSV && f.sexual_violence) return false;
-  if (FILTERS.noKids && f.kids_in_peril) return false;
-  return !item.unreleased_error;
-}
-function themePass(item, relax=false){
-  if (relax || THEME==="all") return true;
-  const f=item.flags||{};
+  if (THEME==="all") return true;
   if (THEME==="witch") return f.theme_witchy;
   if (THEME==="body")  return f.theme_body_horror;
   if (THEME==="folk")  return f.theme_folk;
   if (THEME==="found") return f.theme_found_footage;
   if (THEME==="neon")  return f.theme_neon;
   return true;
+}
+function contentPass(item){
+  const f=item.flags||{};
+  if (FILTERS.noGore && f.extreme_gore) return false;
+  if (FILTERS.noSV && f.sexual_violence) return false;
+  if (FILTERS.noKids && f.kids_in_peril) return false;
+  return !item.unreleased_error;
+}
+
+/* Mood presets */
+function applyPreset(key){
+  if (key==="cozy"){ MODE="order"; VARIETY="T"; THEME="all"; FILTERS={...FILTERS, noKids:true, noSV:true}; }
+  if (key==="midnight"){ MODE="chaos"; VARIETY="W"; THEME="neon"; FILTERS={...FILTERS, noKids:false, noSV:false}; }
+  if (key==="folk"){ MODE="mix"; VARIETY="M"; THEME="folk"; FILTERS={...FILTERS, noKids:true}; }
+  // update UI toggles
+  [...$("#modeSegTop").children].forEach(b=>b.classList.toggle("active", b.dataset.mode===MODE));
+  [...$("#biasSegTop").children].forEach(b=>b.classList.toggle("active", b.dataset.bias===VARIETY));
+  ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active"));
+  const map={all:"thAll",witch:"thWitch",body:"thBody",folk:"thFolk",found:"thFound",neon:"thNeon"}; $("#"+map[THEME]).classList.add("active");
+  $("#fNoKids").classList.toggle("active",FILTERS.noKids);
+  $("#fNoSV").classList.toggle("active",FILTERS.noSV);
+  rebuildDeck();
+  haptics("mid");
 }
 
 /* ====== CHAOS TARGETING ====== */
@@ -309,22 +346,24 @@ function rebuildDeck(){
     if (!MOVIES.length) return;
     const target = chaosTarget();
     let b = band();
+    const todaysBan = (banished.date===todayKey()) ? new Set(banished.ids) : new Set();
 
     let cands = MOVIES.map((m,i)=>({m,i}))
-      .filter(({m}) => themePass(m,false) && contentPass(m,false) && (typeof m.chaos==="number") && Math.abs(m.chaos - target) <= b);
+      .filter(({m}) => !todaysBan.has(idFor(m)) && themePass(m) && contentPass(m) && (typeof m.chaos==="number") && Math.abs(m.chaos - target) <= b);
 
     while (!cands.length && b <= 60){
       b+=10;
       cands = MOVIES.map((m,i)=>({m,i}))
-        .filter(({m}) => themePass(m,false) && contentPass(m,false) && (typeof m.chaos==="number") && Math.abs(m.chaos - target) <= b);
+        .filter(({m}) => !todaysBan.has(idFor(m)) && themePass(m) && contentPass(m) && (typeof m.chaos==="number") && Math.abs(m.chaos - target) <= b);
     }
     if (!cands.length){
       cands = MOVIES.map((m,i)=>({m,i}))
-        .filter(({m}) => themePass(m,false) && contentPass(m,false));
+        .filter(({m}) => !todaysBan.has(idFor(m)) && themePass(m) && contentPass(m));
     }
-    if (!cands.length){ cands = MOVIES.map((m,i)=>({m,i})); }
+    if (!cands.length){ cands = MOVIES.map((m,i)=>({m,i})).filter(({m})=>!todaysBan.has(idFor(m))); }
 
     const deck = cands.map(x=>x.i);
+    // shuffle
     try{
       const rnd = new Uint32Array(deck.length);
       if (crypto?.getRandomValues) crypto.getRandomValues(rnd);
@@ -360,7 +399,7 @@ function links(container, item){
   if (!names.length){
     const q=encodeURIComponent(`${item.title} full movie site:archive.org OR site:youtube.com OR torrent`);
     const s=document.createElement("a");
-    s.textContent="Search elsewhere"; s.href="https://www.google.com/search?q="+q; s.target="_blank"; s.rel="noopener";
+    s.textContent="Search"; s.href="https://www.google.com/search?q="+q; s.target="_blank"; s.rel="noopener";
     container.appendChild(s);
   }
 }
@@ -376,118 +415,72 @@ function render(item){
   const why=(item.chaos_reason||"").trim(); const w=$("#whyBox");
   if (why){ w.textContent=why; w.style.display="block"; } else w.style.display="none";
   links($("#linksRow"), item);
-  show($("#miniPair"), false); // clear any old pair
 }
 
 /* ====== PICKING ====== */
 function safeDealIndex(){
   if (!DECK.length) rebuildDeck();
   let idx = DECK.pop();
-  if (idx==null || idx===undefined || isNaN(idx)){
-    idx = Math.floor(Math.random()*Math.max(1, MOVIES.length));
-  }
+  if (idx==null || idx===undefined || isNaN(idx)){ idx = Math.floor(Math.random()*Math.max(1, MOVIES.length)); }
   return idx;
 }
 function dealOne(){
   if (!MOVIES.length){ setUIError("Data not loaded yet."); return; }
-  const idx = safeDealIndex();
-  lastPickIndex = idx;
+  const idx = safeDealIndex(); lastPickIndex = idx;
   $("#left").textContent = Math.max(0, DECK.length);
   render(MOVIES[idx]);
+  haptics("light");
 }
-
-/* ====== FLEXIBLE PAIR FINDER ====== */
-function findPairFlexible(){
-  if (lastPickIndex==null) return {idx:null, note:null};
-  const main = MOVIES[lastPickIndex];
-  const mc = typeof main.chaos === "number" ? main.chaos : 50;
-
-  // 1) try opposite-energy with current filters, expanding radius
-  let note = null;
-  for (let relaxTheme=false; relaxTheme<=1; relaxTheme++){
-    for (let relaxContent=false; relaxContent<=1; relaxContent++){
-      let radius = 12;
-      while (radius <= 60){
-        const pool=[];
-        for (let i=0;i<MOVIES.length;i++){
-          if (i===lastPickIndex) continue;
-          const m=MOVIES[i];
-          if (!themePass(m, !!relaxTheme)) continue;
-          if (!contentPass(m, !!relaxContent)) continue;
-          const c = typeof m.chaos==="number" ? m.chaos : 50;
-          if (Math.abs(c - (100 - mc)) <= radius) pool.push(i);
-        }
-        if (pool.length){
-          if (relaxTheme || relaxContent || radius>20){
-            const bits=[];
-            if (radius>20) bits.push(`wider band (±${radius})`);
-            if (relaxTheme) bits.push("ignored theme");
-            if (relaxContent) bits.push("ignored content filters");
-            note = "Pair found with " + bits.join(", ") + ".";
-          }
-          return { idx: pool[Math.floor(Math.random()*pool.length)], note };
-        }
-        radius += 8;
-      }
-    }
-  }
-  // 2) nothing? take most different chaos from *anywhere* except main
-  let best=-1, idx=null;
+function rerollNearby(){
+  if (lastPickIndex==null){ dealOne(); return; }
+  const curr=MOVIES[lastPickIndex], c=typeof curr.chaos==="number"?curr.chaos:50;
+  let pool=[];
   for (let i=0;i<MOVIES.length;i++){
     if (i===lastPickIndex) continue;
-    const m=MOVIES[i];
-    const d=Math.abs((m.chaos??50)-mc);
-    if (d>best){ best=d; idx=i; }
+    const m=MOVIES[i]; if (!themePass(m) || !contentPass(m)) continue;
+    const cc=typeof m.chaos==="number"?m.chaos:50;
+    if (Math.abs(cc-c)<=15) pool.push(i);
   }
-  return { idx, note: "Pair ignores filters (no matches) — max contrast." };
+  if (!pool.length){ pool = MOVIES.map((m,i)=>i).filter(i=>i!==lastPickIndex && themePass(MOVIES[i]) && contentPass(MOVIES[i])); }
+  if (!pool.length){ pool = MOVIES.map((_,i)=>i).filter(i=>i!==lastPickIndex); }
+  const idx = pool[Math.floor(Math.random()*pool.length)];
+  lastPickIndex = idx; render(MOVIES[idx]); haptics("mid");
 }
 
-/* ====== DOUBLE FEATURE (preview) ====== */
-function showPair(index, note){
-  if (index==null){ setUIError("No suitable pair found."); return; }
-  lastPairIndex = index;
-  const item = MOVIES[index];
-  setPoster($("#miniPoster"), item.poster, item.title);
-  setText($("#miniTitle"), item.title||"Untitled");
-  const tag = (item.tagline||"").trim() || (item.chaos_reason||"").trim() || "Good counter-point.";
-  $("#miniTag").textContent = note ? `${tag}  ·  ${note}` : tag;
-  show($("#miniPair"), true);
+/* ====== BANISH (long press) ====== */
+let lpTimer=null, lpActive=false;
+function startLP(){
+  if (lastPickIndex==null) return;
+  lpActive=true;
+  lpTimer=setTimeout(()=>{ banishCurrent(); }, 600);
 }
-function doublePreview(){
-  if (lastPickIndex==null) dealOne();
-  const {idx, note} = findPairFlexible();
-  showPair(idx, note);
+function endLP(){ clearTimeout(lpTimer); lpActive=false; }
+function banishCurrent(){
+  if (lastPickIndex==null) return;
+  const it = MOVIES[lastPickIndex];
+  const key = idFor(it);
+  if (banished.date !== todayKey()) banished = { date: todayKey(), ids: [] };
+  if (!banished.ids.includes(key)) banished.ids.push(key);
+  saveBanished();
+  showToast("Banished for today — Undo");
+  rebuildDeck();
+  dealOne();
+  haptics("heavy");
 }
-function swapIn(){
-  if (lastPairIndex==null) return;
-  lastPickIndex = lastPairIndex;
-  render(MOVIES[lastPickIndex]);
+function undoBanish(){
+  if (banished.date !== todayKey() || !banished.ids.length) return;
+  banished.ids.pop(); saveBanished(); showToast("Undo ✓"); rebuildDeck();
+}
+
+function showToast(text){
+  const t=$("#toast"); t.textContent=text; t.classList.remove("show"); void t.offsetWidth; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2300);
 }
 
 /* ====== WIRES ====== */
 $("#deal").onclick = dealOne;
-$("#reroll").onclick = ()=>{ show($("#miniPair"), false);
-  if (lastPickIndex==null){ dealOne(); return; }
-  const curr=MOVIES[lastPickIndex], c=typeof curr.chaos==="number"?curr.chaos:50;
-  // small-radius neighbor with current filters
-  let pool=[];
-  for (let i=0;i<MOVIES.length;i++){
-    if (i===lastPickIndex) continue;
-    const m=MOVIES[i]; if (!themePass(m,false) || !contentPass(m,false)) continue;
-    const cc=typeof m.chaos==="number"?m.chaos:50;
-    if (Math.abs(cc-c)<=15) pool.push(i);
-  }
-  if (!pool.length){ pool = MOVIES.map((m,i)=>i).filter(i=>i!==lastPickIndex && themePass(MOVIES[i],false) && contentPass(MOVIES[i],false)); }
-  if (!pool.length){ pool = MOVIES.map((_,i)=>i).filter(i=>i!==lastPickIndex); }
-  const idx = pool[Math.floor(Math.random()*pool.length)];
-  lastPickIndex = idx; render(MOVIES[idx]);
-};
-$("#double").onclick = doublePreview;
+$("#reroll").onclick = rerollNearby;
 
-$("#swapIn").onclick = swapIn;
-$("#rerollPair").onclick = ()=>{ const {idx, note} = findPairFlexible(); showPair(idx, note); };
-
-/* Filters dialog */
 const dlg=$("#filtersDlg");
 $("#openFilters").onclick = ()=>dlg.showModal();
 $("#closeFilters").onclick = ()=>dlg.close();
@@ -495,24 +488,39 @@ $("#resetAll").onclick = ()=>{
   MODE="mix"; VARIETY="T"; THEME="all"; FILTERS={noGore:false,noSV:false,noKids:false};
   [...$("#modeSegTop").children].forEach(b=>b.classList.remove("active")); $("#modeSegTop").children[1].classList.add("active");
   [...$("#biasSegTop").children].forEach(b=>b.classList.remove("active")); $("#biasSegTop").children[0].classList.add("active");
-  ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active"));
-  $("#thAll").classList.add("active");
+  ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active")); $("#thAll").classList.add("active");
   ["fNoGore","fNoSV","fNoKids"].forEach(id=>$("#"+id).classList.remove("active"));
   rebuildDeck(); dlg.close();
 };
+
 $("#modeSegTop").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return;
-  MODE=e.target.dataset.mode; [...$("#modeSegTop").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); });
+  MODE=e.target.dataset.mode; [...$("#modeSegTop").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); haptics("light"); });
+
 $("#biasSegTop").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return;
-  VARIETY=e.target.dataset.bias; [...$("#biasSegTop").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); });
+  VARIETY=e.target.dataset.bias; [...$("#biasSegTop").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); haptics("light"); });
 
 function setTheme(w){ THEME=w; ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active"));
-  const map={all:"thAll",witch:"thWitch",body:"thBody",folk:"thFolk",found:"thFound",neon:"thNeon"}; $("#"+map[w]).classList.add("active"); rebuildDeck(); }
+  const map={all:"thAll",witch:"thWitch",body:"thBody",folk:"thFolk",found:"thFound",neon:"thNeon"}; $("#"+map[w]).classList.add("active"); rebuildDeck(); haptics("light"); }
 $("#thAll").onclick=()=>setTheme("all"); $("#thWitch").onclick=()=>setTheme("witch"); $("#thBody").onclick=()=>setTheme("body");
 $("#thFolk").onclick=()=>setTheme("folk"); $("#thFound").onclick=()=>setTheme("found"); $("#thNeon").onclick=()=>setTheme("neon");
 
-$("#fNoGore").onclick =()=>{ FILTERS.noGore=!FILTERS.noGore; $("#fNoGore").classList.toggle("active",FILTERS.noGore); rebuildDeck(); };
-$("#fNoSV").onclick   =()=>{ FILTERS.noSV=!FILTERS.noSV; $("#fNoSV").classList.toggle("active",FILTERS.noSV); rebuildDeck(); };
-$("#fNoKids").onclick =()=>{ FILTERS.noKids=!FILTERS.noKids; $("#fNoKids").classList.toggle("active",FILTERS.noKids); rebuildDeck(); };
+$("#fNoGore").onclick =()=>{ FILTERS.noGore=!FILTERS.noGore; $("#fNoGore").classList.toggle("active",FILTERS.noGore); rebuildDeck(); haptics("light"); };
+$("#fNoSV").onclick   =()=>{ FILTERS.noSV=!FILTERS.noSV; $("#fNoSV").classList.toggle("active",FILTERS.noSV); rebuildDeck(); haptics("light"); };
+$("#fNoKids").onclick =()=>{ FILTERS.noKids=!FILTERS.noKids; $("#fNoKids").classList.toggle("active",FILTERS.noKids); rebuildDeck(); haptics("light"); };
+
+$("#presets").addEventListener("click",(e)=>{ const b=e.target.closest(".preset"); if(!b)return; applyPreset(b.dataset.p); });
+
+/* long-press banish on poster or info area title */
+["poster","longPressArea"].forEach(id=>{
+  const el = document.getElementById(id);
+  el.addEventListener("touchstart", startLP, {passive:true});
+  el.addEventListener("touchend", endLP);
+  el.addEventListener("touchcancel", endLP);
+  el.addEventListener("mousedown", startLP);
+  el.addEventListener("mouseleave", endLP);
+  el.addEventListener("mouseup", endLP);
+});
+$("#undo").onclick = ()=>{ undoBanish(); haptics("mid"); };
 
 /* Start */
 loadData();
