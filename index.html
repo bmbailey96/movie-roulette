@@ -13,7 +13,6 @@
     --bg:#0b0b0b; --card:#101010; --fg:#f4f4f4; --muted:#a9b0b6; --border:#212121;
     --accent:#77ffa5; --accentFg:#051e11; --ghost:#151515;
     --radius:16px; --shadow:0 10px 34px rgba(0,0,0,.45);
-    --tick: drop-shadow(0 0 0 rgba(0,0,0,0));
   }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
@@ -34,9 +33,7 @@
   .sub{ color:var(--muted); font-size:12px; margin-top:-4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .deck{ color:#cfe; font-size:12px; padding:6px 10px; border:1px solid #263; border-radius:10px; background:#0f1a14; }
 
-  .toolbar{
-    display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;
-  }
+  .toolbar{ display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
   .group{ display:flex; gap:8px; align-items:center; }
   .label{ color:#9ab; font-size:12px; margin-right:2px; }
   .seg{ display:flex; background:#141414; border:1px solid #262626; border-radius:999px; overflow:hidden; }
@@ -204,17 +201,19 @@ const $ = s => document.querySelector(s);
 function setUIError(m=""){ const e=$("#err"); e.textContent=m; e.style.color=m?"#ffb3b3":"#9ab"; }
 function todayKey(){ const d=new Date(); return d.toISOString().slice(0,10); }
 function haptics(type="light"){
-  // Android: vibrate; iOS Safari: no Vibrate API, so we add a tiny visual tick on the poster.
   if (navigator.vibrate) {
     if (type==="heavy") navigator.vibrate([12,30,12]);
     else if (type==="mid") navigator.vibrate(12);
     else navigator.vibrate(8);
-  } else {
-    const p=$("#poster"); p.classList.add("tick"); setTimeout(()=>p.classList.remove("tick"),180);
-  }
+  } else { const p=$("#poster"); p.classList.add("tick"); setTimeout(()=>p.classList.remove("tick"),180); }
 }
 
-/* Poster helper (no API calls) */
+/* Prevent iOS image long-press UI */
+document.addEventListener("contextmenu", e => {
+  if (e.target && (e.target.id==="poster" || e.target.closest("#poster"))) e.preventDefault();
+});
+
+/* Poster helper */
 function posterURL(path, size="w500"){
   if (!path) return "";
   const s = String(path).trim();
@@ -256,7 +255,6 @@ function loadBanished(){
   }catch{}
 }
 function saveBanished(){ localStorage.setItem("mr_banished", JSON.stringify(banished)); }
-
 function idFor(m){ return `${m.title || ""}::${m.year || ""}`; }
 
 async function loadData(){
@@ -265,12 +263,8 @@ async function loadData(){
     const r = await fetch("./movies.json?v="+Date.now(), {cache:"no-store"});
     const txt = await r.text(); if(!r.ok) throw new Error(`HTTP ${r.status}`);
     const raw = JSON.parse(txt);
-    MOVIES = raw.map(x => ({
-      ...x,
-      poster: x.poster || x.poster_path || "",
-      chaos: (typeof x.chaos === "number") ? x.chaos
-            : (x.Chaos!==undefined && x.Chaos!=="") ? Number(x.Chaos) : null
-    }));
+    MOVIES = raw.filter(x => !x.unreleased_error)  // hard filter out unreleased
+      .map(x => ({ ...x, poster: x.poster || x.poster_path || "", chaos: (typeof x.chaos === "number") ? x.chaos : (x.Chaos!==undefined && x.Chaos!=="") ? Number(x.Chaos) : null }));
     $("#total").textContent = MOVIES.length;
     rebuildDeck();
   }catch(e){
@@ -447,14 +441,13 @@ function rerollNearby(){
   lastPickIndex = idx; render(MOVIES[idx]); haptics("mid");
 }
 
-/* ====== BANISH (long press) ====== */
-let lpTimer=null, lpActive=false;
-function startLP(){
-  if (lastPickIndex==null) return;
-  lpActive=true;
-  lpTimer=setTimeout(()=>{ banishCurrent(); }, 600);
+/* ====== BANISH (long press on INFO AREA only) ====== */
+let lpTimer=null;
+function startLP(e){
+  // only trigger if the touch/mouse is inside the info column, not the poster (to avoid iOS image menu)
+  lpTimer=setTimeout(()=>{ banishCurrent(); }, 350);
 }
-function endLP(){ clearTimeout(lpTimer); lpActive=false; }
+function endLP(){ clearTimeout(lpTimer); }
 function banishCurrent(){
   if (lastPickIndex==null) return;
   const it = MOVIES[lastPickIndex];
@@ -510,16 +503,11 @@ $("#fNoKids").onclick =()=>{ FILTERS.noKids=!FILTERS.noKids; $("#fNoKids").class
 
 $("#presets").addEventListener("click",(e)=>{ const b=e.target.closest(".preset"); if(!b)return; applyPreset(b.dataset.p); });
 
-/* long-press banish on poster or info area title */
-["poster","longPressArea"].forEach(id=>{
-  const el = document.getElementById(id);
-  el.addEventListener("touchstart", startLP, {passive:true});
-  el.addEventListener("touchend", endLP);
-  el.addEventListener("touchcancel", endLP);
-  el.addEventListener("mousedown", startLP);
-  el.addEventListener("mouseleave", endLP);
-  el.addEventListener("mouseup", endLP);
-});
+/* long-press banish ONLY on info column */
+const infoLP = document.getElementById("longPressArea");
+["touchstart","mousedown"].forEach(ev=>infoLP.addEventListener(ev, startLP, {passive:true}));
+["touchend","touchcancel","mouseup","mouseleave"].forEach(ev=>infoLP.addEventListener(ev, endLP));
+
 $("#undo").onclick = ()=>{ undoBanish(); haptics("mid"); };
 
 /* Start */
