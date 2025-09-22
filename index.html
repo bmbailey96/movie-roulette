@@ -90,7 +90,6 @@
   .kicker{ color:#9ab; font-size:12px; }
   .small{ color:#9ab; font-size:11px; white-space:normal; }
 
-  /* toast */
   .toast{
     position:fixed; left:50%; bottom:calc(18px + env(safe-area-inset-bottom)); transform:translateX(-50%);
     background:#0f1511; border:1px solid #2a3a2f; color:#caffe0; padding:10px 12px; border-radius:12px; font-weight:800;
@@ -189,15 +188,18 @@
   </div>
 
   <p class="small" style="margin-top:8px">
-    Tip: you can enrich your CSV by creating <code>data/movies.csv</code> with columns:<br/>
+    Tip: You can enrich your CSV by creating <code>data/movies.csv</code> with columns:<br/>
     <code>Date,Name,Year,Letterboxd URI,Tagline,Chaos,Flags,Poster,Runtime</code><br/>
-    where <em>Flags</em> = space/comma list like <code>witchy body gore kids</code>.
+    where <em>Flags</em> = list like <code>witchy body folk found neon gore sv kids</code>.
   </p>
 </dialog>
 
 <div class="toast" id="toast">Banished for today • Hold Undo</div>
 
 <script>
+/* ====== PUT YOUR TMDB KEY HERE ====== */
+const TMDB_API_KEY = "PASTE_YOUR_TMDB_KEY_HERE"; // e.g. "000802da6224e125437187b196cde898"
+
 /* ====== CONFIG ====== */
 const MY_SERVICES = new Set(["Netflix","Amazon Prime Video","Hulu","Max","Paramount+","Apple TV+","Tubi TV"]);
 const TMDB_IMG = "https://image.tmdb.org/t/p";
@@ -214,7 +216,7 @@ function haptics(type="light"){
   } else { const p=$("#poster"); p.classList.add("tick"); setTimeout(()=>p.classList.remove("tick"),180); }
 }
 
-/* Keep iOS from popping save dialog on poster */
+/* prevent iOS save dialog on poster long press */
 document.addEventListener("contextmenu", e => {
   if (e.target && (e.target.id==="poster" || e.target.closest("#poster"))) e.preventDefault();
 });
@@ -251,10 +253,14 @@ let FILTERS={ noGore:false, noSV:false, noKids:false };
 let lastPickIndex=null;
 let banished = { date: todayKey(), ids: [] };
 
-/* ====== OVERRIDES (hand-tuned chaos/tags/taglines) ======
-   Key = Title::Year
-   Flags: 'witchy','body','folk','found','neon','gore','sv','kids'
-*/
+/* ====== TMDb cache (localStorage) ====== */
+const CACHE_KEY = "mr_tmdb_cache_v2";
+let TMDB_CACHE = {};
+try{ TMDB_CACHE = JSON.parse(localStorage.getItem(CACHE_KEY)||"{}"); }catch{ TMDB_CACHE={}; }
+function saveCache(){ localStorage.setItem(CACHE_KEY, JSON.stringify(TMDB_CACHE)); }
+function cacheKey(title, year){ return (title||"").toLowerCase()+"::"+String(year||"").slice(0,4); }
+
+/* ====== OVERRIDES (keyed by Title::Year) ====== */
 const OVERRIDES = {
   "Bridget Jones's Diary::2001": { chaos:10, flags:[], tagline:"Diary, disaster, darling; not chaos." },
   "High Fidelity::2000": { chaos:15, flags:[], tagline:"Mixtapes and malaise, not madness." },
@@ -269,8 +275,8 @@ const OVERRIDES = {
   "Phantom of the Paradise::1974": { chaos:68, flags:["neon"], tagline:"Glam Faust in a bird mask." },
   "Tetsuo: The Iron Man::1989": { chaos:90, flags:["body","gore","neon"], tagline:"Meat becomes metal, screams become rhythm." },
   "Begotten::1989": { chaos:95, flags:["gore"], tagline:"Biblical rot flickers into being." },
-  "Belladonna of Sadness::1973": { chaos:85, flags:["witchy","folk","body"], tagline:"Watercolor witch scream." },
-  "Taxidermia::2006": { chaos:88, flags:["body","gore","sv"], tagline:"Generations of gluttony and mutation." },
+  "Belladonna of Sadness::1973": { chaos:85, flags:["witchy","folk","body","sv"], tagline:"Watercolor witch scream." },
+  "Taxidermia::2006": { chaos:88, flags:["body","gore","sv"], tagline:"Generations of grotesque mutation." },
   "Sweet Movie::1974": { chaos:90, flags:["sv","body"], tagline:"Sugar, politics, filth; a dare." },
   "Visitor Q::2001": { chaos:88, flags:["sv","gore"], tagline:"Miike milks the void." },
   "Things::1989": { chaos:80, flags:["gore"], tagline:"Shot-on-video, shot in the dark." },
@@ -288,25 +294,7 @@ const OVERRIDES = {
   "Barbarella::1968": { chaos:55, flags:["neon"], tagline:"Camp, kink, killer dolls." },
   "Nothing Lasts Forever::1984": { chaos:64, flags:[], tagline:"Lost satire wandered back." },
   "Liquid Sky::1982": { chaos:72, flags:["neon"], tagline:"Aliens harvest orgasms in downtown glare." },
-  "The Boxer's Omen::1983": { chaos:80, flags:["body","gore","witchy"], tagline:"Black magic pukes up neon toads." },
-  "White Fire::1984": { chaos:62, flags:[], tagline:"Eurotrash diamond and taboo." },
-  "Trump vs the Illuminati::2020": { chaos:70, flags:["neon"], tagline:"3D fever dream of late empire." },
-  "The Cornshukker::1997": { chaos:67, flags:["folk"], tagline:"Cornfield cryptid mumbles a curse." },
-  "American Guinea Pig: The Song of Solomon::2017": { chaos:85, flags:["gore","sv"], tagline:"Possession filmed with a scalpel." },
-  "The Wolf House::2018": { chaos:82, flags:["folk","body"], tagline:"Stop-motion cult prison." },
-  "WNUF Halloween Special::2013": { chaos:57, flags:["found"], tagline:"Local TV eats itself." },
-  "Subspecies::1991": { chaos:48, flags:[], tagline:"Finger-snapped blood goblins." },
-  "Nightbeast::1982": { chaos:55, flags:[], tagline:"Ray guns, mustaches, sincerity." },
-  "Final Flesh::2009": { chaos:74, flags:["sv"], tagline:"Porn studios act your apocalypse." },
-  "Rubber::2010": { chaos:60, flags:[], tagline:"A tire discovers murder and meta." },
-  "Cat Soup::2001": { chaos:80, flags:["neon","body"], tagline:"Kitten crosses death’s soup." },
-  "Santa Sangre::1989": { chaos:76, flags:["body","sv"], tagline:"Circus, armless love, blood poetry." },
-  "A Goofy Movie::1995": { chaos:12, flags:[], tagline:"Father-son karaoke therapy." },
-  "Soul::2020": { chaos:14, flags:[], tagline:"Pixar soul massage." },
-  "Elemental::2023": { chaos:12, flags:[], tagline:"Elements date; world keeps spinning." },
-  "Stand by Me::1986": { chaos:18, flags:["kids"], tagline:"Boyhood walks toward a body." },
-  "Tremors::1990": { chaos:40, flags:[], tagline:"Desert worms vs blue-collar swagger." },
-  "Phénomèna::1985": null // typo guard
+  "The Boxer's Omen::1983": { chaos:80, flags:["body","gore","witchy"], tagline:"Black magic pukes up neon toads." }
 };
 
 /* ====== LOADING ====== */
@@ -329,7 +317,6 @@ async function fetchMaybe(url){
   }catch{ return null; }
 }
 function parseCSV(text){
-  // tab or comma tolerant; supports quotes
   const lines = text.split(/\r?\n/).filter(l=>l.trim().length);
   const header = lines[0];
   const delim = header.includes("\t") ? "\t" : ",";
@@ -346,7 +333,7 @@ function parseCSV(text){
 function splitCSV(str, delim=","){
   const out=[]; let cur=""; let inQ=false;
   for (let i=0;i<str.length;i++){
-    const ch=str[i], nxt=str[i+1];
+    const ch=str[i];
     if (ch === '"'){ inQ=!inQ; continue; }
     if (ch === delim && !inQ){ out.push(cur); cur=""; continue; }
     cur += ch;
@@ -402,9 +389,7 @@ async function loadData(){
     } else {
       let enriched = await fetchMaybe("./data/movies.csv?v="+Date.now());
       if (enriched){
-        const {cols, rows} = parseCSV(enriched);
-        // Expected header (flexible order):
-        // Date,Name,Year,Letterboxd URI,Tagline,Chaos,Flags,Poster,Runtime
+        const {rows} = parseCSV(enriched);
         MOVIES = rows.map(r=>{
           const item = {
             title: r["name"]||r["title"]||"",
@@ -420,7 +405,6 @@ async function loadData(){
           return mergeOverride(item);
         });
       } else {
-        // Fallback to original simple watchlist.csv
         const base = await fetchMaybe("./data/watchlist.csv?v="+Date.now());
         if (!base) throw new Error("No movies.json or CSV found");
         const {rows} = parseCSV(base);
@@ -440,7 +424,6 @@ async function loadData(){
         });
       }
     }
-    // Final tidy: ensure numeric chaos and flags exist
     MOVIES = MOVIES.map(m=>({
       ...m,
       chaos: (typeof m.chaos==="number" && !Number.isNaN(m.chaos)) ? m.chaos : null,
@@ -494,13 +477,10 @@ function contentPass(item){
   if (FILTERS.noKids && f.kids_in_peril) return false;
   return true;
 }
-
-/* Mood presets */
 function applyPreset(key){
   if (key==="cozy"){ MODE="order"; VARIETY="T"; THEME="all"; FILTERS={...FILTERS, noKids:true, noSV:true}; }
   if (key==="midnight"){ MODE="chaos"; VARIETY="W"; THEME="neon"; FILTERS={...FILTERS, noKids:false, noSV:false}; }
   if (key==="folk"){ MODE="mix"; VARIETY="M"; THEME="folk"; FILTERS={...FILTERS, noKids:true}; }
-  // update UI toggles
   [...$("#modeSegTop").children].forEach(b=>b.classList.toggle("active", b.dataset.mode===MODE));
   [...$("#biasSegTop").children].forEach(b=>b.classList.toggle("active", b.dataset.bias===VARIETY));
   ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active"));
@@ -511,13 +491,11 @@ function applyPreset(key){
   haptics("mid");
 }
 
-/* ====== CHAOS TARGETING (weighted sampler) ====== */
+/* ====== CHAOS TARGETING ====== */
 function chaosTarget(){ return MODE==="order" ? 15 : MODE==="chaos" ? 85 : 50; }
 function band(){ return VARIETY==="T"?8: VARIETY==="M"?18:35; }
-
 function weightFor(chaos, target, width){
   if (typeof chaos!=="number") return 0.1;
-  // Gaussian-ish weight: closer to target => heavier
   const d = (chaos - target)/width;
   return Math.exp(-0.5*d*d);
 }
@@ -545,17 +523,14 @@ function rebuildDeck(){
     let width = band();
     const todaysBan = (banished.date===todayKey()) ? new Set(banished.ids) : new Set();
 
-    // start broad: filter by theme/content, not chaos
     let cands = MOVIES.map((m,i)=>({m,i}))
       .filter(({m}) => !todaysBan.has(idFor(m)) && themePass(m) && contentPass(m))
       .map(x=>x.i);
 
     if (!cands.length) cands = MOVIES.map((_,i)=>i);
 
-    // shuffle for variety base
     for (let i=cands.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [cands[i],cands[j]]=[cands[j],cands[i]]; }
 
-    // Build a deck by repeatedly weighted-picking around the target chaos
     const deck=[];
     const used=new Set();
     const MAX = Math.min(80, cands.length);
@@ -565,7 +540,6 @@ function rebuildDeck(){
       const idx = weightedPick(pool, target, width) ?? pool[0];
       used.add(idx);
       deck.push(idx);
-      // make it a touch narrower as we go (keeps flavor cohesive)
       width = Math.max(10, width - (VARIETY==="T"?0.6:(VARIETY==="M"?0.4:0.2)));
     }
 
@@ -579,6 +553,38 @@ function rebuildDeck(){
     DECK = MOVIES.map((_,i)=>i).sort(()=>Math.random()-0.5);
     $("#left").textContent = DECK.length;
     $("#deckCountMini").textContent = "Deck: " + DECK.length;
+  }
+}
+
+/* ====== TMDb LOOKUP ====== */
+async function tmdbSearchPoster(title, year){
+  if (!000802da6224e125437187b196cde898) return null;
+  const key = cacheKey(title, year);
+  if (TMDB_CACHE[key]?.poster) return TMDB_CACHE[key].poster;
+
+  // Simple throttle: only 1 call per 300ms
+  if (!tmdbSearchPoster._q) tmdbSearchPoster._q = Promise.resolve();
+  tmdbSearchPoster._q = tmdbSearchPoster._q.then(()=>new Promise(res=>setTimeout(res,300)));
+  await tmdbSearchPoster._q;
+
+  const url = new URL("https://api.themoviedb.org/3/search/movie");
+  url.searchParams.set("api_key", TMDB_API_KEY);
+  url.searchParams.set("query", title);
+  if (String(year||"").length >= 4) url.searchParams.set("year", String(year).slice(0,4));
+
+  try{
+    const r = await fetch(url.toString());
+    if (!r.ok) throw new Error("search fail");
+    const j = await r.json();
+    const hit = (j.results||[])[0];
+    const poster = hit?.poster_path || null;
+    TMDB_CACHE[key] = TMDB_CACHE[key] || {};
+    TMDB_CACHE[key].poster = poster;
+    saveCache();
+    return poster;
+  }catch(e){
+    console.warn("TMDb search error:", e);
+    return null;
   }
 }
 
@@ -599,8 +605,34 @@ function links(container, item){
     container.appendChild(s);
   }
 }
-function render(item){
-  setPoster($("#poster"), item.poster, item.title);
+
+async function ensurePoster(item){
+  // 1) CSV/JSON poster
+  if (item.poster && String(item.poster).trim()) return item.poster;
+
+  // 2) Cache / lookup
+  const found = await tmdbSearchPoster(item.title, item.year);
+  if (found) { item.poster = found; return found; }
+
+  // 3) give up (fallback SVG shown by setPoster)
+  return "";
+}
+
+function buildBadges(container, item){
+  const names = availabilityNames(item);
+  container.innerHTML = "";
+  if (names.length){
+    for (const n of names){ const s=document.createElement("span"); s.className="badge"; s.textContent=n; container.appendChild(s); }
+    container.style.display="";
+  } else container.style.display="none";
+}
+
+async function render(item){
+  // kick poster skeleton immediately, then load/lookup
+  setPoster($("#poster"), "/null", item.title); // forces skeleton
+  const posterPath = await ensurePoster(item);
+  setPoster($("#poster"), posterPath || "/null", item.title);
+
   setText($("#title"), item.title||"Untitled");
   const tg=(item.tagline||"").trim(); setText($("#taglineInline"), tg); show($("#taglineInline"), !!tg);
   setText($("#year"), item.year ? `Year: ${item.year}` : "");
