@@ -10,28 +10,33 @@
 <style>
   :root{
     color-scheme: light dark;
-    --bg:#0b0b0b; --card:#101010; --fg:#f4f4f4; --muted:#a9b0b6; --border:#222;
+    --bg:#0b0b0b; --card:#101010; --fg:#f4f4f4; --muted:#a9b0b6; --border:#212121;
     --accent:#77ffa5; --accentFg:#051e11; --ghost:#151515;
     --radius:16px; --shadow:0 10px 34px rgba(0,0,0,.45);
   }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
-    font:15px/1.45 system-ui, -apple-system, Inter, Segoe UI, Roboto, Arial, sans-serif; }
+    font:15px/1.45 system-ui, -apple-system, Inter, Segoe UI, Roboto, Arial, sans-serif; overflow:hidden; }
 
   /* Full-screen app frame */
-  .wrap{ height:100dvh; display:flex; padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
-  .card{ margin:auto; width:min(860px, 100%); height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 12px);
+  .wrap{
+    height:100dvh; display:flex;
+    padding:calc(env(safe-area-inset-top)) calc(env(safe-area-inset-right)) calc(env(safe-area-inset-bottom)) calc(env(safe-area-inset-left));
+  }
+  .card{
+    margin:auto; width:min(860px,100%); height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 12px);
     background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow);
-    display:grid; grid-template-rows:auto auto 1fr auto; gap:8px; padding:10px; overflow:hidden; }
+    display:grid; grid-template-rows:auto auto 1fr auto; gap:8px; padding:10px; overflow:hidden;
+  }
 
   /* Header */
   header{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .appTitle{ font-weight:900; letter-spacing:.2px; font-size:20px; margin:0; }
-  .sub{ color:var(--muted); font-size:12px; margin-top:-4px; }
+  .sub{ color:var(--muted); font-size:12px; margin-top:-4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .deck{ color:#cfe; font-size:12px; padding:6px 10px; border:1px solid #263; border-radius:10px; background:#0f1a14; }
 
   /* Always-visible mode/bias toolbar */
-  .toolbar{ display:flex; gap:10px; align-items:center; justify-content:space-between; }
+  .toolbar{ display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
   .group{ display:flex; gap:8px; align-items:center; }
   .label{ color:#9ab; font-size:12px; margin-right:2px; }
   .seg{ display:flex; background:#141414; border:1px solid #262626; border-radius:999px; overflow:hidden; }
@@ -39,15 +44,21 @@
   .seg button.active{ background:#203626; color:#b8ffd1; }
 
   /* Stage: 2 columns, no page scroll */
-  .stage{ min-height:0; display:grid; grid-template-columns:minmax(42%, 44%) 1fr; gap:12px; align-items:start; overflow:hidden; }
-  @media (max-width:480px){ .stage{ grid-template-columns:46% 1fr; } }
+  .stage{
+    min-height:0; display:grid; grid-template-columns:minmax(44%, 46%) 1fr; gap:12px;
+    align-items:start; overflow:hidden; width:100%;
+  }
+  @media (max-width:480px){ .stage{ grid-template-columns:48% 1fr; } }
 
   .poster{ width:100%; aspect-ratio:2/3; object-fit:cover; border-radius:14px; background:#181818; border:1px solid #1f1f1f; }
   .poster.skeleton{ animation:pulse 1.2s infinite ease-in-out; background: linear-gradient(90deg,#141414 25%,#1a1a1a 37%,#141414 63%); background-size:400% 100%; }
   @keyframes pulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
 
-  /* Info column scrolls if it has to; poster stays big */
-  .infoCol{ min-height:0; display:grid; grid-template-rows:auto auto auto 1fr auto; gap:8px; overflow:auto; padding-right:2px; }
+  /* Info column */
+  .infoCol{
+    min-width:0; min-height:0; display:grid; grid-template-rows:auto auto auto 1fr auto; gap:8px;
+    overflow:auto; padding-right:2px; word-break:break-word;
+  }
   .titleMovie{ font-weight:1000; font-size:22px; margin:0; line-height:1.15; }
   .tagline{ color:#d6e2dd; font-size:14px; margin:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
   .micro{ color:var(--muted); display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:12px; }
@@ -61,19 +72,22 @@
   .links a{ display:block; padding:12px; text-align:center; border-radius:12px; text-decoration:none; font-weight:900; font-size:15px; background:#1b1b1b; color:#c0ffd6; border:1px solid #2a2a2a; }
 
   /* Bottom dock */
-  .dock{ display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; align-items:center; }
+  .dock{
+    display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; align-items:center;
+    padding-bottom:calc(env(safe-area-inset-bottom) + 2px);
+  }
   .btn{ appearance:none; border:0; border-radius:14px; padding:14px 12px; font-weight:900; cursor:pointer; font-size:15px; }
   .btn.pri{ background:var(--accent); color:var(--accentFg); }
   .btn.gh{ background:var(--ghost); color:var(--fg); border:1px solid #262626; }
 
-  /* Filters dialog */
+  /* Filters dialog (themes + content only) */
   dialog{ border:1px solid var(--border); background:#0f0f0f; color:#fff; border-radius:16px; width:min(560px, 92vw); padding:14px; }
   dialog::backdrop{ background:rgba(0,0,0,.6); }
   .rowFilt{ display:flex; gap:8px; flex-wrap:wrap; }
   .pill{ background:#161616; border:1px solid #2a2a2a; border-radius:999px; padding:8px 10px; font-weight:800; font-size:13px; color:#dfffe8; cursor:pointer; }
   .pill.active{ background:#242a24; color:#b6ffd1; }
   .kicker{ color:#9ab; font-size:12px; }
-  .small{ color:#9ab; font-size:11px; }
+  .small{ color:#9ab; font-size:11px; white-space:normal; }
 </style>
 </head>
 <body>
@@ -174,7 +188,7 @@ const TMDB_IMG = "https://image.tmdb.org/t/p";
 const $ = s => document.querySelector(s);
 function setUIError(m=""){ const e=$("#err"); e.textContent=m; e.style.color=m?"#ffb3b3":"#9ab"; }
 
-/* Hardened poster loader */
+/* Poster helper: no API calls, just paths/URLs already in movies.json */
 function posterURL(path, size="w500"){
   if (!path) return "";
   const s = String(path).trim();
@@ -210,27 +224,27 @@ let THEME="all";
 let FILTERS={ noGore:false, noSV:false, noKids:false };
 let lastPickIndex=null;
 
-/* ====== DATA LOAD ====== */
+/* ====== LOAD DATA (no external APIs) ====== */
 async function loadData(){
   try{
     const r = await fetch("./movies.json?v="+Date.now(), {cache:"no-store"});
-    const txt = await r.text(); if(!r.ok) throw new Error(`HTTP ${r.status}: ${txt.slice(0,180)}`);
+    const txt = await r.text(); if(!r.ok) throw new Error(`HTTP ${r.status}`);
     const raw = JSON.parse(txt);
     MOVIES = raw.map(x => ({
       ...x,
-      poster: x.poster || x.poster_path || "",
+      poster: x.poster || x.poster_path || "",  // allow either field
       chaos: (typeof x.chaos === "number") ? x.chaos
             : (x.Chaos!==undefined && x.Chaos!=="") ? Number(x.Chaos) : null
     }));
     $("#total").textContent = MOVIES.length;
     rebuildDeck();
   }catch(e){
-    setUIError("Could not load movies.json. "+(e.message||e));
+    setUIError("Could not load movies.json.");
     console.error(e);
   }
 }
 
-/* ====== FILTER LOGIC ====== */
+/* ====== FILTERS ====== */
 function providerMatches(p){
   if (!p?.name) return false;
   const n = String(p.name).trim();
@@ -297,22 +311,23 @@ function rebuildDeck(){
     if (!cands.length){ cands = MOVIES.map((m,i)=>({m,i})); }
 
     const deck = cands.map(x=>x.i);
+    // Shuffle
     try{
       const rnd = new Uint32Array(deck.length);
-      (crypto?.getRandomValues ? crypto.getRandomValues(rnd) : rnd.fill(0));
+      if (crypto?.getRandomValues) crypto.getRandomValues(rnd);
       for (let i=deck.length-1;i>0;i--){
-        const j = (crypto?.getRandomValues ? rnd[i]%(i+1) : Math.floor(Math.random()*(i+1)));
+        const j = crypto?.getRandomValues ? (rnd[i]%(i+1)) : Math.floor(Math.random()*(i+1));
         [deck[i],deck[j]]=[deck[j],deck[i]];
       }
-    }catch(_){
-      for (let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; }
-    }
+    }catch{ for (let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; } }
+
     DECK = deck;
     $("#left").textContent = DECK.length;
     $("#deckCountMini").textContent = "Deck: " + DECK.length;
+    setUIError("");
   }catch(e){
     console.error(e);
-    setUIError("Deck build error: "+e.message);
+    setUIError("Deck build error.");
     DECK = MOVIES.map((_,i)=>i).sort(()=>Math.random()-0.5);
     $("#left").textContent = DECK.length;
     $("#deckCountMini").textContent = "Deck: " + DECK.length;
@@ -322,7 +337,6 @@ function rebuildDeck(){
 /* ====== RENDER ====== */
 function setText(el, t){ el.textContent=t; }
 function show(el, on){ el.style.display = on ? "" : "none"; }
-
 function links(container, item){
   container.innerHTML = "";
   const lb=document.createElement("a");
@@ -337,25 +351,18 @@ function links(container, item){
     container.appendChild(s);
   }
 }
-
 function render(item){
-  try{
-    setPoster($("#poster"), item.poster, item.title);
-    setText($("#title"), item.title||"Untitled");
-    const tg=(item.tagline||"").trim(); setText($("#taglineInline"), tg); show($("#taglineInline"), !!tg);
-    const metaErr = item.unreleased_error ? ` — ${item.unreleased_error}` : "";
-    setText($("#year"), item.year ? `Year: ${item.year}${metaErr}` : metaErr);
-    const run=item.runtime?`${item.runtime} min`:""; setText($("#runChip"), run); show($("#runChip"), !!run);
-    const c=item.chaos; if (typeof c==="number"){ setText($("#chaosChip"), `Chaos: ${c}`); show($("#chaosChip"),true);} else show($("#chaosChip"),false);
-    buildBadges($("#streamBadges"), item);
-    const why=(item.chaos_reason||"").trim(); const w=$("#whyBox");
-    if (why){ w.textContent=why; w.style.display="block"; } else w.style.display="none";
-    links($("#linksRow"), item);
-    setUIError("");
-  }catch(e){
-    console.error(e);
-    setUIError("Render error: "+e.message);
-  }
+  setPoster($("#poster"), item.poster, item.title);
+  setText($("#title"), item.title||"Untitled");
+  const tg=(item.tagline||"").trim(); setText($("#taglineInline"), tg); show($("#taglineInline"), !!tg);
+  const metaErr = item.unreleased_error ? ` — ${item.unreleased_error}` : "";
+  setText($("#year"), item.year ? `Year: ${item.year}${metaErr}` : metaErr);
+  const run=item.runtime?`${item.runtime} min`:""; setText($("#runChip"), run); show($("#runChip"), !!run);
+  const c=item.chaos; if (typeof c==="number"){ setText($("#chaosChip"), `Chaos: ${c}`); show($("#chaosChip"),true);} else show($("#chaosChip"),false);
+  buildBadges($("#streamBadges"), item);
+  const why=(item.chaos_reason||"").trim(); const w=$("#whyBox");
+  if (why){ w.textContent=why; w.style.display="block"; } else w.style.display="none";
+  links($("#linksRow"), item);
 }
 
 /* ====== PICKING ====== */
@@ -368,16 +375,11 @@ function safeDealIndex(){
   return idx;
 }
 function dealOne(){
-  try{
-    if (!MOVIES.length){ setUIError("Data not loaded yet."); return; }
-    const idx = safeDealIndex();
-    lastPickIndex = idx;
-    $("#left").textContent = Math.max(0, DECK.length);
-    render(MOVIES[idx]);
-  }catch(e){
-    console.error(e);
-    setUIError("Deal error: "+e.message);
-  }
+  if (!MOVIES.length){ setUIError("Data not loaded yet."); return; }
+  const idx = safeDealIndex();
+  lastPickIndex = idx;
+  $("#left").textContent = Math.max(0, DECK.length);
+  render(MOVIES[idx]);
 }
 function neighbors(target,initial,max,step){
   for (let r=initial;r<=max;r+=step){
@@ -393,42 +395,32 @@ function neighbors(target,initial,max,step){
   return MOVIES.map((m,i)=>({m,i})).filter(({m})=>passesTheme(m)&&passesContent(m)).map(x=>x.i);
 }
 function rerollNearby(){
-  try{
-    if (lastPickIndex==null){ dealOne(); return; }
-    const curr=MOVIES[lastPickIndex], c=typeof curr.chaos==="number"?curr.chaos:50;
-    const pool=neighbors(c,10,40,5);
-    if (!pool.length){ setUIError("No nearby picks with current filters."); return; }
-    const idx = pool[Math.floor(Math.random()*pool.length)];
-    lastPickIndex = idx;
-    render(MOVIES[idx]);
-  }catch(e){
-    console.error(e);
-    setUIError("Re-roll error: "+e.message);
-  }
+  if (lastPickIndex==null){ dealOne(); return; }
+  const curr=MOVIES[lastPickIndex], c=typeof curr.chaos==="number"?curr.chaos:50;
+  const pool=neighbors(c,10,40,5);
+  if (!pool.length){ setUIError("No nearby picks with current filters."); return; }
+  const idx = pool[Math.floor(Math.random()*pool.length)];
+  lastPickIndex = idx;
+  render(MOVIES[idx]);
 }
 function doubleFeature(){
-  try{
-    if (lastPickIndex==null){ dealOne(); return; }
-    const main=MOVIES[lastPickIndex], mc=typeof main.chaos==="number"?main.chaos:50;
-    const target=Math.max(0, Math.min(100, 100-mc)); // opposite energy
-    let pool=neighbors(target,12,48,6);
-    if (!pool.length){
-      let best=-1, idx=null;
-      for (let i=0;i<MOVIES.length;i++){
-        if (i===lastPickIndex) continue;
-        const m=MOVIES[i]; if (!passesTheme(m)||!passesContent(m)) continue;
-        const d=Math.abs((m.chaos??50)-mc); if (d>best){ best=d; idx=i; }
-      }
-      if (idx==null){ setUIError("No suitable cleanser with current filters."); return; }
-      pool=[idx];
+  if (lastPickIndex==null){ dealOne(); return; }
+  const main=MOVIES[lastPickIndex], mc=typeof main.chaos==="number"?main.chaos:50;
+  const target=Math.max(0, Math.min(100, 100-mc)); // opposite energy
+  let pool=neighbors(target,12,48,6);
+  if (!pool.length){
+    let best=-1, idx=null;
+    for (let i=0;i<MOVIES.length;i++){
+      if (i===lastPickIndex) continue;
+      const m=MOVIES[i]; if (!passesTheme(m)||!passesContent(m)) continue;
+      const d=Math.abs((m.chaos??50)-mc); if (d>best){ best=d; idx=i; }
     }
-    const idx = pool[Math.floor(Math.random()*pool.length)];
-    lastPickIndex = idx;
-    render(MOVIES[idx]);
-  }catch(e){
-    console.error(e);
-    setUIError("Double error: "+e.message);
+    if (idx==null){ setUIError("No suitable cleanser with current filters."); return; }
+    pool=[idx];
   }
+  const idx = pool[Math.floor(Math.random()*pool.length)];
+  lastPickIndex = idx;
+  render(MOVIES[idx]);
 }
 
 /* ====== WIRES ====== */
@@ -436,27 +428,25 @@ $("#deal").onclick = dealOne;
 $("#reroll").onclick = rerollNearby;
 $("#double").onclick = doubleFeature;
 
-/* Filters dialog (themes/content only) */
+/* Filters dialog */
 const dlg=$("#filtersDlg");
 $("#openFilters").onclick = ()=>dlg.showModal();
 $("#closeFilters").onclick = ()=>dlg.close();
 $("#resetAll").onclick = ()=>{
   MODE="mix"; VARIETY="T"; THEME="all"; FILTERS={noGore:false,noSV:false,noKids:false};
-  // reset top toggles
   [...$("#modeSegTop").children].forEach(b=>b.classList.remove("active")); $("#modeSegTop").children[1].classList.add("active");
   [...$("#biasSegTop").children].forEach(b=>b.classList.remove("active")); $("#biasSegTop").children[0].classList.add("active");
-  // reset dialog chips
   ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active"));
   $("#thAll").classList.add("active");
   ["fNoGore","fNoSV","fNoKids"].forEach(id=>$("#"+id).classList.remove("active"));
   rebuildDeck(); dlg.close();
 };
-/* Mode/Bias toggles (top bar) */
+/* Top toggles */
 $("#modeSegTop").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return;
   MODE=e.target.dataset.mode; [...$("#modeSegTop").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); });
 $("#biasSegTop").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return;
   VARIETY=e.target.dataset.bias; [...$("#biasSegTop").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); });
-/* Themes */
+/* Theme chips */
 function setTheme(w){ THEME=w; ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active"));
   const map={all:"thAll",witch:"thWitch",body:"thBody",folk:"thFolk",found:"thFound",neon:"thNeon"}; $("#"+map[w]).classList.add("active"); rebuildDeck(); }
 $("#thAll").onclick=()=>setTheme("all"); $("#thWitch").onclick=()=>setTheme("witch"); $("#thBody").onclick=()=>setTheme("body");
