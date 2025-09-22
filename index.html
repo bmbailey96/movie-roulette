@@ -22,13 +22,21 @@
   .wrap{ height:100dvh; display:flex; padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
   .card{ margin:auto; width:min(860px, 100%); height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 12px);
     background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow);
-    display:grid; grid-template-rows:auto 1fr auto; gap:8px; padding:10px; overflow:hidden; }
+    display:grid; grid-template-rows:auto auto 1fr auto; gap:8px; padding:10px; overflow:hidden; }
 
   /* Header */
   header{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .appTitle{ font-weight:900; letter-spacing:.2px; font-size:20px; margin:0; }
   .sub{ color:var(--muted); font-size:12px; margin-top:-4px; }
   .deck{ color:#cfe; font-size:12px; padding:6px 10px; border:1px solid #263; border-radius:10px; background:#0f1a14; }
+
+  /* Always-visible mode/bias toolbar */
+  .toolbar{ display:flex; gap:10px; align-items:center; justify-content:space-between; }
+  .group{ display:flex; gap:8px; align-items:center; }
+  .label{ color:#9ab; font-size:12px; margin-right:2px; }
+  .seg{ display:flex; background:#141414; border:1px solid #262626; border-radius:999px; overflow:hidden; }
+  .seg button{ background:transparent; border:0; color:#dfffe8; padding:8px 12px; font-weight:900; font-size:13px; cursor:pointer; }
+  .seg button.active{ background:#203626; color:#b8ffd1; }
 
   /* Stage: 2 columns, no page scroll */
   .stage{ min-height:0; display:grid; grid-template-columns:minmax(42%, 44%) 1fr; gap:12px; align-items:start; overflow:hidden; }
@@ -64,9 +72,6 @@
   .rowFilt{ display:flex; gap:8px; flex-wrap:wrap; }
   .pill{ background:#161616; border:1px solid #2a2a2a; border-radius:999px; padding:8px 10px; font-weight:800; font-size:13px; color:#dfffe8; cursor:pointer; }
   .pill.active{ background:#242a24; color:#b6ffd1; }
-  .seg{ display:flex; background:#141414; border:1px solid #262626; border-radius:999px; overflow:hidden; }
-  .seg button{ background:transparent; border:0; color:#dfffe8; padding:9px 12px; font-weight:900; font-size:13px; cursor:pointer; }
-  .seg button.active{ background:#203626; color:#b8ffd1; }
   .kicker{ color:#9ab; font-size:12px; }
   .small{ color:#9ab; font-size:11px; }
 </style>
@@ -82,6 +87,26 @@
       </div>
       <div class="deck">Deck: <span id="left">0</span>/<span id="total">0</span></div>
     </header>
+
+    <!-- Always-visible controls -->
+    <div class="toolbar">
+      <div class="group">
+        <span class="label">Mood</span>
+        <div class="seg" id="modeSegTop">
+          <button data-mode="order">Order</button>
+          <button data-mode="mix" class="active">Mix</button>
+          <button data-mode="chaos">Chaos</button>
+        </div>
+      </div>
+      <div class="group">
+        <span class="label">Bias</span>
+        <div class="seg" id="biasSegTop">
+          <button data-bias="T" class="active">Tight</button>
+          <button data-bias="M">Med</button>
+          <button data-bias="W">Wide</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Stage -->
     <section class="stage" aria-live="polite">
@@ -111,24 +136,10 @@
   </main>
 </div>
 
-<!-- Filters -->
+<!-- Filters (Themes + Content only) -->
 <dialog id="filtersDlg">
   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
     <strong>Filters</strong><div class="kicker" id="deckCountMini">Deck: 0</div>
-  </div>
-
-  <div class="kicker">Mood</div>
-  <div class="seg" id="modeSeg" style="margin:6px 0 10px;">
-    <button data-mode="order">Order</button>
-    <button data-mode="mix" class="active">Mix</button>
-    <button data-mode="chaos">Chaos</button>
-  </div>
-
-  <div class="kicker">Bias</div>
-  <div class="seg" id="biasSeg" style="margin:6px 0 12px;">
-    <button data-bias="T" class="active">Tight</button>
-    <button data-bias="M">Med</button>
-    <button data-bias="W">Wide</button>
   </div>
 
   <div class="kicker">Themes</div>
@@ -174,7 +185,7 @@ function posterURL(path, size="w500"){
   return `${TMDB_IMG}/${size}${clean}`;
 }
 function setPoster(imgEl, posterPath, title){
-  const sizes = ["w500","w780","original","w342"]; // start bigger on phone
+  const sizes = ["w500","w780","original","w342"];
   let i = 0;
   function tryNext(){
     const u = posterURL(posterPath, sizes[i]);
@@ -271,31 +282,21 @@ function rebuildDeck(){
     const target = chaosTarget();
     let b = band();
 
-    // 1) Try strict chaos window
     let cands = MOVIES.map((m,i)=>({m,i}))
       .filter(({m}) => passesTheme(m) && passesContent(m) && (typeof m.chaos==="number") && Math.abs(m.chaos - target) <= b);
 
-    // 2) Widen the window
     while (!cands.length && b <= 60){
       b+=10;
       cands = MOVIES.map((m,i)=>({m,i}))
         .filter(({m}) => passesTheme(m) && passesContent(m) && (typeof m.chaos==="number") && Math.abs(m.chaos - target) <= b);
     }
-
-    // 3) Include titles without chaos if still empty
     if (!cands.length){
       cands = MOVIES.map((m,i)=>({m,i}))
         .filter(({m}) => passesTheme(m) && passesContent(m));
     }
-
-    // 4) Final fallback: if STILL empty, use everything
-    if (!cands.length){
-      cands = MOVIES.map((m,i)=>({m,i}));
-    }
+    if (!cands.length){ cands = MOVIES.map((m,i)=>({m,i})); }
 
     const deck = cands.map(x=>x.i);
-
-    // Shuffle (fallback to Math.random if crypto is unavailable)
     try{
       const rnd = new Uint32Array(deck.length);
       (crypto?.getRandomValues ? crypto.getRandomValues(rnd) : rnd.fill(0));
@@ -306,14 +307,12 @@ function rebuildDeck(){
     }catch(_){
       for (let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; }
     }
-
     DECK = deck;
     $("#left").textContent = DECK.length;
     $("#deckCountMini").textContent = "Deck: " + DECK.length;
   }catch(e){
     console.error(e);
     setUIError("Deck build error: "+e.message);
-    // last-ditch: randomize all
     DECK = MOVIES.map((_,i)=>i).sort(()=>Math.random()-0.5);
     $("#left").textContent = DECK.length;
     $("#deckCountMini").textContent = "Deck: " + DECK.length;
@@ -364,12 +363,10 @@ function safeDealIndex(){
   if (!DECK.length) rebuildDeck();
   let idx = DECK.pop();
   if (idx==null || idx===undefined || isNaN(idx)){
-    // absolute fallback: pick a random valid index
     idx = Math.floor(Math.random()*Math.max(1, MOVIES.length));
   }
   return idx;
 }
-
 function dealOne(){
   try{
     if (!MOVIES.length){ setUIError("Data not loaded yet."); return; }
@@ -382,7 +379,6 @@ function dealOne(){
     setUIError("Deal error: "+e.message);
   }
 }
-
 function neighbors(target,initial,max,step){
   for (let r=initial;r<=max;r+=step){
     const pool=[];
@@ -440,24 +436,26 @@ $("#deal").onclick = dealOne;
 $("#reroll").onclick = rerollNearby;
 $("#double").onclick = doubleFeature;
 
-/* Filters dialog */
+/* Filters dialog (themes/content only) */
 const dlg=$("#filtersDlg");
 $("#openFilters").onclick = ()=>dlg.showModal();
 $("#closeFilters").onclick = ()=>dlg.close();
 $("#resetAll").onclick = ()=>{
   MODE="mix"; VARIETY="T"; THEME="all"; FILTERS={noGore:false,noSV:false,noKids:false};
-  [...$("#modeSeg").children].forEach(b=>b.classList.remove("active")); $("#modeSeg").children[1].classList.add("active");
-  [...$("#biasSeg").children].forEach(b=>b.classList.remove("active")); $("#biasSeg").children[0].classList.add("active");
+  // reset top toggles
+  [...$("#modeSegTop").children].forEach(b=>b.classList.remove("active")); $("#modeSegTop").children[1].classList.add("active");
+  [...$("#biasSegTop").children].forEach(b=>b.classList.remove("active")); $("#biasSegTop").children[0].classList.add("active");
+  // reset dialog chips
   ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active"));
   $("#thAll").classList.add("active");
   ["fNoGore","fNoSV","fNoKids"].forEach(id=>$("#"+id).classList.remove("active"));
   rebuildDeck(); dlg.close();
 };
-/* Mode/Bias toggles */
-$("#modeSeg").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return;
-  MODE=e.target.dataset.mode; [...$("#modeSeg").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); });
-$("#biasSeg").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return;
-  VARIETY=e.target.dataset.bias; [...$("#biasSeg").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); });
+/* Mode/Bias toggles (top bar) */
+$("#modeSegTop").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return;
+  MODE=e.target.dataset.mode; [...$("#modeSegTop").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); });
+$("#biasSegTop").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return;
+  VARIETY=e.target.dataset.bias; [...$("#biasSegTop").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); });
 /* Themes */
 function setTheme(w){ THEME=w; ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active"));
   const map={all:"thAll",witch:"thWitch",body:"thBody",folk:"thFolk",found:"thFound",neon:"thNeon"}; $("#"+map[w]).classList.add("active"); rebuildDeck(); }
