@@ -59,7 +59,7 @@
   .btn.gh{ background:var(--ghost); color:var(--fg); border:1px solid #262626; }
 
   /* Filters dialog */
-  dialog{ border:1px solid var(--border); background:#0f0f0f; color:var(--fg); border-radius:16px; width:min(560px, 92vw); padding:14px; }
+  dialog{ border:1px solid var(--border); background:#0f0f0f; color:#fff; border-radius:16px; width:min(560px, 92vw); padding:14px; }
   dialog::backdrop{ background:rgba(0,0,0,.6); }
   .rowFilt{ display:flex; gap:8px; flex-wrap:wrap; }
   .pill{ background:#161616; border:1px solid #2a2a2a; border-radius:999px; padding:8px 10px; font-weight:800; font-size:13px; color:#dfffe8; cursor:pointer; }
@@ -161,7 +161,7 @@ const TMDB_IMG = "https://image.tmdb.org/t/p";
 
 /* ====== UTIL ====== */
 const $ = s => document.querySelector(s);
-const err = (m="") => { $("#err").textContent = m; $("#err").style.color="#ffb3b3"; };
+function setUIError(m=""){ const e=$("#err"); e.textContent=m; e.style.color=m?"#ffb3b3":"#9ab"; }
 
 /* Hardened poster loader */
 function posterURL(path, size="w500"){
@@ -213,7 +213,10 @@ async function loadData(){
     }));
     $("#total").textContent = MOVIES.length;
     rebuildDeck();
-  }catch(e){ err("Could not load movies.json. "+(e.message||e)); }
+  }catch(e){
+    setUIError("Could not load movies.json. "+(e.message||e));
+    console.error(e);
+  }
 }
 
 /* ====== FILTER LOGIC ====== */
@@ -261,29 +264,60 @@ function passesContent(item){
 function chaosTarget(){ return MODE==="order" ? 15 : MODE==="chaos" ? 85 : 50; }
 function band(){ return VARIETY==="T"?7: VARIETY==="M"?15:30; }
 
-/* ====== DECK ====== */
+/* ====== DECK (never empty) ====== */
 function rebuildDeck(){
-  if (!MOVIES.length) return;
-  const target = chaosTarget();
-  let b = band();
-  let cands = MOVIES.map((m,i)=>({m,i}))
-    .filter(({m}) => passesTheme(m) && passesContent(m) && (typeof m.chaos==="number") && Math.abs(m.chaos - target) <= b);
+  try{
+    if (!MOVIES.length) return;
+    const target = chaosTarget();
+    let b = band();
 
-  while (!cands.length && b <= 50){
-    b+=10;
-    cands = MOVIES.map((m,i)=>({m,i}))
+    // 1) Try strict chaos window
+    let cands = MOVIES.map((m,i)=>({m,i}))
       .filter(({m}) => passesTheme(m) && passesContent(m) && (typeof m.chaos==="number") && Math.abs(m.chaos - target) <= b);
-  }
-  if (!cands.length){
-    cands = MOVIES.map((m,i)=>({m,i})).filter(({m}) => passesTheme(m) && passesContent(m));
-  }
 
-  const deck = cands.map(x=>x.i);
-  const rnd = new Uint32Array(deck.length); crypto.getRandomValues(rnd);
-  for (let i=deck.length-1;i>0;i--){ const j=rnd[i]%(i+1); [deck[i],deck[j]]=[deck[j],deck[i]]; }
-  DECK=deck;
-  $("#left").textContent = DECK.length;
-  $("#deckCountMini").textContent = "Deck: " + DECK.length;
+    // 2) Widen the window
+    while (!cands.length && b <= 60){
+      b+=10;
+      cands = MOVIES.map((m,i)=>({m,i}))
+        .filter(({m}) => passesTheme(m) && passesContent(m) && (typeof m.chaos==="number") && Math.abs(m.chaos - target) <= b);
+    }
+
+    // 3) Include titles without chaos if still empty
+    if (!cands.length){
+      cands = MOVIES.map((m,i)=>({m,i}))
+        .filter(({m}) => passesTheme(m) && passesContent(m));
+    }
+
+    // 4) Final fallback: if STILL empty, use everything
+    if (!cands.length){
+      cands = MOVIES.map((m,i)=>({m,i}));
+    }
+
+    const deck = cands.map(x=>x.i);
+
+    // Shuffle (fallback to Math.random if crypto is unavailable)
+    try{
+      const rnd = new Uint32Array(deck.length);
+      (crypto?.getRandomValues ? crypto.getRandomValues(rnd) : rnd.fill(0));
+      for (let i=deck.length-1;i>0;i--){
+        const j = (crypto?.getRandomValues ? rnd[i]%(i+1) : Math.floor(Math.random()*(i+1)));
+        [deck[i],deck[j]]=[deck[j],deck[i]];
+      }
+    }catch(_){
+      for (let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; }
+    }
+
+    DECK = deck;
+    $("#left").textContent = DECK.length;
+    $("#deckCountMini").textContent = "Deck: " + DECK.length;
+  }catch(e){
+    console.error(e);
+    setUIError("Deck build error: "+e.message);
+    // last-ditch: randomize all
+    DECK = MOVIES.map((_,i)=>i).sort(()=>Math.random()-0.5);
+    $("#left").textContent = DECK.length;
+    $("#deckCountMini").textContent = "Deck: " + DECK.length;
+  }
 }
 
 /* ====== RENDER ====== */
@@ -306,34 +340,47 @@ function links(container, item){
 }
 
 function render(item){
-  setPoster($("#poster"), item.poster, item.title);
-  setText($("#title"), item.title||"Untitled");
-
-  const tg=(item.tagline||"").trim(); setText($("#taglineInline"), tg); show($("#taglineInline"), !!tg);
-
-  const metaErr = item.unreleased_error ? ` — ${item.unreleased_error}` : "";
-  setText($("#year"), item.year ? `Year: ${item.year}${metaErr}` : metaErr);
-
-  const run=item.runtime?`${item.runtime} min`:""; setText($("#runChip"), run); show($("#runChip"), !!run);
-  const c=item.chaos; if (typeof c==="number"){ setText($("#chaosChip"), `Chaos: ${c}`); show($("#chaosChip"),true);} else show($("#chaosChip"),false);
-
-  buildBadges($("#streamBadges"), item);
-
-  const why=(item.chaos_reason||"").trim(); const w=$("#whyBox");
-  if (why){ w.textContent=why; w.style.display="block"; } else w.style.display="none";
-
-  links($("#linksRow"), item);
+  try{
+    setPoster($("#poster"), item.poster, item.title);
+    setText($("#title"), item.title||"Untitled");
+    const tg=(item.tagline||"").trim(); setText($("#taglineInline"), tg); show($("#taglineInline"), !!tg);
+    const metaErr = item.unreleased_error ? ` — ${item.unreleased_error}` : "";
+    setText($("#year"), item.year ? `Year: ${item.year}${metaErr}` : metaErr);
+    const run=item.runtime?`${item.runtime} min`:""; setText($("#runChip"), run); show($("#runChip"), !!run);
+    const c=item.chaos; if (typeof c==="number"){ setText($("#chaosChip"), `Chaos: ${c}`); show($("#chaosChip"),true);} else show($("#chaosChip"),false);
+    buildBadges($("#streamBadges"), item);
+    const why=(item.chaos_reason||"").trim(); const w=$("#whyBox");
+    if (why){ w.textContent=why; w.style.display="block"; } else w.style.display="none";
+    links($("#linksRow"), item);
+    setUIError("");
+  }catch(e){
+    console.error(e);
+    setUIError("Render error: "+e.message);
+  }
 }
 
 /* ====== PICKING ====== */
-function dealOne(){
-  err("");
-  if (!MOVIES.length){ err("Data not loaded yet."); return; }
+function safeDealIndex(){
   if (!DECK.length) rebuildDeck();
-  const idx = DECK.pop();
-  lastPickIndex = idx;
-  $("#left").textContent = DECK.length;
-  render(MOVIES[idx]);
+  let idx = DECK.pop();
+  if (idx==null || idx===undefined || isNaN(idx)){
+    // absolute fallback: pick a random valid index
+    idx = Math.floor(Math.random()*Math.max(1, MOVIES.length));
+  }
+  return idx;
+}
+
+function dealOne(){
+  try{
+    if (!MOVIES.length){ setUIError("Data not loaded yet."); return; }
+    const idx = safeDealIndex();
+    lastPickIndex = idx;
+    $("#left").textContent = Math.max(0, DECK.length);
+    render(MOVIES[idx]);
+  }catch(e){
+    console.error(e);
+    setUIError("Deal error: "+e.message);
+  }
 }
 
 function neighbors(target,initial,max,step){
@@ -350,33 +397,42 @@ function neighbors(target,initial,max,step){
   return MOVIES.map((m,i)=>({m,i})).filter(({m})=>passesTheme(m)&&passesContent(m)).map(x=>x.i);
 }
 function rerollNearby(){
-  if (lastPickIndex==null){ dealOne(); return; }
-  const curr=MOVIES[lastPickIndex], c=typeof curr.chaos==="number"?curr.chaos:50;
-  const pool=neighbors(c,10,40,5);
-  if (!pool.length){ err("No nearby picks with current filters."); return; }
-  const idx = pool[Math.floor(Math.random()*pool.length)];
-  lastPickIndex = idx;
-  render(MOVIES[idx]);
+  try{
+    if (lastPickIndex==null){ dealOne(); return; }
+    const curr=MOVIES[lastPickIndex], c=typeof curr.chaos==="number"?curr.chaos:50;
+    const pool=neighbors(c,10,40,5);
+    if (!pool.length){ setUIError("No nearby picks with current filters."); return; }
+    const idx = pool[Math.floor(Math.random()*pool.length)];
+    lastPickIndex = idx;
+    render(MOVIES[idx]);
+  }catch(e){
+    console.error(e);
+    setUIError("Re-roll error: "+e.message);
+  }
 }
 function doubleFeature(){
-  if (lastPickIndex==null){ dealOne(); return; }
-  const main=MOVIES[lastPickIndex], mc=typeof main.chaos==="number"?main.chaos:50;
-  const target=Math.max(0, Math.min(100, 100-mc)); // opposite energy
-  let pool=neighbors(target,12,48,6);
-  if (!pool.length){
-    let best=-1, idx=null;
-    for (let i=0;i<MOVIES.length;i++){
-      if (i===lastPickIndex) continue;
-      const m=MOVIES[i]; if (!passesTheme(m)||!passesContent(m)) continue;
-      const d=Math.abs((m.chaos??50)-mc); if (d>best){ best=d; idx=i; }
+  try{
+    if (lastPickIndex==null){ dealOne(); return; }
+    const main=MOVIES[lastPickIndex], mc=typeof main.chaos==="number"?main.chaos:50;
+    const target=Math.max(0, Math.min(100, 100-mc)); // opposite energy
+    let pool=neighbors(target,12,48,6);
+    if (!pool.length){
+      let best=-1, idx=null;
+      for (let i=0;i<MOVIES.length;i++){
+        if (i===lastPickIndex) continue;
+        const m=MOVIES[i]; if (!passesTheme(m)||!passesContent(m)) continue;
+        const d=Math.abs((m.chaos??50)-mc); if (d>best){ best=d; idx=i; }
+      }
+      if (idx==null){ setUIError("No suitable cleanser with current filters."); return; }
+      pool=[idx];
     }
-    if (idx==null){ err("No suitable cleanser with current filters."); return; }
-    pool=[idx];
+    const idx = pool[Math.floor(Math.random()*pool.length)];
+    lastPickIndex = idx;
+    render(MOVIES[idx]);
+  }catch(e){
+    console.error(e);
+    setUIError("Double error: "+e.message);
   }
-  // show cleanser in-place (quick swap)
-  const idx = pool[Math.floor(Math.random()*pool.length)];
-  render(MOVIES[idx]);
-  lastPickIndex = idx;
 }
 
 /* ====== WIRES ====== */
