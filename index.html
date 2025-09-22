@@ -105,7 +105,7 @@
     <header>
       <div>
         <h1 class="appTitle">🎲 Movie Roulette</h1>
-        <div class="sub">Thumb-first. No scrolling. Mischief optional.</div>
+        <div class="sub">Presets are law. Chaos obeys.</div>
       </div>
       <div class="deck">Deck: <span id="left">0</span>/<span id="total">0</span></div>
     </header>
@@ -128,9 +128,10 @@
         </div>
       </div>
       <div class="presets" id="presets">
-        <button class="preset" data-p="cozy">Cozy offbeat</button>
-        <button class="preset" data-p="midnight">Cult midnight</button>
-        <button class="preset" data-p="folk">Folk dread</button>
+        <button class="preset" data-preset="none" style="display:none"></button>
+        <button class="preset" data-preset="cozy">Cozy offbeat</button>
+        <button class="preset" data-preset="midnight">Cult midnight</button>
+        <button class="preset" data-preset="folk">Folk dread</button>
       </div>
     </div>
 
@@ -188,20 +189,19 @@
   </div>
 
   <p class="small" style="margin-top:8px">
-    Tip: You can enrich your CSV by creating <code>data/movies.csv</code> with columns:<br/>
+    Tip: enrich <code>data/movies.csv</code> with columns:<br/>
     <code>Date,Name,Year,Letterboxd URI,Tagline,Chaos,Flags,Poster,Runtime</code><br/>
-    where <em>Flags</em> = list like <code>witchy body folk found neon gore sv kids</code>.
+    <em>Flags</em> = e.g. <code>witchy body folk found neon gore sv kids</code>.
   </p>
 </dialog>
 
 <div class="toast" id="toast">Banished for today • Hold Undo</div>
 
 <script>
-/* ====== PUT YOUR TMDB KEY HERE ====== */
-const TMDB_API_KEY = "000802da6224e125437187b196cde898"; // e.g. "000802da6224e125437187b196cde898"
+/* ====== PUT YOUR TMDB KEY HERE (keep the variable name) ====== */
+const TMDB_API_KEY = "PASTE_YOUR_TMDB_KEY_HERE"; // e.g. "000802da6224e125437187b196cde898"
 
 /* ====== CONFIG ====== */
-const MY_SERVICES = new Set(["Netflix","Amazon Prime Video","Hulu","Max","Paramount+","Apple TV+","Tubi TV"]);
 const TMDB_IMG = "https://image.tmdb.org/t/p";
 
 /* ====== UTIL ====== */
@@ -215,13 +215,9 @@ function haptics(type="light"){
     else navigator.vibrate(6);
   } else { const p=$("#poster"); p.classList.add("tick"); setTimeout(()=>p.classList.remove("tick"),180); }
 }
-
-/* prevent iOS save dialog on poster long press */
 document.addEventListener("contextmenu", e => {
   if (e.target && (e.target.id==="poster" || e.target.closest("#poster"))) e.preventDefault();
 });
-
-/* Poster helper */
 function posterURL(path, size="w500"){
   if (!path) return "";
   const s = String(path).trim();
@@ -252,15 +248,16 @@ let THEME="all";
 let FILTERS={ noGore:false, noSV:false, noKids:false };
 let lastPickIndex=null;
 let banished = { date: todayKey(), ids: [] };
+let ACTIVE_PRESET = "none"; // none | cozy | midnight | folk
 
 /* ====== TMDb cache (localStorage) ====== */
-const CACHE_KEY = "mr_tmdb_cache_v2";
+const CACHE_KEY = "mr_tmdb_cache_v3";
 let TMDB_CACHE = {};
 try{ TMDB_CACHE = JSON.parse(localStorage.getItem(CACHE_KEY)||"{}"); }catch{ TMDB_CACHE={}; }
 function saveCache(){ localStorage.setItem(CACHE_KEY, JSON.stringify(TMDB_CACHE)); }
 function cacheKey(title, year){ return (title||"").toLowerCase()+"::"+String(year||"").slice(0,4); }
 
-/* ====== OVERRIDES (keyed by Title::Year) ====== */
+/* ====== OVERRIDES (curated) ====== */
 const OVERRIDES = {
   "Bridget Jones's Diary::2001": { chaos:10, flags:[], tagline:"Diary, disaster, darling; not chaos." },
   "High Fidelity::2000": { chaos:15, flags:[], tagline:"Mixtapes and malaise, not madness." },
@@ -341,7 +338,6 @@ function splitCSV(str, delim=","){
   out.push(cur);
   return out;
 }
-
 function coerceFlags(s){
   const set = new Set(String(s||"").toLowerCase().split(/[,\s]+/).filter(Boolean));
   return {
@@ -355,7 +351,6 @@ function coerceFlags(s){
     kids_in_peril: set.has("kids"),
   };
 }
-
 function mergeOverride(item){
   const key = idFor(item);
   const o = OVERRIDES[key];
@@ -379,7 +374,6 @@ function mergeOverride(item){
     flags
   };
 }
-
 async function loadData(){
   try{
     loadBanished();
@@ -437,29 +431,35 @@ async function loadData(){
   }
 }
 
-/* ====== FILTERS & PRESETS ====== */
-function providerMatches(p){
-  if (!p?.name) return false;
-  const n = String(p.name).trim();
-  if (MY_SERVICES.has(n)) return true;
-  if (n === "HBO Max" && MY_SERVICES.has("Max")) return true;
-  if (n === "Max" && MY_SERVICES.has("HBO Max")) return true;
-  return false;
+/* ====== PRESET HARD FILTERS ====== */
+function presetPass(item){
+  if (ACTIVE_PRESET==="none") return true;
+
+  const f = item.flags || {};
+  const c = (typeof item.chaos === "number") ? item.chaos : 50;
+
+  if (ACTIVE_PRESET==="midnight"){
+    // must be culty/weird via flags, and sufficiently chaotic
+    const any = f.theme_neon || f.extreme_gore || f.theme_body_horror || f.theme_found_footage || f.theme_witchy;
+    if (!any) return false;
+    if (c < 50) return false;
+    return true;
+  }
+  if (ACTIVE_PRESET==="cozy"){
+    // gentler: no gore, no sexual violence, and not too chaotic
+    if (f.extreme_gore || f.sexual_violence) return false;
+    if (c > 45) return false;
+    return true;
+  }
+  if (ACTIVE_PRESET==="folk"){
+    // folk or witchy required; chaos wide open
+    if (!(f.theme_folk || f.theme_witchy)) return false;
+    return true;
+  }
+  return true;
 }
-function availabilityNames(item){
-  const prov = Array.isArray(item.providers) ? item.providers : [];
-  const names=[]; const seen=new Set();
-  for (const p of prov){ if (providerMatches(p)){ const nm = String(p.name).trim(); if (!seen.has(nm)){ seen.add(nm); names.push(nm); } } }
-  return names;
-}
-function buildBadges(container, item){
-  const names = availabilityNames(item);
-  container.innerHTML = "";
-  if (names.length){
-    for (const n of names){ const s=document.createElement("span"); s.className="badge"; s.textContent=n; container.appendChild(s); }
-    container.style.display="";
-  } else container.style.display="none";
-}
+
+/* ====== THEMES & CONTENT FILTERS ====== */
 function themePass(item){
   const f=item.flags||{};
   if (THEME==="all") return true;
@@ -476,19 +476,6 @@ function contentPass(item){
   if (FILTERS.noSV && f.sexual_violence) return false;
   if (FILTERS.noKids && f.kids_in_peril) return false;
   return true;
-}
-function applyPreset(key){
-  if (key==="cozy"){ MODE="order"; VARIETY="T"; THEME="all"; FILTERS={...FILTERS, noKids:true, noSV:true}; }
-  if (key==="midnight"){ MODE="chaos"; VARIETY="W"; THEME="neon"; FILTERS={...FILTERS, noKids:false, noSV:false}; }
-  if (key==="folk"){ MODE="mix"; VARIETY="M"; THEME="folk"; FILTERS={...FILTERS, noKids:true}; }
-  [...$("#modeSegTop").children].forEach(b=>b.classList.toggle("active", b.dataset.mode===MODE));
-  [...$("#biasSegTop").children].forEach(b=>b.classList.toggle("active", b.dataset.bias===VARIETY));
-  ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active"));
-  const map={all:"thAll",witch:"thWitch",body:"thBody",folk:"thFolk",found:"thFound",neon:"thNeon"}; $("#"+map[THEME]).classList.add("active");
-  $("#fNoKids").classList.toggle("active",FILTERS.noKids);
-  $("#fNoSV").classList.toggle("active",FILTERS.noSV);
-  rebuildDeck();
-  haptics("mid");
 }
 
 /* ====== CHAOS TARGETING ====== */
@@ -524,10 +511,14 @@ function rebuildDeck(){
     const todaysBan = (banished.date===todayKey()) ? new Set(banished.ids) : new Set();
 
     let cands = MOVIES.map((m,i)=>({m,i}))
-      .filter(({m}) => !todaysBan.has(idFor(m)) && themePass(m) && contentPass(m))
+      .filter(({m}) => presetPass(m) && !todaysBan.has(idFor(m)) && themePass(m) && contentPass(m))
       .map(x=>x.i);
 
-    if (!cands.length) cands = MOVIES.map((_,i)=>i);
+    if (!cands.length) {
+      // If preset is too strict, fall back to preset only (ignore theme/content) then gradually relax.
+      cands = MOVIES.map((m,i)=>({m,i})).filter(({m})=>presetPass(m) && !todaysBan.has(idFor(m))).map(x=>x.i);
+      if (!cands.length) cands = MOVIES.map((_,i)=>i); // nuclear fallback
+    }
 
     for (let i=cands.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [cands[i],cands[j]]=[cands[j],cands[i]]; }
 
@@ -556,27 +547,34 @@ function rebuildDeck(){
   }
 }
 
-/* ====== TMDb LOOKUP ====== */
+/* ====== TMDb LOOKUP (with yearless retry) ====== */
 async function tmdbSearchPoster(title, year){
   if (!TMDB_API_KEY) return null;
   const key = cacheKey(title, year);
   if (TMDB_CACHE[key]?.poster) return TMDB_CACHE[key].poster;
 
-  // Simple throttle: only 1 call per 300ms
   if (!tmdbSearchPoster._q) tmdbSearchPoster._q = Promise.resolve();
   tmdbSearchPoster._q = tmdbSearchPoster._q.then(()=>new Promise(res=>setTimeout(res,300)));
   await tmdbSearchPoster._q;
 
-  const url = new URL("https://api.themoviedb.org/3/search/movie");
-  url.searchParams.set("api_key", TMDB_API_KEY);
-  url.searchParams.set("query", title);
-  if (String(year||"").length >= 4) url.searchParams.set("year", String(year).slice(0,4));
-
-  try{
+  async function call(params){
+    const url = new URL("https://api.themoviedb.org/3/search/movie");
+    url.searchParams.set("api_key", TMDB_API_KEY);
+    for (const [k,v] of Object.entries(params)) url.searchParams.set(k, v);
     const r = await fetch(url.toString());
     if (!r.ok) throw new Error("search fail");
-    const j = await r.json();
-    const hit = (j.results||[])[0];
+    return r.json();
+  }
+
+  try{
+    // Try with year
+    let j = await call({ query:title, year:String(year||"").slice(0,4) });
+    let hit = (j.results||[])[0];
+    // Retry without year if no result or no poster
+    if (!hit || !hit.poster_path){
+      j = await call({ query:title });
+      hit = (j.results||[])[0];
+    }
     const poster = hit?.poster_path || null;
     TMDB_CACHE[key] = TMDB_CACHE[key] || {};
     TMDB_CACHE[key].poster = poster;
@@ -597,39 +595,23 @@ function links(container, item){
   lb.textContent="Open on Letterboxd"; lb.href=item.link||"#"; lb.target="_blank"; lb.rel="noopener";
   container.appendChild(lb);
 
-  const names = availabilityNames(item);
-  if (!names.length){
-    const q=encodeURIComponent(`${item.title} full movie site:archive.org OR site:youtube.com OR torrent`);
-    const s=document.createElement("a");
-    s.textContent="Search"; s.href="https://www.google.com/search?q="+q; s.target="_blank"; s.rel="noopener";
-    container.appendChild(s);
-  }
+  // If not on your services (we’re not fetching providers here), show a general search helper
+  const s=document.createElement("a");
+  const q=encodeURIComponent(`${item.title} full movie site:archive.org OR site:youtube.com OR torrent`);
+  s.textContent="Where to watch (search)"; s.href="https://www.google.com/search?q="+q; s.target="_blank"; s.rel="noopener";
+  container.appendChild(s);
 }
 
 async function ensurePoster(item){
-  // 1) CSV/JSON poster
   if (item.poster && String(item.poster).trim()) return item.poster;
-
-  // 2) Cache / lookup
   const found = await tmdbSearchPoster(item.title, item.year);
   if (found) { item.poster = found; return found; }
-
-  // 3) give up (fallback SVG shown by setPoster)
   return "";
 }
-
-function buildBadges(container, item){
-  const names = availabilityNames(item);
-  container.innerHTML = "";
-  if (names.length){
-    for (const n of names){ const s=document.createElement("span"); s.className="badge"; s.textContent=n; container.appendChild(s); }
-    container.style.display="";
-  } else container.style.display="none";
-}
+function buildBadges(){ /* (providers turned off for now; UI kept clean) */ }
 
 async function render(item){
-  // kick poster skeleton immediately, then load/lookup
-  setPoster($("#poster"), "/null", item.title); // forces skeleton
+  setPoster($("#poster"), "/null", item.title); // skeleton
   const posterPath = await ensurePoster(item);
   setPoster($("#poster"), posterPath || "/null", item.title);
 
@@ -639,8 +621,7 @@ async function render(item){
   const run=item.runtime?`${item.runtime} min`:""; setText($("#runChip"), run); show($("#runChip"), !!run);
   const c=item.chaos; if (typeof c==="number"){ setText($("#chaosChip"), `Chaos: ${c}`); show($("#chaosChip"),true);} else show($("#chaosChip"),false);
   buildBadges($("#streamBadges"), item);
-  const why=(item.chaos_reason||"").trim(); const w=$("#whyBox");
-  if (why){ w.textContent=why; w.style.display="block"; } else w.style.display="none";
+  $("#whyBox").style.display="none";
   links($("#linksRow"), item);
 }
 
@@ -656,6 +637,7 @@ function dealOne(){
   const idx = safeDealIndex(); lastPickIndex = idx;
   $("#left").textContent = Math.max(0, DECK.length);
   render(MOVIES[idx]);
+  setUIError("");
   haptics("light");
 }
 function rerollNearby(){
@@ -664,17 +646,18 @@ function rerollNearby(){
   let pool=[];
   for (let i=0;i<MOVIES.length;i++){
     if (i===lastPickIndex) continue;
-    const m=MOVIES[i]; if (!themePass(m) || !contentPass(m)) continue;
+    const m=MOVIES[i];
+    if (!presetPass(m) || !themePass(m) || !contentPass(m)) continue;
     const cc=typeof m.chaos==="number"?m.chaos:50;
     if (Math.abs(cc-c)<=15) pool.push(i);
   }
-  if (!pool.length){ pool = MOVIES.map((m,i)=>i).filter(i=>i!==lastPickIndex && themePass(MOVIES[i]) && contentPass(MOVIES[i])); }
+  if (!pool.length){ pool = MOVIES.map((m,i)=>i).filter(i=>i!==lastPickIndex && presetPass(MOVIES[i]) && themePass(MOVIES[i]) && contentPass(MOVIES[i])); }
   if (!pool.length){ pool = MOVIES.map((_,i)=>i).filter(i=>i!==lastPickIndex); }
   const idx = pool[Math.floor(Math.random()*pool.length)];
   lastPickIndex = idx; render(MOVIES[idx]); haptics("mid");
 }
 
-/* ====== BANISH (long press on INFO AREA only, 300ms) ====== */
+/* ====== BANISH (long press on INFO area, 300ms) ====== */
 let lpTimer=null;
 function startLP(){ lpTimer=setTimeout(()=>{ banishCurrent(); }, 300); }
 function endLP(){ clearTimeout(lpTimer); }
@@ -707,7 +690,7 @@ const dlg=$("#filtersDlg");
 $("#openFilters").onclick = ()=>dlg.showModal();
 $("#closeFilters").onclick = ()=>dlg.close();
 $("#resetAll").onclick = ()=>{
-  MODE="mix"; VARIETY="T"; THEME="all"; FILTERS={noGore:false,noSV:false,noKids:false};
+  MODE="mix"; VARIETY="T"; THEME="all"; FILTERS={noGore:false,noSV:false,noKids:false}; ACTIVE_PRESET="none";
   [...$("#modeSegTop").children].forEach(b=>b.classList.remove("active")); $("#modeSegTop").children[1].classList.add("active");
   [...$("#biasSegTop").children].forEach(b=>b.classList.remove("active")); $("#biasSegTop").children[0].classList.add("active");
   ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active")); $("#thAll").classList.add("active");
@@ -715,27 +698,39 @@ $("#resetAll").onclick = ()=>{
   rebuildDeck(); dlg.close();
 };
 
+/* mode & bias */
 $("#modeSegTop").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return;
   MODE=e.target.dataset.mode; [...$("#modeSegTop").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); haptics("light"); });
 
 $("#biasSegTop").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return;
   VARIETY=e.target.dataset.bias; [...$("#biasSegTop").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); haptics("light"); });
 
+/* themes */
 function setTheme(w){ THEME=w; ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active"));
   const map={all:"thAll",witch:"thWitch",body:"thBody",folk:"thFolk",found:"thFound",neon:"thNeon"}; $("#"+map[w]).classList.add("active"); rebuildDeck(); haptics("light"); }
 $("#thAll").onclick=()=>setTheme("all"); $("#thWitch").onclick=()=>setTheme("witch"); $("#thBody").onclick=()=>setTheme("body");
 $("#thFolk").onclick=()=>setTheme("folk"); $("#thFound").onclick=()=>setTheme("found"); $("#thNeon").onclick=()=>setTheme("neon");
 
+/* content */
 $("#fNoGore").onclick =()=>{ FILTERS.noGore=!FILTERS.noGore; $("#fNoGore").classList.toggle("active",FILTERS.noGore); rebuildDeck(); haptics("light"); };
 $("#fNoSV").onclick   =()=>{ FILTERS.noSV=!FILTERS.noSV; $("#fNoSV").classList.toggle("active",FILTERS.noSV); rebuildDeck(); haptics("light"); };
 $("#fNoKids").onclick =()=>{ FILTERS.noKids=!FILTERS.noKids; $("#fNoKids").classList.toggle("active",FILTERS.noKids); rebuildDeck(); haptics("light"); };
 
-$("#presets").addEventListener("click",(e)=>{ const b=e.target.closest(".preset"); if(!b)return; applyPreset(b.dataset.p); });
+/* presets (HARD FILTERS) */
+$("#presets").addEventListener("click",(e)=>{
+  const b = e.target.closest(".preset"); if(!b) return;
+  ACTIVE_PRESET = b.dataset.preset; // none | cozy | midnight | folk
+  // visual ping
+  [...$("#presets").querySelectorAll(".preset")].forEach(x=>x.style.outline="none");
+  b.style.outline="2px solid #2c5";
+  rebuildDeck();
+  haptics("mid");
+});
 
 /* long-press banish ONLY on info column */
 const infoLP = document.getElementById("longPressArea");
-["touchstart","mousedown"].forEach(ev=>infoLP.addEventListener(ev, startLP, {passive:true}));
-["touchend","touchcancel","mouseup","mouseleave"].forEach(ev=>infoLP.addEventListener(ev, endLP));
+["touchstart","mousedown"].forEach(ev=>infoLP.addEventListener(ev, ()=>{ lpTimer=setTimeout(banishCurrent, 300); }, {passive:true}));
+["touchend","touchcancel","mouseup","mouseleave"].forEach(ev=>infoLP.addEventListener(ev, ()=>clearTimeout(lpTimer)));
 
 $("#undo").onclick = ()=>{ undoBanish(); haptics("mid"); };
 
