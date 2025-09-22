@@ -198,7 +198,7 @@
 
 <script>
 /* ====== PUT YOUR TMDB KEY HERE ====== */
-const TMDB_API_KEY = "PASTE_YOUR_TMDB_KEY_HERE"; // e.g. "000802da6224e125437187b196cde898"
+const TMDB_API_KEY = "000802da6224e125437187b196cde898"; // e.g. "000802da6224e125437187b196cde898"
 
 /* ====== CONFIG ====== */
 const MY_SERVICES = new Set(["Netflix","Amazon Prime Video","Hulu","Max","Paramount+","Apple TV+","Tubi TV"]);
@@ -558,7 +558,7 @@ function rebuildDeck(){
 
 /* ====== TMDb LOOKUP ====== */
 async function tmdbSearchPoster(title, year){
-  if (!000802da6224e125437187b196cde898) return null;
+  if (!TMDB_API_KEY) return null;
   const key = cacheKey(title, year);
   if (TMDB_CACHE[key]?.poster) return TMDB_CACHE[key].poster;
 
