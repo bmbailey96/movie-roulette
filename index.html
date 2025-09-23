@@ -1,741 +1,115 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>Movie Roulette</title>
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0b0b0b">
-<style>
-  :root{
-    color-scheme: light dark;
-    --bg:#0b0b0b; --card:#101010; --fg:#f4f4f4; --muted:#a9b0b6; --border:#212121;
-    --accent:#77ffa5; --accentFg:#051e11; --ghost:#151515;
-    --radius:16px; --shadow:0 10px 34px rgba(0,0,0,.45);
-  }
-  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body{ height:100%; margin:0; background:var(--bg); color:var(--fg);
-    font:15px/1.45 system-ui,-apple-system,Inter,Segoe UI,Roboto,Arial,sans-serif; overflow:hidden; }
-
-  .wrap{ height:100dvh; display:flex;
-    padding:calc(env(safe-area-inset-top)) calc(env(safe-area-inset-right)) calc(env(safe-area-inset-bottom)) calc(env(safe-area-inset-left));
-  }
-  .card{
-    margin:auto; width:min(880px,100%);
-    height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 12px);
-    background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow);
-    display:grid; grid-template-rows:auto auto 1fr auto; gap:8px; padding:10px; overflow:hidden;
-  }
-
-  header{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
-  .appTitle{ font-weight:900; letter-spacing:.2px; font-size:20px; margin:0; }
-  .sub{ color:var(--muted); font-size:12px; margin-top:-4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .deck{ color:#cfe; font-size:12px; padding:6px 10px; border:1px solid #263; border-radius:10px; background:#0f1a14; }
-
-  .toolbar{ display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
-  .group{ display:flex; gap:8px; align-items:center; }
-  .label{ color:#9ab; font-size:12px; margin-right:2px; }
-  .seg{ display:flex; background:#141414; border:1px solid #262626; border-radius:999px; overflow:hidden; }
-  .seg button{ background:transparent; border:0; color:#dfffe8; padding:8px 12px; font-weight:900; font-size:13px; cursor:pointer; }
-  .seg button.active{ background:#203626; color:#b8ffd1; }
-
-  .presets{ display:flex; gap:8px; flex-wrap:wrap; }
-  .preset{ background:#141414; border:1px solid #262626; color:#dfffe8; font-weight:800; font-size:12px;
-           padding:6px 10px; border-radius:999px; cursor:pointer; }
-
-  .stage{
-    min-height:0; display:grid; grid-template-columns:minmax(52%,58%) 1fr; gap:12px;
-    align-items:start; overflow:hidden; width:100%;
-  }
-  @media (max-width:420px){ .stage{ grid-template-columns:56% 1fr; } }
-
-  .poster{
-    width:100%; aspect-ratio:2/3; object-fit:cover; border-radius:14px;
-    background:#181818; border:1px solid #1f1f1f; position:relative;
-  }
-  .poster.skeleton{ animation:pulse 1.2s infinite ease-in-out; background:linear-gradient(90deg,#141414 25%,#1a1a1a 37%,#141414 63%); background-size:400% 100%; }
-  @keyframes pulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
-  .poster.tick{ animation:tick .18s ease; }
-  @keyframes tick{ 0%{transform:scale(.99)} 50%{transform:scale(1.01)} 100%{transform:scale(1)} }
-
-  .infoCol{
-    min-width:0; min-height:0; display:grid; grid-template-rows:auto auto auto 1fr auto; gap:8px;
-    overflow:auto; padding-right:2px; word-break:break-word;
-  }
-  .titleMovie{ font-weight:1000; font-size:22px; margin:0; line-height:1.15; }
-  .tagline{ color:#d6e2dd; font-size:14px; margin:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-  .micro{ color:var(--muted); display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:12px; }
-  .chip{ background:#141414; border:1px solid #262626; border-radius:999px; padding:6px 10px; font-weight:800; font-size:12px; color:#d8ffe9; }
-  .badges{ display:flex; gap:6px; flex-wrap:wrap; }
-  .badge{ font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid #2a2a2a; background:#171717; color:#bfe; }
-  .whyBox{ background:#0f1511; border:1px dashed #294; border-radius:10px; padding:8px; color:#bff5d7; font-size:12px; display:none; }
-
-  .links{ display:grid; grid-template-columns:1fr; gap:8px; }
-  .links a{ display:block; padding:12px; text-align:center; border-radius:12px; text-decoration:none; font-weight:900; font-size:15px; background:#1b1b1b; color:#c0ffd6; border:1px solid #2a2a2a; }
-
-  .dock{
-    display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; align-items:center;
-    padding-bottom:calc(env(safe-area-inset-bottom) + 2px);
-  }
-  .btn{ appearance:none; border:0; border-radius:14px; padding:14px 12px; font-weight:900; cursor:pointer; font-size:15px; }
-  .btn.pri{ background:var(--accent); color:var(--accentFg); }
-  .btn.gh{ background:var(--ghost); color:var(--fg); border:1px solid #262626; }
-
-  dialog{ border:1px solid var(--border); background:#0f0f0f; color:#fff; border-radius:16px; width:min(560px, 92vw); padding:14px; }
-  dialog::backdrop{ background:rgba(0,0,0,.6); }
-  .rowFilt{ display:flex; gap:8px; flex-wrap:wrap; }
-  .pill{ background:#161616; border:1px solid #2a2a2a; border-radius:999px; padding:8px 10px; font-weight:800; font-size:13px; color:#dfffe8; cursor:pointer; }
-  .pill.active{ background:#242a24; color:#b6ffd1; }
-  .kicker{ color:#9ab; font-size:12px; }
-  .small{ color:#9ab; font-size:11px; white-space:normal; }
-
-  .toast{
-    position:fixed; left:50%; bottom:calc(18px + env(safe-area-inset-bottom)); transform:translateX(-50%);
-    background:#0f1511; border:1px solid #2a3a2f; color:#caffe0; padding:10px 12px; border-radius:12px; font-weight:800;
-    display:none; z-index:50;
-  }
-  .toast.show{ display:block; animation:fade 2.4s ease both; }
-  @keyframes fade{ 0%{opacity:0; transform:translate(-50%, 8px)} 10%{opacity:1; transform:translate(-50%,0)} 90%{opacity:1} 100%{opacity:0} }
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Movie Roulette</title>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="theme-color" content="#0b0b0b"/>
+  <link rel="stylesheet" href="./style.css"/>
 </head>
 <body>
-<div class="wrap">
-  <main class="card" id="root">
-    <header>
-      <div>
-        <h1 class="appTitle">🎲 Movie Roulette</h1>
-        <div class="sub">Presets are law. Chaos obeys.</div>
-      </div>
-      <div class="deck">Deck: <span id="left">0</span>/<span id="total">0</span></div>
-    </header>
+  <div class="wrap">
+    <main class="card" id="root">
+      <header>
+        <div>
+          <h1 class="appTitle">🎲 Movie Roulette</h1>
+          <div class="sub">Presets are law. Chaos obeys.</div>
+        </div>
+        <div class="deck">Deck: <span id="left">0</span>/<span id="total">0</span></div>
+      </header>
 
-    <div class="toolbar">
-      <div class="group">
-        <span class="label">Mood</span>
-        <div class="seg" id="modeSegTop">
-          <button data-mode="order">Order</button>
-          <button data-mode="mix" class="active">Mix</button>
-          <button data-mode="chaos">Chaos</button>
+      <div class="toolbar">
+        <div class="group">
+          <span class="label">Mood</span>
+          <div class="seg" id="modeSegTop">
+            <button data-mode="order">Order</button>
+            <button data-mode="mix" class="active">Mix</button>
+            <button data-mode="chaos">Chaos</button>
+          </div>
+        </div>
+        <div class="group">
+          <span class="label">Bias</span>
+          <div class="seg" id="biasSegTop">
+            <button data-bias="T" class="active">Tight</button>
+            <button data-bias="M">Med</button>
+            <button data-bias="W">Wide</button>
+          </div>
+        </div>
+        <div class="presets" id="presets">
+          <button class="preset" data-preset="cozy">Cozy offbeat</button>
+          <button class="preset" data-preset="midnight">Cult midnight</button>
+          <button class="preset" data-preset="folk">Folk dread</button>
         </div>
       </div>
-      <div class="group">
-        <span class="label">Bias</span>
-        <div class="seg" id="biasSegTop">
-          <button data-bias="T" class="active">Tight</button>
-          <button data-bias="M">Med</button>
-          <button data-bias="W">Wide</button>
+
+      <section class="stage" aria-live="polite">
+        <img id="poster" class="poster skeleton" referrerpolicy="no-referrer" alt="Movie poster"/>
+        <div class="infoCol" id="longPressArea">
+          <div class="lockRow">
+            <span class="lockChip" id="presetLock" style="display:none;"></span>
+          </div>
+          <h2 class="titleMovie" id="title">—</h2>
+          <p class="tagline" id="taglineInline" style="display:none;"></p>
+          <div class="micro">
+            <span id="year"></span>
+            <span id="runChip" class="chip" style="display:none;"></span>
+            <span id="chaosChip" class="chip" style="display:none;"></span>
+          </div>
+          <div class="badges" id="streamBadges" style="display:none;"></div>
+          <div class="whyBox" id="whyBox" style="display:none;"></div>
+          <div class="links" id="linksRow"></div>
+          <div class="small" id="err" role="alert" aria-live="polite"></div>
         </div>
-      </div>
-      <div class="presets" id="presets">
-        <button class="preset" data-preset="none" style="display:none"></button>
-        <button class="preset" data-preset="cozy">Cozy offbeat</button>
-        <button class="preset" data-preset="midnight">Cult midnight</button>
-        <button class="preset" data-preset="folk">Folk dread</button>
-      </div>
+      </section>
+
+      <nav class="dock">
+        <button id="deal" class="btn pri">Deal</button>
+        <button id="reroll" class="btn gh">Re-roll</button>
+        <button id="openFilters" class="btn gh">Filters</button>
+        <button id="resetDeck" class="btn gh" style="display:none;">Reset</button>
+        <button id="shareCard" class="btn gh">Share</button>
+        <button id="undo" class="btn gh">Undo banish</button>
+      </nav>
+    </main>
+  </div>
+
+  <dialog id="filtersDlg">
+    <div class="dlgHead">
+      <strong>Filters</strong><div class="kicker" id="deckCountMini">Deck: 0</div>
     </div>
 
-    <section class="stage" aria-live="polite">
-      <img id="poster" class="poster skeleton" referrerpolicy="no-referrer" alt="Movie poster"/>
-      <div class="infoCol" id="longPressArea">
-        <h2 class="titleMovie" id="title">—</h2>
-        <p class="tagline" id="taglineInline" style="display:none;"></p>
-        <div class="micro">
-          <span id="year"></span>
-          <span id="runChip" class="chip" style="display:none;"></span>
-          <span id="chaosChip" class="chip" style="display:none;"></span>
-        </div>
-        <div class="badges" id="streamBadges" style="display:none;"></div>
-        <div class="whyBox" id="whyBox"></div>
-        <div class="links" id="linksRow"></div>
-        <div class="small" id="err" role="alert" aria-live="polite"></div>
-      </div>
-    </section>
+    <div class="kicker">Themes</div>
+    <div class="rowFilt mb8">
+      <div class="pill active" id="thAll">All</div>
+      <div class="pill" id="thWitch">Witchy</div>
+      <div class="pill" id="thBody">Body</div>
+      <div class="pill" id="thFolk">Folk</div>
+      <div class="pill" id="thFound">Found</div>
+      <div class="pill" id="thNeon">Neon</div>
+    </div>
 
-    <nav class="dock">
-      <button id="deal" class="btn pri">Deal</button>
-      <button id="reroll" class="btn gh">Re-roll</button>
-      <button id="openFilters" class="btn gh">Filters</button>
-      <button id="undo" class="btn gh">Undo banish</button>
-    </nav>
-  </main>
-</div>
+    <div class="kicker">Content</div>
+    <div class="rowFilt mb12">
+      <div class="pill" id="fNoGore">No gore</div>
+      <div class="pill" id="fNoSV">No sexual violence</div>
+      <div class="pill" id="fNoKids">No kids-in-peril</div>
+    </div>
 
-<dialog id="filtersDlg">
-  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-    <strong>Filters</strong><div class="kicker" id="deckCountMini">Deck: 0</div>
-  </div>
+    <div class="rowFilt endRow">
+      <button class="btn gh" id="resetAll">Reset</button>
+      <button class="btn pri" id="closeFilters">Close</button>
+    </div>
 
-  <div class="kicker">Themes</div>
-  <div class="rowFilt" style="margin-bottom:8px;">
-    <div class="pill active" id="thAll">All</div>
-    <div class="pill" id="thWitch">Witchy</div>
-    <div class="pill" id="thBody">Body</div>
-    <div class="pill" id="thFolk">Folk</div>
-    <div class="pill" id="thFound">Found</div>
-    <div class="pill" id="thNeon">Neon</div>
-  </div>
+    <p class="small tip">
+      Enrich <code>data/movies.csv</code> with:<br/>
+      <code>Date,Name,Year,Letterboxd URI,Tagline,Chaos,Flags,Poster,Runtime</code>
+    </p>
+  </dialog>
 
-  <div class="kicker">Content</div>
-  <div class="rowFilt" style="margin-bottom:12px;">
-    <div class="pill" id="fNoGore">No gore</div>
-    <div class="pill" id="fNoSV">No sexual violence</div>
-    <div class="pill" id="fNoKids">No kids-in-peril</div>
-  </div>
+  <div class="toast" id="toast">Banished for today — Undo</div>
 
-  <div class="rowFilt" style="justify-content:flex-end;">
-    <button class="btn gh" id="resetAll">Reset</button>
-    <button class="btn pri" id="closeFilters">Close</button>
-  </div>
-
-  <p class="small" style="margin-top:8px">
-    Tip: enrich <code>data/movies.csv</code> with columns:<br/>
-    <code>Date,Name,Year,Letterboxd URI,Tagline,Chaos,Flags,Poster,Runtime</code><br/>
-    <em>Flags</em> = e.g. <code>witchy body folk found neon gore sv kids</code>.
-  </p>
-</dialog>
-
-<div class="toast" id="toast">Banished for today • Hold Undo</div>
-
-<script>
-/* ====== PUT YOUR TMDB KEY HERE (keep the variable name) ====== */
-const TMDB_API_KEY = "000802da6224e125437187b196cde898"; // e.g. "000802da6224e125437187b196cde898"
-
-/* ====== CONFIG ====== */
-const TMDB_IMG = "https://image.tmdb.org/t/p";
-
-/* ====== UTIL ====== */
-const $ = s => document.querySelector(s);
-function setUIError(m=""){ const e=$("#err"); e.textContent=m; e.style.color=m?"#ffb3b3":"#9ab"; }
-function todayKey(){ const d=new Date(); return d.toISOString().slice(0,10); }
-function haptics(type="light"){
-  if (navigator.vibrate) {
-    if (type==="heavy") navigator.vibrate([8,18,8]);
-    else if (type==="mid") navigator.vibrate(12);
-    else navigator.vibrate(6);
-  } else { const p=$("#poster"); p.classList.add("tick"); setTimeout(()=>p.classList.remove("tick"),180); }
-}
-document.addEventListener("contextmenu", e => {
-  if (e.target && (e.target.id==="poster" || e.target.closest("#poster"))) e.preventDefault();
-});
-function posterURL(path, size="w500"){
-  if (!path) return "";
-  const s = String(path).trim();
-  if (!s || s==="null" || s==="undefined") return "";
-  if (s.startsWith("http://")) return s.replace("http://","https://");
-  if (s.startsWith("https://")) return s;
-  const clean = s.startsWith("/") ? s : "/"+s;
-  return `${TMDB_IMG}/${size}${clean}`;
-}
-function setPoster(imgEl, posterPath, title){
-  const sizes = ["w500","w780","original","w342"];
-  let i = 0;
-  function tryNext(){ const u = posterURL(posterPath, sizes[i]); if (!u){ setFallback(); return; } imgEl.src = u; }
-  function setFallback(){
-    imgEl.src = `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900"><rect width="100%" height="100%" fill="#141414"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#5a5a5a" font-family="system-ui, -apple-system, Segoe UI, Roboto" font-size="28">NO POSTER</text></svg>')}`;
-  }
-  imgEl.alt = title || "poster"; imgEl.classList.add("skeleton");
-  imgEl.onerror = () => { i++; (i < sizes.length) ? tryNext() : (setFallback(), imgEl.classList.remove("skeleton")); };
-  imgEl.onload  = () => imgEl.classList.remove("skeleton");
-  tryNext();
-}
-
-/* ====== STATE ====== */
-let MOVIES=[], DECK=[];
-let MODE="mix";   // order | mix | chaos
-let VARIETY="T";  // T | M | W
-let THEME="all";
-let FILTERS={ noGore:false, noSV:false, noKids:false };
-let lastPickIndex=null;
-let banished = { date: todayKey(), ids: [] };
-let ACTIVE_PRESET = "none"; // none | cozy | midnight | folk
-
-/* ====== TMDb cache (localStorage) ====== */
-const CACHE_KEY = "mr_tmdb_cache_v3";
-let TMDB_CACHE = {};
-try{ TMDB_CACHE = JSON.parse(localStorage.getItem(CACHE_KEY)||"{}"); }catch{ TMDB_CACHE={}; }
-function saveCache(){ localStorage.setItem(CACHE_KEY, JSON.stringify(TMDB_CACHE)); }
-function cacheKey(title, year){ return (title||"").toLowerCase()+"::"+String(year||"").slice(0,4); }
-
-/* ====== OVERRIDES (curated) ====== */
-const OVERRIDES = {
-  "Bridget Jones's Diary::2001": { chaos:10, flags:[], tagline:"Diary, disaster, darling; not chaos." },
-  "High Fidelity::2000": { chaos:15, flags:[], tagline:"Mixtapes and malaise, not madness." },
-  "A River Runs Through It::1992": { chaos:8, flags:[], tagline:"Pastoral reverie; zero delirium." },
-  "Friday the 13th Part VIII: Jason Takes Manhattan::1989": { chaos:42, flags:["gore"], tagline:"Boat trip to punch a rooftop head off." },
-  "The Smashing Machine::2025": { chaos:10, flags:[], tagline:"Straight doc energy. Calm in the cage." },
-  "Come and See::1985": { chaos:75, flags:["gore","kids"], tagline:"War as fever dream; soul on fire." },
-  "Valerie and Her Week of Wonders::1970": { chaos:78, flags:["folk","witchy"], tagline:"Lace, teeth, and puberty spells." },
-  "The Color of Pomegranates::1969": { chaos:82, flags:["neon"], tagline:"Symbols upon symbols until language breaks." },
-  "The Substance::2024": { chaos:74, flags:["body","gore"], tagline:"You shed her, she devours you back." },
-  "Ghostwatch::1992": { chaos:55, flags:["found"], tagline:"The TV lied and Britain screamed." },
-  "Phantom of the Paradise::1974": { chaos:68, flags:["neon"], tagline:"Glam Faust in a bird mask." },
-  "Tetsuo: The Iron Man::1989": { chaos:90, flags:["body","gore","neon"], tagline:"Meat becomes metal, screams become rhythm." },
-  "Begotten::1989": { chaos:95, flags:["gore"], tagline:"Biblical rot flickers into being." },
-  "Belladonna of Sadness::1973": { chaos:85, flags:["witchy","folk","body","sv"], tagline:"Watercolor witch scream." },
-  "Taxidermia::2006": { chaos:88, flags:["body","gore","sv"], tagline:"Generations of grotesque mutation." },
-  "Sweet Movie::1974": { chaos:90, flags:["sv","body"], tagline:"Sugar, politics, filth; a dare." },
-  "Visitor Q::2001": { chaos:88, flags:["sv","gore"], tagline:"Miike milks the void." },
-  "Things::1989": { chaos:80, flags:["gore"], tagline:"Shot-on-video, shot in the dark." },
-  "Miami Connection::1987": { chaos:62, flags:[], tagline:"Friends fight ninjas; sincerity detonates." },
-  "Samurai Cop::1991": { chaos:60, flags:[], tagline:"Wigs, katana, deadpan carnage." },
-  "Street Trash::1987": { chaos:66, flags:["gore","body"], tagline:"Liquor that melts the poor." },
-  "Meet the Feebles::1989": { chaos:70, flags:["gore","sv"], tagline:"Puppets with track marks." },
-  "The Peanut Butter Solution::1985": { chaos:63, flags:["kids"], tagline:"Haunted PB grows cursed hair." },
-  "964 Pinocchio::1991": { chaos:82, flags:["neon","body"], tagline:"Sex-cyborg screams Tokyo inside out." },
-  "Funky Forest: The First Contact::2005": { chaos:78, flags:["neon"], tagline:"Sketchbook from a parallel puberty." },
-  "The Beyond::1981": { chaos:60, flags:["gore","witchy"], tagline:"Hotel on Hell. Keys don’t help." },
-  "On the Silver Globe::1988": { chaos:76, flags:[], tagline:"Unfinished prophecy on another world." },
-  "The Wizard of Gore::1970": { chaos:58, flags:["gore"], tagline:"Stage illusions with actual viscera." },
-  "Zardoz::1974": { chaos:65, flags:[], tagline:"Stone head, red diaper, immortality malaise." },
-  "Barbarella::1968": { chaos:55, flags:["neon"], tagline:"Camp, kink, killer dolls." },
-  "Nothing Lasts Forever::1984": { chaos:64, flags:[], tagline:"Lost satire wandered back." },
-  "Liquid Sky::1982": { chaos:72, flags:["neon"], tagline:"Aliens harvest orgasms in downtown glare." },
-  "The Boxer's Omen::1983": { chaos:80, flags:["body","gore","witchy"], tagline:"Black magic pukes up neon toads." }
-};
-
-/* ====== LOADING ====== */
-function loadBanished(){
-  const raw = localStorage.getItem("mr_banished");
-  if (!raw) return;
-  try{
-    const obj = JSON.parse(raw);
-    if (obj.date === todayKey() && Array.isArray(obj.ids)) banished = obj;
-  }catch{}
-}
-function saveBanished(){ localStorage.setItem("mr_banished", JSON.stringify(banished)); }
-function idFor(m){ return `${m.title || ""}::${m.year || ""}`; }
-
-async function fetchMaybe(url){
-  try{
-    const r = await fetch(url, {cache:"no-store"});
-    if (!r.ok) return null;
-    return await r.text();
-  }catch{ return null; }
-}
-function parseCSV(text){
-  const lines = text.split(/\r?\n/).filter(l=>l.trim().length);
-  const header = lines[0];
-  const delim = header.includes("\t") ? "\t" : ",";
-  const cols = header.split(delim).map(s=>s.trim().toLowerCase());
-  const out=[];
-  for (let i=1;i<lines.length;i++){
-    const row = splitCSV(lines[i], delim);
-    const rec={};
-    cols.forEach((c,idx)=> rec[c]= (row[idx]??"").trim());
-    out.push(rec);
-  }
-  return {cols, rows:out};
-}
-function splitCSV(str, delim=","){
-  const out=[]; let cur=""; let inQ=false;
-  for (let i=0;i<str.length;i++){
-    const ch=str[i];
-    if (ch === '"'){ inQ=!inQ; continue; }
-    if (ch === delim && !inQ){ out.push(cur); cur=""; continue; }
-    cur += ch;
-  }
-  out.push(cur);
-  return out;
-}
-function coerceFlags(s){
-  const set = new Set(String(s||"").toLowerCase().split(/[,\s]+/).filter(Boolean));
-  return {
-    theme_witchy: set.has("witchy"),
-    theme_body_horror: set.has("body"),
-    theme_folk: set.has("folk"),
-    theme_found_footage: set.has("found"),
-    theme_neon: set.has("neon"),
-    extreme_gore: set.has("gore"),
-    sexual_violence: set.has("sv"),
-    kids_in_peril: set.has("kids"),
-  };
-}
-function mergeOverride(item){
-  const key = idFor(item);
-  const o = OVERRIDES[key];
-  if (!o) return item;
-  const flags = {...item.flags};
-  if (o.flags) {
-    const set = new Set(o.flags);
-    flags.theme_witchy = flags.theme_witchy || set.has("witchy");
-    flags.theme_body_horror = flags.theme_body_horror || set.has("body");
-    flags.theme_folk = flags.theme_folk || set.has("folk");
-    flags.theme_found_footage = flags.theme_found_footage || set.has("found");
-    flags.theme_neon = flags.theme_neon || set.has("neon");
-    flags.extreme_gore = flags.extreme_gore || set.has("gore");
-    flags.sexual_violence = flags.sexual_violence || set.has("sv");
-    flags.kids_in_peril = flags.kids_in_peril || set.has("kids");
-  }
-  return {
-    ...item,
-    chaos: (o.chaos ?? item.chaos),
-    tagline: (o.tagline ?? item.tagline),
-    flags
-  };
-}
-async function loadData(){
-  try{
-    loadBanished();
-    let js = await fetchMaybe("./movies.json?v="+Date.now());
-    if (js){
-      MOVIES = JSON.parse(js);
-    } else {
-      let enriched = await fetchMaybe("./data/movies.csv?v="+Date.now());
-      if (enriched){
-        const {rows} = parseCSV(enriched);
-        MOVIES = rows.map(r=>{
-          const item = {
-            title: r["name"]||r["title"]||"",
-            year: (r["year"]||"").slice(0,4),
-            link: r["letterboxd uri"]||r["uri"]||"",
-            tagline: r["tagline"]||"",
-            chaos: r["chaos"]? Number(r["chaos"]) : null,
-            poster: r["poster"]||"",
-            runtime: r["runtime"]? Number(r["runtime"]) : null,
-            flags: coerceFlags(r["flags"]||""),
-            providers:[]
-          };
-          return mergeOverride(item);
-        });
-      } else {
-        const base = await fetchMaybe("./data/watchlist.csv?v="+Date.now());
-        if (!base) throw new Error("No movies.json or CSV found");
-        const {rows} = parseCSV(base);
-        MOVIES = rows.map(r=>{
-          const item = {
-            title: r["name"]||"",
-            year: (r["year"]||"").slice(0,4),
-            link: r["letterboxd uri"]||"",
-            tagline: "",
-            chaos: null,
-            poster: "",
-            runtime: null,
-            flags: {},
-            providers:[]
-          };
-          return mergeOverride(item);
-        });
-      }
-    }
-    MOVIES = MOVIES.map(m=>({
-      ...m,
-      chaos: (typeof m.chaos==="number" && !Number.isNaN(m.chaos)) ? m.chaos : null,
-      flags: m.flags || {}
-    }));
-    $("#total").textContent = MOVIES.length;
-    rebuildDeck();
-  }catch(e){
-    setUIError("Data not loaded yet (couldn’t find movies.json or CSV).");
-    console.error(e);
-  }
-}
-
-/* ====== PRESET HARD FILTERS ====== */
-function presetPass(item){
-  if (ACTIVE_PRESET==="none") return true;
-
-  const f = item.flags || {};
-  const c = (typeof item.chaos === "number") ? item.chaos : 50;
-
-  if (ACTIVE_PRESET==="midnight"){
-    // must be culty/weird via flags, and sufficiently chaotic
-    const any = f.theme_neon || f.extreme_gore || f.theme_body_horror || f.theme_found_footage || f.theme_witchy;
-    if (!any) return false;
-    if (c < 50) return false;
-    return true;
-  }
-  if (ACTIVE_PRESET==="cozy"){
-    // gentler: no gore, no sexual violence, and not too chaotic
-    if (f.extreme_gore || f.sexual_violence) return false;
-    if (c > 45) return false;
-    return true;
-  }
-  if (ACTIVE_PRESET==="folk"){
-    // folk or witchy required; chaos wide open
-    if (!(f.theme_folk || f.theme_witchy)) return false;
-    return true;
-  }
-  return true;
-}
-
-/* ====== THEMES & CONTENT FILTERS ====== */
-function themePass(item){
-  const f=item.flags||{};
-  if (THEME==="all") return true;
-  if (THEME==="witch") return f.theme_witchy;
-  if (THEME==="body")  return f.theme_body_horror;
-  if (THEME==="folk")  return f.theme_folk;
-  if (THEME==="found") return f.theme_found_footage;
-  if (THEME==="neon")  return f.theme_neon;
-  return true;
-}
-function contentPass(item){
-  const f=item.flags||{};
-  if (FILTERS.noGore && f.extreme_gore) return false;
-  if (FILTERS.noSV && f.sexual_violence) return false;
-  if (FILTERS.noKids && f.kids_in_peril) return false;
-  return true;
-}
-
-/* ====== CHAOS TARGETING ====== */
-function chaosTarget(){ return MODE==="order" ? 15 : MODE==="chaos" ? 85 : 50; }
-function band(){ return VARIETY==="T"?8: VARIETY==="M"?18:35; }
-function weightFor(chaos, target, width){
-  if (typeof chaos!=="number") return 0.1;
-  const d = (chaos - target)/width;
-  return Math.exp(-0.5*d*d);
-}
-function weightedPick(indices, target, width){
-  if (!indices.length) return null;
-  const weights = indices.map(i=>{
-    const c = typeof MOVIES[i].chaos==="number" ? MOVIES[i].chaos : 50;
-    return weightFor(c, target, width);
-  });
-  let sum = weights.reduce((a,b)=>a+b,0);
-  if (sum<=0) return indices[Math.floor(Math.random()*indices.length)];
-  let r = Math.random()*sum;
-  for (let k=0;k<indices.length;k++){
-    r -= weights[k];
-    if (r<=0) return indices[k];
-  }
-  return indices[indices.length-1];
-}
-
-/* ====== DECK ====== */
-function rebuildDeck(){
-  try{
-    if (!MOVIES.length) return;
-    const target = chaosTarget();
-    let width = band();
-    const todaysBan = (banished.date===todayKey()) ? new Set(banished.ids) : new Set();
-
-    let cands = MOVIES.map((m,i)=>({m,i}))
-      .filter(({m}) => presetPass(m) && !todaysBan.has(idFor(m)) && themePass(m) && contentPass(m))
-      .map(x=>x.i);
-
-    if (!cands.length) {
-      // If preset is too strict, fall back to preset only (ignore theme/content) then gradually relax.
-      cands = MOVIES.map((m,i)=>({m,i})).filter(({m})=>presetPass(m) && !todaysBan.has(idFor(m))).map(x=>x.i);
-      if (!cands.length) cands = MOVIES.map((_,i)=>i); // nuclear fallback
-    }
-
-    for (let i=cands.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [cands[i],cands[j]]=[cands[j],cands[i]]; }
-
-    const deck=[];
-    const used=new Set();
-    const MAX = Math.min(80, cands.length);
-    for (let n=0; n<MAX; n++){
-      const pool = cands.filter(i=>!used.has(i));
-      if (!pool.length) break;
-      const idx = weightedPick(pool, target, width) ?? pool[0];
-      used.add(idx);
-      deck.push(idx);
-      width = Math.max(10, width - (VARIETY==="T"?0.6:(VARIETY==="M"?0.4:0.2)));
-    }
-
-    DECK = deck.length ? deck : cands;
-    $("#left").textContent = DECK.length;
-    $("#deckCountMini").textContent = "Deck: " + DECK.length;
-    setUIError("");
-  }catch(e){
-    console.error(e);
-    setUIError("Deck build error.");
-    DECK = MOVIES.map((_,i)=>i).sort(()=>Math.random()-0.5);
-    $("#left").textContent = DECK.length;
-    $("#deckCountMini").textContent = "Deck: " + DECK.length;
-  }
-}
-
-/* ====== TMDb LOOKUP (with yearless retry) ====== */
-async function tmdbSearchPoster(title, year){
-  if (!TMDB_API_KEY) return null;
-  const key = cacheKey(title, year);
-  if (TMDB_CACHE[key]?.poster) return TMDB_CACHE[key].poster;
-
-  if (!tmdbSearchPoster._q) tmdbSearchPoster._q = Promise.resolve();
-  tmdbSearchPoster._q = tmdbSearchPoster._q.then(()=>new Promise(res=>setTimeout(res,300)));
-  await tmdbSearchPoster._q;
-
-  async function call(params){
-    const url = new URL("https://api.themoviedb.org/3/search/movie");
-    url.searchParams.set("api_key", TMDB_API_KEY);
-    for (const [k,v] of Object.entries(params)) url.searchParams.set(k, v);
-    const r = await fetch(url.toString());
-    if (!r.ok) throw new Error("search fail");
-    return r.json();
-  }
-
-  try{
-    // Try with year
-    let j = await call({ query:title, year:String(year||"").slice(0,4) });
-    let hit = (j.results||[])[0];
-    // Retry without year if no result or no poster
-    if (!hit || !hit.poster_path){
-      j = await call({ query:title });
-      hit = (j.results||[])[0];
-    }
-    const poster = hit?.poster_path || null;
-    TMDB_CACHE[key] = TMDB_CACHE[key] || {};
-    TMDB_CACHE[key].poster = poster;
-    saveCache();
-    return poster;
-  }catch(e){
-    console.warn("TMDb search error:", e);
-    return null;
-  }
-}
-
-/* ====== RENDER ====== */
-function setText(el, t){ el.textContent=t; }
-function show(el, on){ el.style.display = on ? "" : "none"; }
-function links(container, item){
-  container.innerHTML = "";
-  const lb=document.createElement("a");
-  lb.textContent="Open on Letterboxd"; lb.href=item.link||"#"; lb.target="_blank"; lb.rel="noopener";
-  container.appendChild(lb);
-
-  // If not on your services (we’re not fetching providers here), show a general search helper
-  const s=document.createElement("a");
-  const q=encodeURIComponent(`${item.title} full movie site:archive.org OR site:youtube.com OR torrent`);
-  s.textContent="Where to watch (search)"; s.href="https://www.google.com/search?q="+q; s.target="_blank"; s.rel="noopener";
-  container.appendChild(s);
-}
-
-async function ensurePoster(item){
-  if (item.poster && String(item.poster).trim()) return item.poster;
-  const found = await tmdbSearchPoster(item.title, item.year);
-  if (found) { item.poster = found; return found; }
-  return "";
-}
-function buildBadges(){ /* (providers turned off for now; UI kept clean) */ }
-
-async function render(item){
-  setPoster($("#poster"), "/null", item.title); // skeleton
-  const posterPath = await ensurePoster(item);
-  setPoster($("#poster"), posterPath || "/null", item.title);
-
-  setText($("#title"), item.title||"Untitled");
-  const tg=(item.tagline||"").trim(); setText($("#taglineInline"), tg); show($("#taglineInline"), !!tg);
-  setText($("#year"), item.year ? `Year: ${item.year}` : "");
-  const run=item.runtime?`${item.runtime} min`:""; setText($("#runChip"), run); show($("#runChip"), !!run);
-  const c=item.chaos; if (typeof c==="number"){ setText($("#chaosChip"), `Chaos: ${c}`); show($("#chaosChip"),true);} else show($("#chaosChip"),false);
-  buildBadges($("#streamBadges"), item);
-  $("#whyBox").style.display="none";
-  links($("#linksRow"), item);
-}
-
-/* ====== PICKING ====== */
-function safeDealIndex(){
-  if (!DECK.length) rebuildDeck();
-  let idx = DECK.pop();
-  if (idx==null || idx===undefined || isNaN(idx)){ idx = Math.floor(Math.random()*(MOVIES.length||1)); }
-  return idx;
-}
-function dealOne(){
-  if (!MOVIES.length){ setUIError("Data not loaded yet."); return; }
-  const idx = safeDealIndex(); lastPickIndex = idx;
-  $("#left").textContent = Math.max(0, DECK.length);
-  render(MOVIES[idx]);
-  setUIError("");
-  haptics("light");
-}
-function rerollNearby(){
-  if (lastPickIndex==null){ dealOne(); return; }
-  const curr=MOVIES[lastPickIndex], c=typeof curr.chaos==="number"?curr.chaos:50;
-  let pool=[];
-  for (let i=0;i<MOVIES.length;i++){
-    if (i===lastPickIndex) continue;
-    const m=MOVIES[i];
-    if (!presetPass(m) || !themePass(m) || !contentPass(m)) continue;
-    const cc=typeof m.chaos==="number"?m.chaos:50;
-    if (Math.abs(cc-c)<=15) pool.push(i);
-  }
-  if (!pool.length){ pool = MOVIES.map((m,i)=>i).filter(i=>i!==lastPickIndex && presetPass(MOVIES[i]) && themePass(MOVIES[i]) && contentPass(MOVIES[i])); }
-  if (!pool.length){ pool = MOVIES.map((_,i)=>i).filter(i=>i!==lastPickIndex); }
-  const idx = pool[Math.floor(Math.random()*pool.length)];
-  lastPickIndex = idx; render(MOVIES[idx]); haptics("mid");
-}
-
-/* ====== BANISH (long press on INFO area, 300ms) ====== */
-let lpTimer=null;
-function startLP(){ lpTimer=setTimeout(()=>{ banishCurrent(); }, 300); }
-function endLP(){ clearTimeout(lpTimer); }
-function banishCurrent(){
-  if (lastPickIndex==null) return;
-  const it = MOVIES[lastPickIndex];
-  const key = idFor(it);
-  if (banished.date !== todayKey()) banished = { date: todayKey(), ids: [] };
-  if (!banished.ids.includes(key)) banished.ids.push(key);
-  saveBanished();
-  showToast("Banished for today — Undo");
-  rebuildDeck();
-  dealOne();
-  haptics("heavy");
-}
-function undoBanish(){
-  if (banished.date !== todayKey() || !banished.ids.length) return;
-  banished.ids.pop(); saveBanished(); showToast("Undo ✓"); rebuildDeck();
-}
-function showToast(text){
-  const t=$("#toast"); t.textContent=text; t.classList.remove("show"); void t.offsetWidth; t.classList.add("show");
-  setTimeout(()=>t.classList.remove("show"), 2300);
-}
-
-/* ====== WIRES ====== */
-$("#deal").onclick = dealOne;
-$("#reroll").onclick = rerollNearby;
-
-const dlg=$("#filtersDlg");
-$("#openFilters").onclick = ()=>dlg.showModal();
-$("#closeFilters").onclick = ()=>dlg.close();
-$("#resetAll").onclick = ()=>{
-  MODE="mix"; VARIETY="T"; THEME="all"; FILTERS={noGore:false,noSV:false,noKids:false}; ACTIVE_PRESET="none";
-  [...$("#modeSegTop").children].forEach(b=>b.classList.remove("active")); $("#modeSegTop").children[1].classList.add("active");
-  [...$("#biasSegTop").children].forEach(b=>b.classList.remove("active")); $("#biasSegTop").children[0].classList.add("active");
-  ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active")); $("#thAll").classList.add("active");
-  ["fNoGore","fNoSV","fNoKids"].forEach(id=>$("#"+id).classList.remove("active"));
-  rebuildDeck(); dlg.close();
-};
-
-/* mode & bias */
-$("#modeSegTop").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return;
-  MODE=e.target.dataset.mode; [...$("#modeSegTop").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); haptics("light"); });
-
-$("#biasSegTop").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return;
-  VARIETY=e.target.dataset.bias; [...$("#biasSegTop").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); haptics("light"); });
-
-/* themes */
-function setTheme(w){ THEME=w; ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active"));
-  const map={all:"thAll",witch:"thWitch",body:"thBody",folk:"thFolk",found:"thFound",neon:"thNeon"}; $("#"+map[w]).classList.add("active"); rebuildDeck(); haptics("light"); }
-$("#thAll").onclick=()=>setTheme("all"); $("#thWitch").onclick=()=>setTheme("witch"); $("#thBody").onclick=()=>setTheme("body");
-$("#thFolk").onclick=()=>setTheme("folk"); $("#thFound").onclick=()=>setTheme("found"); $("#thNeon").onclick=()=>setTheme("neon");
-
-/* content */
-$("#fNoGore").onclick =()=>{ FILTERS.noGore=!FILTERS.noGore; $("#fNoGore").classList.toggle("active",FILTERS.noGore); rebuildDeck(); haptics("light"); };
-$("#fNoSV").onclick   =()=>{ FILTERS.noSV=!FILTERS.noSV; $("#fNoSV").classList.toggle("active",FILTERS.noSV); rebuildDeck(); haptics("light"); };
-$("#fNoKids").onclick =()=>{ FILTERS.noKids=!FILTERS.noKids; $("#fNoKids").classList.toggle("active",FILTERS.noKids); rebuildDeck(); haptics("light"); };
-
-/* presets (HARD FILTERS) */
-$("#presets").addEventListener("click",(e)=>{
-  const b = e.target.closest(".preset"); if(!b) return;
-  ACTIVE_PRESET = b.dataset.preset; // none | cozy | midnight | folk
-  // visual ping
-  [...$("#presets").querySelectorAll(".preset")].forEach(x=>x.style.outline="none");
-  b.style.outline="2px solid #2c5";
-  rebuildDeck();
-  haptics("mid");
-});
-
-/* long-press banish ONLY on info column */
-const infoLP = document.getElementById("longPressArea");
-["touchstart","mousedown"].forEach(ev=>infoLP.addEventListener(ev, ()=>{ lpTimer=setTimeout(banishCurrent, 300); }, {passive:true}));
-["touchend","touchcancel","mouseup","mouseleave"].forEach(ev=>infoLP.addEventListener(ev, ()=>clearTimeout(lpTimer)));
-
-$("#undo").onclick = ()=>{ undoBanish(); haptics("mid"); };
-
-/* Start */
-loadData();
-</script>
+  <script src="./script.js"></script>
 </body>
 </html>
