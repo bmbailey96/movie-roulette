@@ -34,11 +34,13 @@ function setPoster(imgEl, posterPath, title){
 /* ====== STATE ====== */
 let MOVIES=[], DECK=[], lastPickIndex=null, dealtOnce=false;
 let ACTIVE_PRESET="none"; // none | cozy | midnight | folk
-let VIBE="blend";         // cozy | blend | spooky | cursed
 let VARIETY="T";          // T | M | W
 let THEME="all";
 let FILTERS={ noGore:false, noSV:false, noKids:false };
 let banished = { date: todayKey(), ids: [] };
+
+/* VIBE TARGET (Cursed/Spooky/Cozy) — live from the triangle pad */
+let TARGET = { c:33, s:33, z:34 };
 
 /* ====== CACHE ====== */
 const CACHE_KEY="mr_tmdb_cache_v5";
@@ -97,7 +99,6 @@ async function loadData(){
         MOVIES = rows.map(r=>({
           title:r["name"]||r["title"]||"", year:(r["year"]||"").slice(0,4),
           link:r["letterboxd uri"]||r["uri"]||"", tagline:r["tagline"]||"",
-          // chaos ignored now
           poster:r["poster"]||"", runtime:r["runtime"]?Number(r["runtime"]):null,
           flags:coerceFlags(r["flags"]||""),
           cursed: r["cursed"]? Number(r["cursed"]) : 0,
@@ -111,7 +112,7 @@ async function loadData(){
         MOVIES = rows.map(r=>({
           title:r["name"]||"", year:(r["year"]||"").slice(0,4),
           link:r["letterboxd uri"]||"", tagline:"",
-          poster:"", runtime:null, flags:{}, cursed:0, spooky:0, cozy:0
+          poster:"", runtime:null, flags:{}, cursed:33, spooky:33, cozy:34
         }));
       }
     }
@@ -121,21 +122,13 @@ async function loadData(){
   }catch(e){ console.error(e); setUIError("Data not loaded yet."); }
 }
 
-/* ====== VIBE TARGETS ====== */
-// Triangle vertices in “component space”: (Cursed, Spooky, Cozy)
-const TARGETS = {
-  cozy:   {c:0,  s:15, z:85},
-  blend:  {c:33, s:33, z:34},
-  spooky: {c:10, s:85, z:5},
-  cursed: {c:85, s:10, z:5}
-};
-function normTriple(c,s,z){ c=Math.max(0,c||0); s=Math.max(0,s||0); z=Math.max(0,z||0); const sum=c+s+z; if(sum<=0) return {c:33,s:33,z:34}; return {c:c/sum, s:s/sum, z:z/sum}; }
-function distTriple(a,b){ const A=normTriple(a.c,a.s,a.z); const B=normTriple(b.c,b.s,b.z); const dx=A.c-B.c, dy=A.s-B.s, dz=A.z-B.z; return Math.sqrt(dx*dx + dy*dy + dz*dz); }
+/* ====== VIBE MATH ====== */
+function normTriple(c,s,z){ c=Math.max(0,c||0); s=Math.max(0,s||0); z=Math.max(0,z||0); const sum=c+s+z; if(sum<=0) return {c:33,s:33,z:34}; return {c:100*c/sum, s:100*s/sum, z:100*z/sum}; }
+function distTriple(a,b){ const A=normTriple(a.c,a.s,a.z); const B=normTriple(b.c,b.s,b.z); const dx=(A.c-B.c)/100, dy=(A.s-B.s)/100, dz=(A.z-B.z)/100; return Math.sqrt(dx*dx + dy*dy + dz*dz); }
 function band(){ return VARIETY==="T"?0.18: VARIETY==="M"?0.32:0.55; } // lower = tighter
 function weightFor(movie, target){
   const m={c:movie.cursed||0, s:movie.spooky||0, z:movie.cozy||0};
-  const t=TARGETS[target]||TARGETS.blend;
-  const d=distTriple(m,t);
+  const d=distTriple(m, target);
   const w=Math.exp(-0.5*Math.pow(d/band(),2));
   return w;
 }
@@ -179,13 +172,13 @@ function rebuildDeck(){
   if(!cands.length){ cands=MOVIES.map((m,i)=>({m,i})).filter(({m})=>presetPass(m)&&!todaysBan.has(idFor(m))).map(x=>x.i); if(!cands.length) cands=MOVIES.map((_,i)=>i); }
 
   // Shuffle
-  for(let i=cands.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [cands[i],cands[j]]=[cands[j],cands[i]]; }
+  for(let i=cands.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [cands[i],cands[j]]=[cands[j]]; }
 
   // Weighted by vibe distance
   const deck=[], used=new Set(), MAX=Math.min(80,cands.length);
   for(let n=0;n<MAX;n++){
     const pool=cands.filter(i=>!used.has(i)); if(!pool.length) break;
-    const weights = pool.map(i=> weightFor(MOVIES[i], VIBE));
+    const weights = pool.map(i=> weightFor(MOVIES[i], TARGET));
     let sum=weights.reduce((a,b)=>a+b,0); if(sum<=0){ deck.push(pool[0]); used.add(pool[0]); continue; }
     let r=Math.random()*sum; let pick=pool[0];
     for(let k=0;k<pool.length;k++){ r-=weights[k]; if(r<=0){ pick=pool[k]; break; } }
@@ -205,12 +198,13 @@ function dealOne(){ if(!MOVIES.length){ setUIError("Data not loaded yet."); retu
 function rerollNearby(){
   if(lastPickIndex==null){ dealOne(); return; }
   const curr=MOVIES[lastPickIndex];
-  let pool=[]; // near in vibe-space
+  let pool=[]; // near in vibe-space to TARGET and current pick
   for(let i=0;i<MOVIES.length;i++){
     if(i===lastPickIndex) continue;
     const m=MOVIES[i]; if(!presetPass(m)||!themePass(m)||!contentPass(m)) continue;
-    const d=distTriple({c:m.cursed,s:m.spooky,z:m.cozy},{c:curr.cursed,s:curr.spooky,z:curr.cozy});
-    if(d<=0.18) pool.push(i);
+    const dT=distTriple({c:m.cursed,s:m.spooky,z:m.cozy}, TARGET);
+    const dC=distTriple({c:m.cursed,s:m.spooky,z:m.cozy}, {c:curr.cursed,s:curr.spooky,z:curr.cozy});
+    if(dT<=band()*1.2 || dC<=0.18) pool.push(i);
   }
   if(!pool.length){ pool=MOVIES.map((m,i)=>i).filter(i=>i!==lastPickIndex && presetPass(MOVIES[i])&&themePass(MOVIES[i])&&contentPass(MOVIES[i])); }
   if(!pool.length){ pool=MOVIES.map((_,i)=>i).filter(i=>i!==lastPickIndex); }
@@ -236,9 +230,9 @@ async function prefetchNextPosters(n=3){
   for(const idx of peek){ const m=MOVIES[idx]; if(m && !m.poster){ ensurePoster(m); } }
 }
 
-/* ====== VIBE BADGE (SVG triangle) ====== */
+/* ====== VIBE BADGE (readout triangle for current pick) ====== */
 function renderVibeBadge(el, m){
-  const w=180, h=156; // equilateral-ish
+  const w=180, h=156;
   const top   = {x:w/2, y:10};
   const left  = {x:14,  y:h-12};
   const right = {x:w-14, y:h-12};
@@ -254,9 +248,9 @@ function renderVibeBadge(el, m){
     <line x1="${top.x}" y1="${top.y}" x2="${(left.x+right.x)/2}" y2="${left.y}"
       stroke="#1f3327" stroke-width="1"/>
     <circle cx="${px}" cy="${py}" r="5" fill="#77ffa5" stroke="#173824" stroke-width="2"/>
-    <text class="lab" x="${top.x}" y="${top.y-2}" text-anchor="middle">Cursed ${C||0}%</text>
-    <text class="lab" x="${left.x}" y="${left.y+12}">Spooky ${S||0}%</text>
-    <text class="lab" x="${right.x}" y="${right.y+12}" text-anchor="end">Cozy ${Z||0}%</text>
+    <text class="lab" x="${top.x}" y="${top.y-2}" text-anchor="middle">Cursed ${Math.round(C)}%</text>
+    <text class="lab" x="${left.x}" y="${left.y+12}">Spooky ${Math.round(S)}%</text>
+    <text class="lab" x="${right.x}" y="${right.y+12}" text-anchor="end">Cozy ${Math.round(Z)}%</text>
   </svg>`;
 }
 
@@ -326,22 +320,20 @@ function wrapText(ctx,text,x,y,maxWidth,lineHeight){ const words=(text||"").spli
 /* ====== TOAST ====== */
 function showToast(text){ const t=$("#toast"); t.textContent=text; t.classList.remove("show"); void t.offsetWidth; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),3000); }
 
-/* ====== PREFS & WIRES ====== */
+/* ====== FILTERS & PRESETS WIRES ====== */
 const dlg=$("#filtersDlg");
 $("#openFilters").onclick = ()=>dlg.showModal();
 $("#closeFilters").onclick = ()=>dlg.close();
 $("#resetAll").onclick = ()=>{
-  VIBE="blend"; VARIETY="T"; THEME="all"; FILTERS={noGore:false,noSV:false,noKids:false}; ACTIVE_PRESET="none";
-  markSeg($("#vibeSeg"), "blend"); markSeg($("#biasSegTop"), "T", "data-bias");
+  VARIETY="T"; THEME="all"; FILTERS={noGore:false,noSV:false,noKids:false}; ACTIVE_PRESET="none";
+  TARGET={c:33,s:33,z:34}; drawPad(); updatePadPercents();
+  [...$("#biasSegTop").children].forEach(b=>b.classList.remove("active")); $("#biasSegTop").children[0].classList.add("active");
   ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active")); $("#thAll").classList.add("active");
   ["fNoGore","fNoSV","fNoKids"].forEach(id=>$("#"+id).classList.remove("active"));
   $("#presetLock").style.display="none";
   rebuildDeck(); dlg.close(); haptics("light");
 };
-function markSeg(seg, val, attr="data-vibe"){ [...seg.children].forEach(b=>b.classList.toggle("active",b.getAttribute(attr)===val)); }
-
-$("#vibeSeg").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return; VIBE=e.target.dataset.vibe; markSeg($("#vibeSeg"), VIBE); rebuildDeck(); haptics("light"); });
-$("#biasSegTop").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return; VARIETY=e.target.dataset.bias; markSeg($("#biasSegTop"), VARIETY, "data-bias"); rebuildDeck(); haptics("light"); });
+$("#biasSegTop").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return; VARIETY=e.target.dataset.bias; [...$("#biasSegTop").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); haptics("light"); });
 
 function setTheme(w){ THEME=w; ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active")); const map={all:"thAll",witch:"thWitch",body:"thBody",folk:"thFolk",found:"thFound",neon:"thNeon"}; $("#"+map[w]).classList.add("active"); rebuildDeck(); haptics("light"); }
 $("#thAll").onclick=()=>setTheme("all"); $("#thWitch").onclick=()=>setTheme("witch"); $("#thBody").onclick=()=>setTheme("body"); $("#thFolk").onclick=()=>setTheme("folk"); $("#thFound").onclick=()=>setTheme("found"); $("#thNeon").onclick=()=>setTheme("neon");
@@ -354,23 +346,145 @@ $("#presets").addEventListener("click",(e)=>{
   const b=e.target.closest(".preset"); if(!b) return;
   ACTIVE_PRESET=b.dataset.preset; $("#presetLock").style.display="inline-block";
   $("#presetLock").textContent=(ACTIVE_PRESET==="midnight"?"Cult midnight":ACTIVE_PRESET==="cozy"?"Cozy offbeat":"Folk dread")+" 🔒";
-  // also nudge vibe: cozy->cozy, midnight->cursed, folk->spooky
-  VIBE = ACTIVE_PRESET==="cozy" ? "cozy" : ACTIVE_PRESET==="midnight" ? "cursed" : "spooky";
-  markSeg($("#vibeSeg"), VIBE);
-  rebuildDeck(); haptics("mid");
+  // nudge TARGET
+  if (ACTIVE_PRESET==="cozy") TARGET={c:10,s:15,z:75};
+  else if (ACTIVE_PRESET==="midnight") TARGET={c:70,s:25,z:5};
+  else TARGET={c:25,s:65,z:10}; // folk dread
+  drawPad(); updatePadPercents(); rebuildDeck(); haptics("mid");
 });
 $("#presetLock").onclick=()=>{ ACTIVE_PRESET="none"; $("#presetLock").style.display="none"; rebuildDeck(); };
 
-/* Deck controls */
+/* ====== TRIANGLE PAD (draggable target) ====== */
+const pad = $("#vibePad");
+let padCanvas, ctx, padGeom;
+
+function initPad(){
+  pad.innerHTML = ""; padCanvas = document.createElement("canvas");
+  padCanvas.width = pad.clientWidth * devicePixelRatio;
+  padCanvas.height = pad.clientHeight * devicePixelRatio;
+  padCanvas.style.width = "100%"; padCanvas.style.height="100%";
+  pad.appendChild(padCanvas);
+  ctx = padCanvas.getContext("2d");
+  padGeom = computeGeom();
+  drawPad();
+  // events
+  const down = (e)=>{ moveDot(e); e.preventDefault(); dragging=true; };
+  const move = (e)=>{ if(!dragging) return; moveDot(e); e.preventDefault(); };
+  const up   = ()=>{ dragging=false; };
+  let dragging=false;
+  pad.addEventListener("mousedown", down);
+  pad.addEventListener("touchstart", down, {passive:false});
+  window.addEventListener("mousemove", move, {passive:false});
+  window.addEventListener("touchmove", move, {passive:false});
+  window.addEventListener("mouseup", up);
+  window.addEventListener("touchend", up);
+  window.addEventListener("resize", ()=>{ initPad(); });
+}
+function computeGeom(){
+  const W=padCanvas.width, H=padCanvas.height;
+  const m=18*devicePixelRatio;
+  const top={x:W/2,y:m+4}, left={x:m,y:H-m}, right={x:W-m,y:H-m};
+  return {W,H,top,left,right};
+}
+function drawPad(){
+  const {W,H,top,left,right}=padGeom;
+  ctx.clearRect(0,0,W,H);
+  // tri
+  ctx.fillStyle="#0f1511"; ctx.strokeStyle="#284832"; ctx.lineWidth=2*devicePixelRatio;
+  ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo(left.x,left.y); ctx.lineTo(right.x,right.y); ctx.closePath(); ctx.fill(); ctx.stroke();
+  // internal line
+  ctx.strokeStyle="#1f3327"; ctx.lineWidth=1*devicePixelRatio; ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo((left.x+right.x)/2,left.y); ctx.stroke();
+  // dot -> from TARGET percentages to point
+  const p = baryToPoint(normTriple(TARGET.c,TARGET.s,TARGET.z), top,left,right);
+  ctx.fillStyle="#77ffa5"; ctx.strokeStyle="#173824"; ctx.lineWidth=2*devicePixelRatio;
+  ctx.beginPath(); ctx.arc(p.x,p.y,5*devicePixelRatio,0,Math.PI*2); ctx.fill(); ctx.stroke();
+}
+function moveDot(e){
+  const rect=padCanvas.getBoundingClientRect();
+  const clientX = (e.touches? e.touches[0].clientX : e.clientX);
+  const clientY = (e.touches? e.touches[0].clientY : e.clientY);
+  const x = (clientX - rect.left) * devicePixelRatio;
+  const y = (clientY - rect.top) * devicePixelRatio;
+  const {top,left,right}=padGeom;
+
+  // clamp to triangle by projecting to barycentric and clipping
+  let bary = pointToBary({x,y}, top,left,right);
+  bary = clipBary(bary);
+  // update TARGET
+  TARGET = { c:bary.c*100, s:bary.s*100, z:bary.z*100 };
+  updatePadPercents();
+  drawPad();
+  rebuildDeck();
+  haptics("light");
+}
+function updatePadPercents(){
+  $("#pcC").textContent = Math.round(normTriple(TARGET.c,TARGET.s,TARGET.z).c) + "%";
+  $("#pcS").textContent = Math.round(normTriple(TARGET.c,TARGET.s,TARGET.z).s) + "%";
+  $("#pcZ").textContent = Math.round(normTriple(TARGET.c,TARGET.s,TARGET.z).z) + "%";
+}
+/* geometry helpers */
+function pointToBary(p, A,B,C){
+  const v0={x:B.x-A.x, y:B.y-A.y}, v1={x:C.x-A.x, y:C.y-A.y}, v2={x:p.x-A.x, y:p.y-A.y};
+  const d00=v0.x*v0.x+v0.y*v0.y, d01=v0.x*v1.x+v0.y*v1.y, d11=v1.x*v1.x+v1.y*v1.y;
+  const d20=v2.x*v0.x+v2.y*v0.y, d21=v2.x*v1.x+v2.y*v1.y; const denom=d00*d11-d01*d01||1;
+  let v=(d11*d20-d01*d21)/denom, w=(d00*d21-d01*d20)/denom, u=1-v-w;
+  return {c:u, s:v, z:w}; // map: top→cursed(u), left→spooky(v), right→cozy(w)
+}
+function baryToPoint(bary, A,B,C){
+  return { x: bary.c*A.x + bary.s*B.x + bary.z*C.x, y: bary.c*A.y + bary.s*B.y + bary.z*C.y };
+}
+function clipBary(b){ // clip to triangle
+  let {c,s,z}=b;
+  c=Math.max(0,Math.min(1,c));
+  s=Math.max(0,Math.min(1,s));
+  z=Math.max(0,Math.min(1,z));
+  const sum=c+s+z; if(sum===0){ c=1; s=0; z=0; }
+  else{ c/=sum; s/=sum; z/=sum; }
+  return {c,s,z};
+}
+
+/* ====== LINKS + TOAST ====== */
+function showToast(text){ const t=$("#toast"); t.textContent=text; t.classList.remove("show"); void t.offsetWidth; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),3000); }
+
+/* ====== WIRES ====== */
+const dlg=$("#filtersDlg");
+$("#openFilters").onclick = ()=>dlg.showModal();
+$("#closeFilters").onclick = ()=>dlg.close();
 $("#deal").onclick = ()=>dealOne();
 $("#reroll").onclick = ()=>rerollNearby();
 $("#shareCard").onclick = ()=>shareCurrent();
+$("#undo").onclick = ()=>{ undoBanish(); haptics("mid"); };
 function resetDeck(){ rebuildDeck(); $("#left").textContent=DECK.length; dealtOnce=false; updateResetVisibility(); haptics("mid"); }
 function updateResetVisibility(){ show($("#resetDeck"), dealtOnce); }
 $("#resetDeck").onclick = resetDeck;
-$("#undo").onclick = ()=>{ undoBanish(); haptics("mid"); };
 
-/* LINKS + START */
-function linksRow(container,item){ /* already in render() */ }
-
+/* ====== START ====== */
+initPad();
 loadData();
+
+/* ====== CARD UTIL (end) ====== */
+function links(container,item){
+  container.innerHTML="";
+  const lb=document.createElement("a"); lb.textContent="Open on Letterboxd"; lb.href=item.link||"#"; lb.target="_blank"; lb.rel="noopener";
+  container.appendChild(lb);
+  const s=document.createElement("a");
+  const q=encodeURIComponent(`${item.title} full movie site:archive.org OR site:youtube.com OR torrent`);
+  s.textContent="Where to watch (search)"; s.href="https://www.google.com/search?q="+q; s.target="_blank"; s.rel="noopener";
+  container.appendChild(s);
+}
+async function render(item){
+  setPoster($("#poster"), "/null", item.title);
+  const posterPath = await ensurePoster(item);
+  setPoster($("#poster"), posterPath || "/null", item.title);
+
+  $("#title").textContent = item.title || "Untitled";
+  const tg=(item.tagline||"").trim(); $("#taglineInline").textContent=tg; show($("#taglineInline"), !!tg);
+
+  if(item.year){ $("#year").textContent=`Year: ${item.year}`; show($("#year"),true); } else show($("#year"),false);
+  const run=item.runtime?`${item.runtime} min`:""; $("#runChip").textContent=run; show($("#runChip"), !!run);
+
+  renderVibeBadge($("#vibeBadge"), item);
+  links($("#linksRow"), item);
+
+  prefetchNextPosters(3);
+}
