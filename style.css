@@ -18,7 +18,14 @@ header{ display:flex; align-items:center; justify-content:space-between; gap:10p
 .sub{ color:var(--muted); font-size:12px; margin-top:-4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .deck{ color:#cfe; font-size:12px; padding:6px 10px; border:1px solid #263; border-radius:10px; background:#0f1a14; }
 
-.toolbar{ display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+/* Vibe chooser row */
+.vibeBar{ display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; }
+@media (max-width:680px){ .vibeBar{ grid-template-columns:1fr; } }
+.triWrap{ display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:center; }
+@media (max-width:520px){ .triWrap{ grid-template-columns:1fr; } }
+.triLegend{ display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:#a7c9bb; }
+.triLegend b{ color:#c8ffe0; font-weight:900; }
+.vibeSide{ display:grid; gap:8px; }
 .group{ display:flex; gap:8px; align-items:center; }
 .label{ color:#9ab; font-size:12px; }
 .seg{ display:flex; background:#141414; border:1px solid #262626; border-radius:999px; overflow:hidden; }
@@ -30,6 +37,12 @@ header{ display:flex; align-items:center; justify-content:space-between; gap:10p
          padding:6px 10px; border-radius:999px; cursor:pointer; }
 .lockChip{ background:#0f1a14; border:1px solid #264; color:#bff7cf; padding:4px 8px; font-weight:800; font-size:11px; border-radius:999px; }
 
+/* Triangle control canvas */
+#vibePad{ width:160px; height:140px; border-radius:12px; border:1px solid #1f1f1f; background:#0f1511; position:relative; }
+@media (min-width:680px){ #vibePad{ width:220px; height:180px; } }
+#vibePad canvas{ width:100%; height:100%; display:block; border-radius:12px; }
+
+/* Card area */
 .stage{
   min-height:0; display:grid; grid-template-columns:56% 1fr; gap:12px;
   align-items:start; overflow:hidden; width:100%;
@@ -56,6 +69,7 @@ header{ display:flex; align-items:center; justify-content:space-between; gap:10p
 .links{ display:grid; grid-template-columns:1fr; gap:8px; }
 .links a{ display:block; padding:12px; text-align:center; border-radius:12px; text-decoration:none; font-weight:900; font-size:15px; background:#1b1b1b; color:#c0ffd6; border:1px solid #2a2a2a; }
 
+/* Bottom dock (buttons scroll instead of squish) */
 .dock{
   display:flex; gap:10px; align-items:center; padding-bottom:calc(env(safe-area-inset-bottom) + 2px);
   overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory;
