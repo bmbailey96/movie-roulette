@@ -15,18 +15,20 @@
       <header>
         <div>
           <h1 class="appTitle">🎲 Movie Roulette</h1>
-          <div class="sub">Presets are law. Chaos obeys.</div>
+          <div class="sub">Triangle rules: Cursed • Spooky • Cozy.</div>
         </div>
-        <div class="deck">Deck: <span id="left">0</span>/<span id="total">0</span></div>
+        <div class="deck"><span id="left">0</span> left · <span id="total">0</span> total</div>
       </header>
 
+      <!-- Always-visible vibe target + bias -->
       <div class="toolbar">
         <div class="group">
-          <span class="label">Mood</span>
-          <div class="seg" id="modeSegTop">
-            <button data-mode="order">Order</button>
-            <button data-mode="mix" class="active">Mix</button>
-            <button data-mode="chaos">Chaos</button>
+          <span class="label">Vibe</span>
+          <div class="seg" id="vibeSeg">
+            <button data-vibe="cozy">Cozy</button>
+            <button data-vibe="blend" class="active">Blend</button>
+            <button data-vibe="spooky">Spooky</button>
+            <button data-vibe="cursed">Cursed</button>
           </div>
         </div>
         <div class="group">
@@ -41,30 +43,30 @@
           <button class="preset" data-preset="cozy">Cozy offbeat</button>
           <button class="preset" data-preset="midnight">Cult midnight</button>
           <button class="preset" data-preset="folk">Folk dread</button>
+          <span class="lockChip" id="presetLock" style="display:none;"></span>
         </div>
       </div>
 
       <section class="stage" aria-live="polite">
         <img id="poster" class="poster skeleton" referrerpolicy="no-referrer" alt="Movie poster"/>
-        <div class="infoCol" id="longPressArea">
-          <div class="lockRow">
-            <span class="lockChip" id="presetLock" style="display:none;"></span>
-          </div>
+        <div class="infoCol" id="longPressArea" title="Hold to banish (250ms)">
           <h2 class="titleMovie" id="title">—</h2>
           <p class="tagline" id="taglineInline" style="display:none;"></p>
-          <div class="micro">
-            <span id="year"></span>
-            <span id="runChip" class="chip" style="display:none;"></span>
-            <span id="chaosChip" class="chip" style="display:none;"></span>
+
+          <div class="chips">
+            <span class="chip" id="year" style="display:none;"></span>
+            <span class="chip" id="runChip" style="display:none;"></span>
           </div>
-          <div class="badges" id="streamBadges" style="display:none;"></div>
-          <div class="whyBox" id="whyBox" style="display:none;"></div>
+
+          <!-- Ternary vibe badge -->
+          <div id="vibeBadge"></div>
+
           <div class="links" id="linksRow"></div>
-          <div class="small" id="err" role="alert" aria-live="polite"></div>
+          <div class="small" id="err" role="alert"></div>
         </div>
       </section>
 
-      <nav class="dock">
+      <nav class="dock" id="dock">
         <button id="deal" class="btn pri">Deal</button>
         <button id="reroll" class="btn gh">Re-roll</button>
         <button id="openFilters" class="btn gh">Filters</button>
@@ -77,7 +79,8 @@
 
   <dialog id="filtersDlg">
     <div class="dlgHead">
-      <strong>Filters</strong><div class="kicker" id="deckCountMini">Deck: 0</div>
+      <strong>Filters</strong>
+      <div class="kicker" id="deckCountMini">Deck: 0</div>
     </div>
 
     <div class="kicker">Themes</div>
@@ -101,14 +104,9 @@
       <button class="btn gh" id="resetAll">Reset</button>
       <button class="btn pri" id="closeFilters">Close</button>
     </div>
-
-    <p class="small tip">
-      Enrich <code>data/movies.csv</code> with:<br/>
-      <code>Date,Name,Year,Letterboxd URI,Tagline,Chaos,Flags,Poster,Runtime</code>
-    </p>
   </dialog>
 
-  <div class="toast" id="toast">Banished for today — Undo</div>
+  <div class="toast" id="toast">Banished — Undo</div>
 
   <script src="./script.js"></script>
 </body>
