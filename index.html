@@ -15,37 +15,39 @@
       <header>
         <div>
           <h1 class="appTitle">🎲 Movie Roulette</h1>
-          <div class="sub">Triangle rules: Cursed • Spooky • Cozy.</div>
+          <div class="sub">Drag the dot to mix: Cursed • Spooky • Cozy.</div>
         </div>
         <div class="deck"><span id="left">0</span> left · <span id="total">0</span> total</div>
       </header>
 
-      <!-- Always-visible vibe target + bias -->
-      <div class="toolbar">
-        <div class="group">
-          <span class="label">Vibe</span>
-          <div class="seg" id="vibeSeg">
-            <button data-vibe="cozy">Cozy</button>
-            <button data-vibe="blend" class="active">Blend</button>
-            <button data-vibe="spooky">Spooky</button>
-            <button data-vibe="cursed">Cursed</button>
+      <!-- Vibe triangle + bias + presets -->
+      <section class="vibeBar">
+        <div class="triWrap">
+          <div id="vibePad" aria-label="Vibe triangle chooser"></div>
+          <div class="triLegend">
+            <span>🝮 Cursed <b id="pcC">33%</b></span>
+            <span>🕯️ Spooky <b id="pcS">33%</b></span>
+            <span>☕ Cozy <b id="pcZ">34%</b></span>
           </div>
         </div>
-        <div class="group">
-          <span class="label">Bias</span>
-          <div class="seg" id="biasSegTop">
-            <button data-bias="T" class="active">Tight</button>
-            <button data-bias="M">Med</button>
-            <button data-bias="W">Wide</button>
+
+        <div class="vibeSide">
+          <div class="group">
+            <span class="label">Bias</span>
+            <div class="seg" id="biasSegTop">
+              <button data-bias="T" class="active">Tight</button>
+              <button data-bias="M">Med</button>
+              <button data-bias="W">Wide</button>
+            </div>
+          </div>
+          <div class="presets" id="presets">
+            <button class="preset" data-preset="cozy">Cozy offbeat</button>
+            <button class="preset" data-preset="midnight">Cult midnight</button>
+            <button class="preset" data-preset="folk">Folk dread</button>
+            <span class="lockChip" id="presetLock" style="display:none;"></span>
           </div>
         </div>
-        <div class="presets" id="presets">
-          <button class="preset" data-preset="cozy">Cozy offbeat</button>
-          <button class="preset" data-preset="midnight">Cult midnight</button>
-          <button class="preset" data-preset="folk">Folk dread</button>
-          <span class="lockChip" id="presetLock" style="display:none;"></span>
-        </div>
-      </div>
+      </section>
 
       <section class="stage" aria-live="polite">
         <img id="poster" class="poster skeleton" referrerpolicy="no-referrer" alt="Movie poster"/>
@@ -58,7 +60,7 @@
             <span class="chip" id="runChip" style="display:none;"></span>
           </div>
 
-          <!-- Ternary vibe badge -->
+          <!-- Readout triangle for the current pick -->
           <div id="vibeBadge"></div>
 
           <div class="links" id="linksRow"></div>
@@ -77,6 +79,7 @@
     </main>
   </div>
 
+  <!-- Filters -->
   <dialog id="filtersDlg">
     <div class="dlgHead">
       <strong>Filters</strong>
