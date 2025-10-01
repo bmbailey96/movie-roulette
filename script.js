@@ -1,5 +1,5 @@
 /* ====== PUT YOUR TMDB KEY HERE ====== */
-const TMDB_API_KEY = "PASTE_YOUR_TMDB_KEY_HERE";
+const TMDB_API_KEY = "000802da6224e125437187b196cde898";
 const TMDB_IMG = "https://image.tmdb.org/t/p";
 
 /* ====== SHORTCUTS ====== */
