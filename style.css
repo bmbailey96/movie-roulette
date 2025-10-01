@@ -97,3 +97,4 @@ dialog::backdrop{ background:rgba(0,0,0,.6); }
 }
 .toast.show{ display:block; animation:fade 3s ease both; }
 @keyframes fade{ 0%{opacity:0; transform:translate(-50%, 8px)} 10%{opacity:1; transform:translate(-50%,0)} 90%{opacity:1} 100%{opacity:0} }
+ 
