@@ -169,10 +169,16 @@ function rebuildDeck(){
     .filter(({m})=>presetPass(m)&&!todaysBan.has(idFor(m))&&themePass(m)&&contentPass(m))
     .map(x=>x.i);
 
-  if(!cands.length){ cands=MOVIES.map((m,i)=>({m,i})).filter(({m})=>presetPass(m)&&!todaysBan.has(idFor(m))).map(x=>x.i); if(!cands.length) cands=MOVIES.map((_,i)=>i); }
+  if(!cands.length){
+    cands=MOVIES.map((m,i)=>({m,i})).filter(({m})=>presetPass(m)&&!todaysBan.has(idFor(m))).map(x=>x.i);
+    if(!cands.length) cands=MOVIES.map((_,i)=>i);
+  }
 
-  // Shuffle
-  for(let i=cands.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [cands[i],cands[j]]=[cands[j]]; }
+  // FIXED: proper shuffle (this was the crash)
+  for(let i=cands.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [cands[i], cands[j]] = [cands[j], cands[i]];
+  }
 
   // Weighted by vibe distance
   const deck=[], used=new Set(), MAX=Math.min(80,cands.length);
@@ -198,7 +204,7 @@ function dealOne(){ if(!MOVIES.length){ setUIError("Data not loaded yet."); retu
 function rerollNearby(){
   if(lastPickIndex==null){ dealOne(); return; }
   const curr=MOVIES[lastPickIndex];
-  let pool=[]; // near in vibe-space to TARGET and current pick
+  let pool=[];
   for(let i=0;i<MOVIES.length;i++){
     if(i===lastPickIndex) continue;
     const m=MOVIES[i]; if(!presetPass(m)||!themePass(m)||!contentPass(m)) continue;
@@ -346,10 +352,9 @@ $("#presets").addEventListener("click",(e)=>{
   const b=e.target.closest(".preset"); if(!b) return;
   ACTIVE_PRESET=b.dataset.preset; $("#presetLock").style.display="inline-block";
   $("#presetLock").textContent=(ACTIVE_PRESET==="midnight"?"Cult midnight":ACTIVE_PRESET==="cozy"?"Cozy offbeat":"Folk dread")+" 🔒";
-  // nudge TARGET
   if (ACTIVE_PRESET==="cozy") TARGET={c:10,s:15,z:75};
   else if (ACTIVE_PRESET==="midnight") TARGET={c:70,s:25,z:5};
-  else TARGET={c:25,s:65,z:10}; // folk dread
+  else TARGET={c:25,s:65,z:10};
   drawPad(); updatePadPercents(); rebuildDeck(); haptics("mid");
 });
 $("#presetLock").onclick=()=>{ ACTIVE_PRESET="none"; $("#presetLock").style.display="none"; rebuildDeck(); };
@@ -360,8 +365,8 @@ let padCanvas, ctx, padGeom;
 
 function initPad(){
   pad.innerHTML = ""; padCanvas = document.createElement("canvas");
-  padCanvas.width = pad.clientWidth * devicePixelRatio;
-  padCanvas.height = pad.clientHeight * devicePixelRatio;
+  padCanvas.width = Math.max(160, pad.clientWidth) * devicePixelRatio;
+  padCanvas.height = Math.max(140, pad.clientHeight) * devicePixelRatio;
   padCanvas.style.width = "100%"; padCanvas.style.height="100%";
   pad.appendChild(padCanvas);
   ctx = padCanvas.getContext("2d");
@@ -389,12 +394,9 @@ function computeGeom(){
 function drawPad(){
   const {W,H,top,left,right}=padGeom;
   ctx.clearRect(0,0,W,H);
-  // tri
   ctx.fillStyle="#0f1511"; ctx.strokeStyle="#284832"; ctx.lineWidth=2*devicePixelRatio;
   ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo(left.x,left.y); ctx.lineTo(right.x,right.y); ctx.closePath(); ctx.fill(); ctx.stroke();
-  // internal line
   ctx.strokeStyle="#1f3327"; ctx.lineWidth=1*devicePixelRatio; ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo((left.x+right.x)/2,left.y); ctx.stroke();
-  // dot -> from TARGET percentages to point
   const p = baryToPoint(normTriple(TARGET.c,TARGET.s,TARGET.z), top,left,right);
   ctx.fillStyle="#77ffa5"; ctx.strokeStyle="#173824"; ctx.lineWidth=2*devicePixelRatio;
   ctx.beginPath(); ctx.arc(p.x,p.y,5*devicePixelRatio,0,Math.PI*2); ctx.fill(); ctx.stroke();
@@ -406,11 +408,8 @@ function moveDot(e){
   const x = (clientX - rect.left) * devicePixelRatio;
   const y = (clientY - rect.top) * devicePixelRatio;
   const {top,left,right}=padGeom;
-
-  // clamp to triangle by projecting to barycentric and clipping
   let bary = pointToBary({x,y}, top,left,right);
   bary = clipBary(bary);
-  // update TARGET
   TARGET = { c:bary.c*100, s:bary.s*100, z:bary.z*100 };
   updatePadPercents();
   drawPad();
@@ -422,29 +421,17 @@ function updatePadPercents(){
   $("#pcS").textContent = Math.round(normTriple(TARGET.c,TARGET.s,TARGET.z).s) + "%";
   $("#pcZ").textContent = Math.round(normTriple(TARGET.c,TARGET.s,TARGET.z).z) + "%";
 }
-/* geometry helpers */
 function pointToBary(p, A,B,C){
   const v0={x:B.x-A.x, y:B.y-A.y}, v1={x:C.x-A.x, y:C.y-A.y}, v2={x:p.x-A.x, y:p.y-A.y};
   const d00=v0.x*v0.x+v0.y*v0.y, d01=v0.x*v1.x+v0.y*v1.y, d11=v1.x*v1.x+v1.y*v1.y;
   const d20=v2.x*v0.x+v2.y*v0.y, d21=v2.x*v1.x+v2.y*v1.y; const denom=d00*d11-d01*d01||1;
   let v=(d11*d20-d01*d21)/denom, w=(d00*d21-d01*d20)/denom, u=1-v-w;
-  return {c:u, s:v, z:w}; // map: top→cursed(u), left→spooky(v), right→cozy(w)
+  return {c:u, s:v, z:w}; // top→cursed, left→spooky, right→cozy
 }
 function baryToPoint(bary, A,B,C){
   return { x: bary.c*A.x + bary.s*B.x + bary.z*C.x, y: bary.c*A.y + bary.s*B.y + bary.z*C.y };
 }
-function clipBary(b){ // clip to triangle
-  let {c,s,z}=b;
-  c=Math.max(0,Math.min(1,c));
-  s=Math.max(0,Math.min(1,s));
-  z=Math.max(0,Math.min(1,z));
-  const sum=c+s+z; if(sum===0){ c=1; s=0; z=0; }
-  else{ c/=sum; s/=sum; z/=sum; }
-  return {c,s,z};
-}
-
-/* ====== LINKS + TOAST ====== */
-function showToast(text){ const t=$("#toast"); t.textContent=text; t.classList.remove("show"); void t.offsetWidth; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),3000); }
+function clipBary(b){ let {c,s,z}=b; c=Math.max(0,Math.min(1,c)); s=Math.max(0,Math.min(1,s)); z=Math.max(0,Math.min(1,z)); const sum=c+s+z; if(sum===0){ c=1; s=0; z=0; } else{ c/=sum; s/=sum; z/=sum; } return {c,s,z}; }
 
 /* ====== WIRES ====== */
 const dlg=$("#filtersDlg");
@@ -483,8 +470,11 @@ async function render(item){
   if(item.year){ $("#year").textContent=`Year: ${item.year}`; show($("#year"),true); } else show($("#year"),false);
   const run=item.runtime?`${item.runtime} min`:""; $("#runChip").textContent=run; show($("#runChip"), !!run);
 
-  renderVibeBadge($("#vibeBadge"), item);
-  links($("#linksRow"), item);
+  // readout for this movie's own vibe
+  const badge = $("#vibeBadge");
+  badge.innerHTML = "";
+  renderVibeBadge(badge, item);
 
+  links($("#linksRow"), item);
   prefetchNextPosters(3);
 }
