@@ -7,7 +7,6 @@
 <meta name="theme-color" content="#0b0b0b"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-
 <style>
 :root{
   color-scheme: light dark;
@@ -22,20 +21,21 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
 .card{
   width:min(920px,100%);height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 12px);
   margin:auto;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);
-  display:grid;grid-template-rows:auto auto auto 1fr auto;gap:8px;padding:10px;overflow:hidden
+  display:grid;grid-template-rows:auto auto 1fr auto;gap:10px;padding:10px;overflow:hidden
 }
 header{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.appTitle{margin:0;font-weight:900;letter-spacing:.2px;font-size:20px}
+.appTitle{margin:0;font-weight:1000;letter-spacing:.2px;font-size:20px}
 .sub{color:var(--muted);font-size:12px;margin-top:-4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .deck{color:#cfe;font-size:12px;padding:6px 10px;border:1px solid #263;border-radius:10px;background:#0f1a14}
 
-/* Vibe row */
-.vibeBar{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
-@media (max-width:680px){.vibeBar{grid-template-columns:1fr}}
-.triWrap{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
-@media (max-width:520px){.triWrap{grid-template-columns:1fr}}
-.triLegend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:#a7c9bb}
+/* Vibe bar (triangle + controls) */
+.vibeBar{display:grid;grid-template-columns:200px 1fr;gap:12px;align-items:center}
+@media (max-width:680px){.vibeBar{grid-template-columns:170px 1fr}}
+.triWrap{display:grid;gap:6px}
+.triLegend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#a7c9bb}
 .triLegend b{color:#c8ffe0;font-weight:900}
+#vibePad{width:100%;aspect-ratio:11/9;border-radius:12px;border:1px solid #1f1f1f;background:#0f1511;position:relative}
+#vibePad canvas{width:100%;height:100%;display:block;border-radius:12px}
 .vibeSide{display:grid;gap:8px}
 .group{display:flex;gap:8px;align-items:center}
 .label{color:#9ab;font-size:12px}
@@ -46,15 +46,10 @@ header{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .preset{background:#141414;border:1px solid #262626;color:#dfffe8;font-weight:800;font-size:12px;padding:6px 10px;border-radius:999px;cursor:pointer}
 .lockChip{background:#0f1a14;border:1px solid #264;color:#bff7cf;padding:4px 8px;font-weight:800;font-size:11px;border-radius:999px}
 
-/* Triangle */
-#vibePad{width:160px;height:140px;border-radius:12px;border:1px solid #1f1f1f;background:#0f1511;position:relative}
-@media (min-width:680px){#vibePad{width:220px;height:180px}}
-#vibePad canvas{width:100%;height:100%;display:block;border-radius:12px}
-
 /* Error banner */
 .errBanner{display:block;background:#1a1010;border:1px solid #412525;color:#ffd6d6;padding:8px 10px;border-radius:10px;font-weight:700}
 
-/* Stage */
+/* Stage (poster + info) */
 .stage{min-height:0;display:grid;grid-template-columns:56% 1fr;gap:12px;align-items:start;overflow:hidden;width:100%}
 @media (min-width:760px){.stage{grid-template-columns:minmax(48%,1fr) 1fr}}
 .poster{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:14px;background:#181818;border:1px solid #1f1f1f}
@@ -65,9 +60,6 @@ header{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .tagline{color:#d6e2dd;font-size:14px;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip{background:#141414;border:1px solid #262626;border-radius:999px;padding:6px 10px;font-weight:800;font-size:12px;color:#d8ffe9}
-#vibeBadge{width:100%;max-width:280px}
-#vibeBadge svg{width:100%;height:auto;display:block}
-#vibeBadge .lab{font:11px system-ui,-apple-system,Inter,Segoe UI,Roboto;fill:#a7c9bb}
 .links{display:grid;grid-template-columns:1fr;gap:8px}
 .links a{display:block;padding:12px;text-align:center;border-radius:12px;text-decoration:none;font-weight:900;font-size:15px;background:#1b1b1b;color:#c0ffd6;border:1px solid #2a2a2a}
 
@@ -104,6 +96,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
       <div class="deck"><span id="left">0</span> left · <span id="total">0</span> total</div>
     </header>
 
+    <!-- Vibe control -->
     <section class="vibeBar">
       <div class="triWrap">
         <div id="vibePad" aria-label="Vibe triangle chooser"></div>
@@ -133,6 +126,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 
     <div id="err" class="errBanner" style="display:none;"></div>
 
+    <!-- Result -->
     <section class="stage" aria-live="polite">
       <img id="poster" class="poster skeleton" referrerpolicy="no-referrer" alt="Movie poster"/>
       <div class="infoCol" id="longPressArea" title="Hold to banish (250ms)">
@@ -142,11 +136,12 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
           <span class="chip" id="year" style="display:none;"></span>
           <span class="chip" id="runChip" style="display:none;"></span>
         </div>
-        <div id="vibeBadge"></div>
+        <div class="chips" id="vibeChips"></div>
         <div class="links" id="linksRow"></div>
       </div>
     </section>
 
+    <!-- Dock -->
     <nav class="dock">
       <button id="deal" class="btn pri">Deal</button>
       <button id="reroll" class="btn gh">Re-roll</button>
@@ -158,12 +153,12 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   </main>
 </div>
 
+<!-- Filters -->
 <dialog id="filtersDlg">
   <div class="dlgHead">
     <strong>Filters</strong>
     <div class="kicker" id="deckCountMini">Deck: 0</div>
   </div>
-
   <div class="kicker">Themes</div>
   <div class="rowFilt mb8">
     <div class="pill active" id="thAll">All</div>
@@ -173,14 +168,12 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     <div class="pill" id="thFound">Found</div>
     <div class="pill" id="thNeon">Neon</div>
   </div>
-
   <div class="kicker">Content</div>
   <div class="rowFilt mb12">
     <div class="pill" id="fNoGore">No gore</div>
     <div class="pill" id="fNoSV">No sexual violence</div>
     <div class="pill" id="fNoKids">No kids-in-peril</div>
   </div>
-
   <div class="rowFilt endRow">
     <button class="btn gh" id="resetAll">Reset</button>
     <button class="btn pri" id="closeFilters">Close</button>
@@ -191,18 +184,19 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 
 <script>
 /* ===== CONFIG ===== */
-const TMDB_API_KEY = "PASTE_YOUR_TMDB_KEY_HERE"; // <-- put your real TMDb API key here
+const TMDB_API_KEY = "000802da6224e125437187b196cde898"; // <— put your TMDb key here
 const TMDB_IMG = "https://image.tmdb.org/t/p";
 
-/* ===== HELPERS ===== */
+/* ===== LITTLE HELPERS ===== */
 const $ = s => document.querySelector(s);
 const todayKey = () => new Date().toISOString().slice(0,10);
-const show = (el,on)=> el.style.display = on ? "" : "none";
 function haptics(kind="light"){ if(navigator.vibrate) navigator.vibrate(kind==="heavy"?[10,20,10]:kind==="mid"?12:6); }
 function setBanner(msg){ const b=$("#err"); if(!msg){ b.style.display="none"; b.textContent=""; return; } b.textContent=msg; b.style.display="block"; }
+
+/* Prevent long-press save dialog on poster interfering with banish */
 document.addEventListener("contextmenu", e => { if (e.target && e.target.id==="poster") e.preventDefault(); });
 
-/* ===== POSTERS ===== */
+/* ===== POSTER UTILS ===== */
 function posterURL(path,size="w500"){
   if(!path) return "";
   const s=String(path).trim();
@@ -212,8 +206,7 @@ function posterURL(path,size="w500"){
   return `${TMDB_IMG}/${size}${clean}`;
 }
 function setPoster(imgEl, posterPath, title){
-  const conn = navigator.connection?.effectiveType || "4g";
-  const order = conn.includes("4g") ? ["w780","w500","original","w342"] : ["w342","w500","w780"];
+  const order = ["w780","w500","w342","original"];
   let i=0;
   function next(){ const u=posterURL(posterPath, order[i]); if(!u){ fallback(); return; } imgEl.crossOrigin="anonymous"; imgEl.src=u; }
   function fallback(){
@@ -225,16 +218,8 @@ function setPoster(imgEl, posterPath, title){
   next();
 }
 
-/* ===== STATE ===== */
-let MOVIES=[], DECK=[], lastPickIndex=null, dealtOnce=false;
-let ACTIVE_PRESET="none"; // none|cozy|midnight|folk
-let VARIETY="T";          // T|M|W
-let THEME="all";
-let FILTERS={ noGore:false, noSV:false, noKids:false };
-let banished = { date: todayKey(), ids: [] };
-let TARGET = { c:33, s:33, z:34 };
-
-const CACHE_KEY="mr_tmdb_cache_v7";
+/* ===== TMDb CACHE & LOOKUP ===== */
+const CACHE_KEY="mr_tmdb_cache_v8";
 let TMDB_CACHE={}; try{ TMDB_CACHE=JSON.parse(localStorage.getItem(CACHE_KEY)||"{}"); }catch{}
 const cacheKey=(title,year)=> (title||"").toLowerCase()+"::"+String(year||"").slice(0,4);
 function saveCache(){ localStorage.setItem(CACHE_KEY, JSON.stringify(TMDB_CACHE)); }
@@ -262,7 +247,7 @@ async function ensurePoster(item){
   return "";
 }
 
-/* ===== CSV + LOAD ===== */
+/* ===== CSV / DATA LOADING ===== */
 async function fetchMaybe(url){ try{ const r=await fetch(url,{cache:"no-store"}); if(!r.ok) return null; return await r.text(); }catch{ return null; } }
 function splitCSV(str,delim=","){ const out=[]; let cur="",q=false; for(let i=0;i<str.length;i++){ const ch=str[i]; if(ch==='"'){ q=!q; continue; } if(ch===delim && !q){ out.push(cur); cur=""; continue; } cur+=ch; } out.push(cur); return out; }
 function parseCSV(text){
@@ -273,15 +258,18 @@ function parseCSV(text){
   return {cols,rows:out};
 }
 function coerceFlags(s){ const set=new Set(String(s||"").toLowerCase().split(/[,\s;|]+/).filter(Boolean)); return {
-  theme_witchy:set.has("witchy"), theme_body_horror:set.has("body"), theme_folk:set.has("folk"),
-  theme_found_footage:set.has("found"), theme_neon:set.has("neon"),
-  extreme_gore:set.has("gore"), sexual_violence:set.has("sv")||set.has("sexual-violence"), kids_in_peril:set.has("kids")
+  theme_witchy:set.has("witchy"), theme_body_horror:set.has("body"),
+  theme_folk:set.has("folk"), theme_found_footage:set.has("found"),
+  theme_neon:set.has("neon"), extreme_gore:set.has("gore"),
+  sexual_violence:set.has("sv")||set.has("sexual-violence"), kids_in_peril:set.has("kids")
 };}
-function loadBanished(){ try{ const raw=localStorage.getItem("mr_banished"); if(!raw) return; const obj=JSON.parse(raw); if(obj.date===todayKey()) banished=obj; }catch{} }
-function saveBanished(){ localStorage.setItem("mr_banished", JSON.stringify(banished)); }
-function idFor(m){ return `${m.title||""}::${m.year||""}`; }
 
-/* Demo so UI works */
+let MOVIES=[], DECK=[], lastPickIndex=null, dealtOnce=false;
+let ACTIVE_PRESET="none"; let VARIETY="T"; let THEME="all";
+let FILTERS={ noGore:false, noSV:false, noKids:false };
+let banished = { date: todayKey(), ids: [] };
+let TARGET = { c:33, s:33, z:34 };
+
 const DEMO = [
   {title:"Tetsuo: The Iron Man", year:"1989", link:"https://boxd.it/ZoM", tagline:"Flesh welded to steel; body becomes weaponized noise.", poster:"", runtime:67, flags:{theme_neon:true}, cursed:70, spooky:25, cozy:5},
   {title:"Night of the Demons", year:"1988", link:"https://boxd.it/1wLO", tagline:"Punk party, demon lipstick, cemetery chaos.", poster:"", runtime:90, flags:{theme_neon:true}, cursed:60, spooky:35, cozy:5},
@@ -292,7 +280,6 @@ async function loadData(){
   try{
     loadBanished();
 
-    // Prefer CSV at /data/movies.csv
     let enriched = await fetchMaybe("./data/movies.csv?v="+Date.now());
     if (enriched){
       const {rows}=parseCSV(enriched);
@@ -305,12 +292,10 @@ async function loadData(){
       }));
       if(!MOVIES.length) setBanner("Loaded data/movies.csv but found 0 rows — check headers.");
     } else {
-      // JSON fallback
       let js = await fetchMaybe("./movies.json?v="+Date.now());
       if (js){
         MOVIES = JSON.parse(js);
       } else {
-        // Watchlist fallback (no vibes)
         let base = await fetchMaybe("./data/watchlist.csv?v="+Date.now());
         if(base){
           const {rows}=parseCSV(base);
@@ -329,23 +314,87 @@ async function loadData(){
 
     $("#total").textContent = MOVIES.length;
     rebuildDeck();
-  }catch(e){
-    console.error(e);
-    setBanner("Data not loaded yet. Check file paths and CSV headers.");
-  }
+  }catch(e){ console.error(e); setBanner("Data not loaded yet. Check file paths and CSV headers."); }
 }
 
-/* ===== VIBE MATH ===== */
+/* ===== TRIANGLE (barycentric) ===== */
+const pad = $("#vibePad"); let padCanvas, ctx, padGeom;
+function initPad(){
+  pad.innerHTML = ""; padCanvas = document.createElement("canvas");
+  padCanvas.width = Math.max(170, pad.clientWidth) * devicePixelRatio;
+  padCanvas.height = padCanvas.width * (9/11);
+  padCanvas.style.width = "100%"; padCanvas.style.height="100%";
+  pad.appendChild(padCanvas);
+  ctx = padCanvas.getContext("2d");
+  padGeom = computeGeom();
+  drawPad();
+
+  let dragging=false;
+  const down = (e)=>{ moveDot(e); e.preventDefault(); dragging=true; };
+  const move = (e)=>{ if(!dragging) return; moveDot(e); e.preventDefault(); };
+  const up   = ()=>{ if(dragging){ dragging=false; rebuildDeck(); haptics("light"); } };
+  pad.addEventListener("mousedown", down);
+  pad.addEventListener("touchstart", down, {passive:false});
+  window.addEventListener("mousemove", move, {passive:false});
+  window.addEventListener("touchmove", move, {passive:false});
+  window.addEventListener("mouseup", up);
+  window.addEventListener("touchend", up);
+  window.addEventListener("resize", ()=>{ initPad(); });
+}
+function computeGeom(){
+  const W=padCanvas.width, H=padCanvas.height;
+  const m=18*devicePixelRatio;
+  const top={x:W/2,y:m+4}, left={x:m,y:H-m}, right={x:W-m,y:H-m};
+  return {W,H,top,left,right};
+}
+function drawPad(){
+  const {W,H,top,left,right}=padGeom;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle="#0f1511"; ctx.strokeStyle="#284832"; ctx.lineWidth=2*devicePixelRatio;
+  ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo(left.x,left.y); ctx.lineTo(right.x,right.y); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle="#1f3327"; ctx.lineWidth=1*devicePixelRatio; ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo((left.x+right.x)/2,left.y); ctx.stroke();
+  const p = baryToPoint(normTriple(TARGET.c,TARGET.s,TARGET.z), top,left,right);
+  ctx.fillStyle="#77ffa5"; ctx.strokeStyle="#173824"; ctx.lineWidth=2*devicePixelRatio;
+  ctx.beginPath(); ctx.arc(p.x,p.y,5*devicePixelRatio,0,Math.PI*2); ctx.fill(); ctx.stroke();
+}
+function moveDot(e){
+  const rect=padCanvas.getBoundingClientRect();
+  const clientX = (e.touches? e.touches[0].clientX : e.clientX);
+  const clientY = (e.touches? e.touches[0].clientY : e.clientY);
+  const x = (clientX - rect.left) * devicePixelRatio;
+  const y = (clientY - rect.top) * devicePixelRatio;
+  const {top,left,right}=padGeom;
+  let bary = pointToBary({x,y}, top,left,right);
+  bary = clipBary(bary);
+  TARGET = { c:bary.c*100, s:bary.s*100, z:bary.z*100 };
+  updatePadPercents();
+  drawPad();
+}
 function normTriple(c,s,z){ c=Math.max(0,c||0); s=Math.max(0,s||0); z=Math.max(0,z||0); const sum=c+s+z; if(sum<=0) return {c:33,s:33,z:34}; return {c:100*c/sum, s:100*s/sum, z:100*z/sum}; }
-function distTriple(a,b){ const A=normTriple(a.c,a.s,a.z); const B=normTriple(b.c,b.s,b.z); const dx=(A.c-B.c)/100, dy=(A.s-B.s)/100, dz=(A.z-B.z)/100; return Math.sqrt(dx*dx + dy*dy + dz*dz); }
+function pointToBary(p, A,B,C){
+  const v0={x:B.x-A.x, y:B.y-A.y}, v1={x:C.x-A.x, y:C.y-A.y}, v2={x:p.x-A.x, y:p.y-A.y};
+  const d00=v0.x*v0.x+v0.y*v0.y, d01=v0.x*v1.x+v0.y*v1.y, d11=v1.x*v1.x+v1.y*v1.y;
+  const d20=v2.x*v0.x+v2.y*v0.y, d21=v2.x*v1.x+v2.y*v1.y; const denom=d00*d11-d01*d01||1;
+  let v=(d11*d20-d01*d21)/denom, w=(d00*d21-d01*d20)/denom, u=1-v-w;
+  return {c:u, s:v, z:w}; // top=cursed, left=spooky, right=cozy
+}
+function baryToPoint(bary, A,B,C){ return { x: bary.c*A.x + bary.s*B.x + bary.z*C.x, y: bary.c*A.y + bary.s*B.y + bary.z*C.y }; }
+function clipBary(b){ let {c,s,z}=b; c=Math.max(0,Math.min(1,c)); s=Math.max(0,Math.min(1,s)); z=Math.max(0,Math.min(1,z)); const sum=c+s+z; if(sum===0){ c=1; s=0; z=0; } else{ c/=sum; s/=sum; z/=sum; } return {c,s,z}; }
+function updatePadPercents(){
+  const n = normTriple(TARGET.c,TARGET.s,TARGET.z);
+  $("#pcC").textContent = Math.round(n.c) + "%";
+  $("#pcS").textContent = Math.round(n.s) + "%";
+  $("#pcZ").textContent = Math.round(n.z) + "%";
+}
+
+/* ===== WEIGHTING / FILTERS ===== */
+function distTriple(a,b){ const A=normTriple(a.c,a.s,a.z), B=normTriple(b.c,b.s,b.z); const dx=(A.c-B.c)/100, dy=(A.s-B.s)/100, dz=(A.z-B.z)/100; return Math.sqrt(dx*dx + dy*dy + dz*dz); }
 function band(){ return VARIETY==="T"?0.18: VARIETY==="M"?0.32:0.55; }
 function weightFor(movie, target){
   const m={c:movie.cursed||0, s:movie.spooky||0, z:movie.cozy||0};
   const d=distTriple(m, target);
   return Math.exp(-0.5*Math.pow(d/band(),2));
 }
-
-/* ===== FILTERS ===== */
 function presetPass(item){
   if (ACTIVE_PRESET==="none") return true;
   const f=item.flags||{};
@@ -357,9 +406,7 @@ function presetPass(item){
     if (f.extreme_gore || f.sexual_violence) return false;
     return item.cozy >= 50;
   }
-  if (ACTIVE_PRESET==="folk"){
-    return (f.theme_folk || f.theme_witchy);
-  }
+  if (ACTIVE_PRESET==="folk"){ return (f.theme_folk || f.theme_witchy); }
   return true;
 }
 function themePass(item){
@@ -372,10 +419,13 @@ function contentPass(item){
   const f=item.flags||{}; if(FILTERS.noGore&&f.extreme_gore)return false; if(FILTERS.noSV&&f.sexual_violence)return false; if(FILTERS.noKids&&f.kids_in_peril)return false; return true;
 }
 
-/* ===== DECK ===== */
+/* ===== DECK / BANISH ===== */
+function idFor(m){ return `${m.title||""}::${m.year||""}`; }
+function loadBanished(){ try{ const raw=localStorage.getItem("mr_banished"); if(!raw) return; const obj=JSON.parse(raw); if(obj.date===todayKey()) banished=obj; }catch{} }
+function saveBanished(){ localStorage.setItem("mr_banished", JSON.stringify(banished)); }
+
 function rebuildDeck(){
   if(!MOVIES.length){ $("#left").textContent=0; $("#deckCountMini").textContent="Deck: 0"; return; }
-
   if(banished.date!==todayKey()) banished={date:todayKey(), ids:[]};
   const todaysBan=new Set(banished.ids);
 
@@ -388,12 +438,7 @@ function rebuildDeck(){
     if(!cands.length) cands=MOVIES.map((_,i)=>i);
   }
 
-  // Shuffle
-  for(let i=cands.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [cands[i], cands[j]] = [cands[j], cands[i]];
-  }
-
+  for(let i=cands.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [cands[i], cands[j]]=[cands[j], cands[i]]; }
   const deck=[], used=new Set(), MAX=Math.min(80,cands.length);
   for(let n=0;n<MAX;n++){
     const pool=cands.filter(i=>!used.has(i)); if(!pool.length) break;
@@ -410,7 +455,6 @@ function rebuildDeck(){
   updateResetVisibility();
   setBanner("");
 }
-
 function safeDealIndex(){ if(!DECK.length) rebuildDeck(); let idx=DECK.pop(); if(idx==null||isNaN(idx)) idx=Math.floor(Math.random()*(MOVIES.length||1)); return idx; }
 function dealOne(){ if(!MOVIES.length){ setBanner("No data loaded yet. Add /data/movies.csv or /movies.json."); return; } const idx=safeDealIndex(); lastPickIndex=idx; dealtOnce=true; $("#left").textContent=Math.max(0,DECK.length); render(MOVIES[idx]); updateResetVisibility(); setBanner(""); haptics("light"); }
 function rerollNearby(){
@@ -429,7 +473,7 @@ function rerollNearby(){
   const idx=pool[Math.floor(Math.random()*pool.length)]; lastPickIndex=idx; render(MOVIES[idx]); haptics("mid");
 }
 
-/* ===== BANISH ===== */
+/* Banishing */
 let lpTimer=null; const infoLP=$("#longPressArea");
 ["touchstart","mousedown"].forEach(e=>infoLP.addEventListener(e,()=>{ lpTimer=setTimeout(banishCurrent,250); },{passive:true}));
 ["touchend","touchcancel","mouseup","mouseleave"].forEach(e=>infoLP.addEventListener(e,()=>clearTimeout(lpTimer)));
@@ -442,37 +486,20 @@ function banishCurrent(){
 }
 function undoBanish(){ if(banished.date!==todayKey()||!banished.ids.length) return; banished.ids.pop(); saveBanished(); showToast("Undo ✓"); rebuildDeck(); }
 
-/* ===== PREFETCH ===== */
+/* Prefetch */
 async function prefetchNextPosters(n=3){
   const peek=DECK.slice(-n);
   for(const idx of peek){ const m=MOVIES[idx]; if(m && !m.poster){ ensurePoster(m); } }
 }
 
-/* ===== BADGE ===== */
-function renderVibeBadge(el, m){
-  const w=180, h=156;
-  const top   = {x:w/2, y:10};
-  const left  = {x:14,  y:h-12};
-  const right = {x:w-14, y:h-12};
-  const C = Math.max(0, m.cursed||0), S = Math.max(0, m.spooky||0), Z = Math.max(0, m.cozy||0);
-  const sum = C+S+Z || 1;
-  const px = (C/sum)*top.x + (S/sum)*left.x + (Z/sum)*right.x;
-  const py = (C/sum)*top.y + (S/sum)*left.y + (Z/sum)*right.y;
-
-  el.innerHTML = `
-  <svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vibe triangle">
-    <polygon points="${top.x},${top.y} ${left.x},${left.y} ${right.x},${right.y}"
-      fill="#0f1511" stroke="#284832" stroke-width="2" />
-    <line x1="${top.x}" y1="${top.y}" x2="${(left.x+right.x)/2}" y2="${left.y}"
-      stroke="#1f3327" stroke-width="1"/>
-    <circle cx="${px}" cy="${py}" r="5" fill="#77ffa5" stroke="#173824" stroke-width="2"/>
-    <text class="lab" x="${top.x}" y="${top.y-2}" text-anchor="middle">Cursed ${Math.round(C)}%</text>
-    <text class="lab" x="${left.x}" y="${left.y+12}">Spooky ${Math.round(S)}%</text>
-    <text class="lab" x="${right.x}" y="${right.y+12}" text-anchor="end">Cozy ${Math.round(Z)}%</text>
-  </svg>`;
-}
-
 /* ===== RENDER ===== */
+function chips(container, m){
+  container.innerHTML="";
+  const mk=(t)=>{ const el=document.createElement("span"); el.className="chip"; el.textContent=t; return el; };
+  container.appendChild(mk(`Cursed ${Math.round(m.cursed||0)}%`));
+  container.appendChild(mk(`Spooky ${Math.round(m.spooky||0)}%`));
+  container.appendChild(mk(`Cozy ${Math.round(m.cozy||0)}%`));
+}
 function links(container,item){
   container.innerHTML="";
   const lb=document.createElement("a"); lb.textContent="Open on Letterboxd"; lb.href=item.link||"#"; lb.target="_blank"; lb.rel="noopener";
@@ -483,17 +510,17 @@ function links(container,item){
   container.appendChild(s);
 }
 async function render(item){
-  setPoster($("#poster"), "/null", item.title);
+  setPoster($("#poster"), "/null", item.title); // skeleton first
   const posterPath = await ensurePoster(item);
   setPoster($("#poster"), posterPath || "/null", item.title);
 
   $("#title").textContent = item.title || "Untitled";
-  const tg=(item.tagline||"").trim(); $("#taglineInline").textContent=tg; show($("#taglineInline"), !!tg);
+  const tg=(item.tagline||"").trim(); $("#taglineInline").textContent=tg; $("#taglineInline").style.display = tg ? "" : "none";
 
-  if(item.year){ $("#year").textContent=`Year: ${item.year}`; show($("#year"),true); } else show($("#year"),false);
-  const run=item.runtime?`${item.runtime} min`:""; $("#runChip").textContent=run; show($("#runChip"), !!run);
+  if(item.year){ $("#year").textContent=`Year: ${item.year}`; $("#year").style.display=""; } else $("#year").style.display="none";
+  const run=item.runtime?`${item.runtime} min`:""; $("#runChip").textContent=run; $("#runChip").style.display = run ? "" : "none";
 
-  renderVibeBadge($("#vibeBadge"), item);
+  chips($("#vibeChips"), item);
   links($("#linksRow"), item);
   prefetchNextPosters(3);
 }
@@ -510,9 +537,9 @@ async function shareCurrent(){
     roundRect(ctx,PX,PY,PW,PH,24); ctx.save(); ctx.clip(); ctx.drawImage(img,PX,PY,PW,PH); ctx.restore();
     ctx.fillStyle="#eafff3"; ctx.font="bold 44px system-ui,-apple-system,Segoe UI,Inter"; wrapText(ctx, m.title||"Untitled", 60, 990, W-120, 52);
     ctx.fillStyle="#cfe8dc"; ctx.font="400 28px system-ui,-apple-system,Segoe UI,Inter"; wrapText(ctx, (m.tagline||"").trim(), 60, 1050, W-120, 36);
-    drawChip(ctx, `Cursed ${m.cursed||0}%`, 60, 1150);
-    drawChip(ctx, `Spooky ${m.spooky||0}%`, 270, 1150);
-    drawChip(ctx, `Cozy ${m.cozy||0}%`, 470, 1150);
+    drawChip(ctx, `Cursed ${Math.round(m.cursed||0)}%`, 60, 1150);
+    drawChip(ctx, `Spooky ${Math.round(m.spooky||0)}%`, 270, 1150);
+    drawChip(ctx, `Cozy ${Math.round(m.cozy||0)}%`, 470, 1150);
     ctx.fillStyle="#8fb8a5"; ctx.font="500 22px system-ui,-apple-system,Segoe UI,Inter";
     const urlText=(m.link||"").replace(/^https?:\/\//,""); ctx.fillText(urlText||"letterboxd.com", 60, 1290);
     const blob=await new Promise(res=>canvas.toBlob(b=>res(b),"image/png",0.92));
@@ -565,88 +592,13 @@ $("#presets").addEventListener("click",(e)=>{
 });
 $("#presetLock").onclick=()=>{ ACTIVE_PRESET="none"; $("#presetLock").style.display="none"; rebuildDeck(); };
 
-/* ===== TRI PAD ===== */
-const pad = $("#vibePad");
-let padCanvas, ctx, padGeom;
-function initPad(){
-  pad.innerHTML = ""; padCanvas = document.createElement("canvas");
-  padCanvas.width = Math.max(160, pad.clientWidth) * devicePixelRatio;
-  padCanvas.height = Math.max(140, pad.clientHeight) * devicePixelRatio;
-  padCanvas.style.width = "100%"; padCanvas.style.height="100%";
-  pad.appendChild(padCanvas);
-  ctx = padCanvas.getContext("2d");
-  padGeom = computeGeom();
-  drawPad();
-  const down = (e)=>{ moveDot(e); e.preventDefault(); dragging=true; };
-  const move = (e)=>{ if(!dragging) return; moveDot(e); e.preventDefault(); };
-  const up   = ()=>{ dragging=false; };
-  let dragging=false;
-  pad.addEventListener("mousedown", down);
-  pad.addEventListener("touchstart", down, {passive:false});
-  window.addEventListener("mousemove", move, {passive:false});
-  window.addEventListener("touchmove", move, {passive:false});
-  window.addEventListener("mouseup", up);
-  window.addEventListener("touchend", up);
-  window.addEventListener("resize", ()=>{ initPad(); });
-}
-function computeGeom(){
-  const W=padCanvas.width, H=padCanvas.height;
-  const m=18*devicePixelRatio;
-  const top={x:W/2,y:m+4}, left={x:m,y:H-m}, right={x:W-m,y:H-m};
-  return {W,H,top,left,right};
-}
-function drawPad(){
-  const {W,H,top,left,right}=padGeom;
-  ctx.clearRect(0,0,W,H);
-  ctx.fillStyle="#0f1511"; ctx.strokeStyle="#284832"; ctx.lineWidth=2*devicePixelRatio;
-  ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo(left.x,left.y); ctx.lineTo(right.x,right.y); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle="#1f3327"; ctx.lineWidth=1*devicePixelRatio; ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo((left.x+right.x)/2,left.y); ctx.stroke();
-  const p = baryToPoint(normTriple(TARGET.c,TARGET.s,TARGET.z), top,left,right);
-  ctx.fillStyle="#77ffa5"; ctx.strokeStyle="#173824"; ctx.lineWidth=2*devicePixelRatio;
-  ctx.beginPath(); ctx.arc(p.x,p.y,5*devicePixelRatio,0,Math.PI*2); ctx.fill(); ctx.stroke();
-}
-function moveDot(e){
-  const rect=padCanvas.getBoundingClientRect();
-  const clientX = (e.touches? e.touches[0].clientX : e.clientX);
-  const clientY = (e.touches? e.touches[0].clientY : e.clientY);
-  const x = (clientX - rect.left) * devicePixelRatio;
-  const y = (clientY - rect.top) * devicePixelRatio;
-  const {top,left,right}=padGeom;
-  let bary = pointToBary({x,y}, top,left,right);
-  bary = clipBary(bary);
-  TARGET = { c:bary.c*100, s:bary.s*100, z:bary.z*100 };
-  updatePadPercents();
-  drawPad();
-  rebuildDeck();
-  haptics("light");
-}
-function updatePadPercents(){
-  $("#pcC").textContent = Math.round(normTriple(TARGET.c,TARGET.s,TARGET.z).c) + "%";
-  $("#pcS").textContent = Math.round(normTriple(TARGET.c,TARGET.s,TARGET.z).s) + "%";
-  $("#pcZ").textContent = Math.round(normTriple(TARGET.c,TARGET.s,TARGET.z).z) + "%";
-}
-function pointToBary(p, A,B,C){
-  const v0={x:B.x-A.x, y:B.y-A.y}, v1={x:C.x-A.x, y:C.y-A.y}, v2={x:p.x-A.x, y:p.y-A.y};
-  const d00=v0.x*v0.x+v0.y*v0.y, d01=v0.x*v1.x+v0.y*v1.y, d11=v1.x*v1.x+v1.y*v1.y;
-  const d20=v2.x*v0.x+v2.y*v0.y, d21=v2.x*v1.x+v2.y*v1.y; const denom=d00*d11-d01*d01||1;
-  let v=(d11*d20-d01*d21)/denom, w=(d00*d21-d01*d20)/denom, u=1-v-w;
-  return {c:u, s:v, z:w}; // top→cursed, left→spooky, right→cozy
-}
-function baryToPoint(bary, A,B,C){
-  return { x: bary.c*A.x + bary.s*B.x + bary.z*C.x, y: bary.c*A.y + bary.s*B.y + bary.z*C.y };
-}
-function clipBary(b){ let {c,s,z}=b; c=Math.max(0,Math.min(1,c)); s=Math.max(0,Math.min(1,s)); z=Math.max(0,Math.min(1,z)); const sum=c+s+z; if(sum===0){ c=1; s=0; z=0; } else{ c/=sum; s/=sum; z/=sum; } return {c,s,z}; }
-
 /* ===== WIRES ===== */
-$("#openFilters").onclick = ()=>dlg.showModal();
-$("#closeFilters").onclick = ()=>dlg.close();
 $("#deal").onclick = ()=>dealOne();
 $("#reroll").onclick = ()=>rerollNearby();
 $("#shareCard").onclick = ()=>shareCurrent();
 $("#undo").onclick = ()=>{ undoBanish(); haptics("mid"); };
-function resetDeck(){ rebuildDeck(); $("#left").textContent=DECK.length; dealtOnce=false; updateResetVisibility(); haptics("mid"); }
-function updateResetVisibility(){ show($("#resetDeck"), dealtOnce); }
-$("#resetDeck").onclick = resetDeck;
+function updateResetVisibility(){ $("#resetDeck").style.display = dealtOnce ? "" : "none"; }
+$("#resetDeck").onclick = ()=>{ rebuildDeck(); $("#left").textContent=DECK.length; dealtOnce=false; updateResetVisibility(); haptics("mid"); };
 
 /* ===== BOOT ===== */
 initPad();
