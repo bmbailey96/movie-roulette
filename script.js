@@ -2,20 +2,24 @@
 const TMDB_API_KEY = "000802da6224e125437187b196cde898";
 const TMDB_IMG = "https://image.tmdb.org/t/p";
 
-/* ====== SHORTCUTS ====== */
+/* ================== UTILS ================== */
 const $ = s => document.querySelector(s);
 const todayKey = () => new Date().toISOString().slice(0,10);
-function show(el,on){ el.style.display = on ? "" : "none"; }
+const show = (el,on)=> el.style.display = on ? "" : "none";
 function haptics(kind="light"){ if(navigator.vibrate) navigator.vibrate(kind==="heavy"?[10,20,10]:kind==="mid"?12:6); }
+function setBanner(msg){ const b=$("#err"); if(!msg){ b.style.display="none"; b.textContent=""; return; } b.textContent=msg; b.style.display="block"; }
+
+/* prevent long-press save image sheet fighting our banish */
 document.addEventListener("contextmenu", e => { if (e.target && e.target.id==="poster") e.preventDefault(); });
 
-/* ====== POSTERS ====== */
+/* ================== POSTERS ================== */
 function posterURL(path,size="w500"){
-  if(!path) return ""; const s=String(path).trim();
-  if(!s || s==="null" || s==="undefined") return "";
+  if(!path) return "";
+  const s=String(path).trim();
   if(s.startsWith("http://")) return s.replace("http://","https://");
   if(s.startsWith("https://")) return s;
-  const clean = s.startsWith("/")? s : "/"+s; return `${TMDB_IMG}/${size}${clean}`;
+  const clean = s.startsWith("/")? s : "/"+s;
+  return `${TMDB_IMG}/${size}${clean}`;
 }
 function setPoster(imgEl, posterPath, title){
   const conn = navigator.connection?.effectiveType || "4g";
@@ -31,36 +35,34 @@ function setPoster(imgEl, posterPath, title){
   next();
 }
 
-/* ====== STATE ====== */
+/* ================== STATE ================== */
 let MOVIES=[], DECK=[], lastPickIndex=null, dealtOnce=false;
-let ACTIVE_PRESET="none"; // none | cozy | midnight | folk
-let VARIETY="T";          // T | M | W
+let ACTIVE_PRESET="none"; // none|cozy|midnight|folk
+let VARIETY="T";          // T|M|W
 let THEME="all";
 let FILTERS={ noGore:false, noSV:false, noKids:false };
 let banished = { date: todayKey(), ids: [] };
-
-/* VIBE TARGET (Cursed/Spooky/Cozy) — live from the triangle pad */
 let TARGET = { c:33, s:33, z:34 };
 
-/* ====== CACHE ====== */
-const CACHE_KEY="mr_tmdb_cache_v5";
+const CACHE_KEY="mr_tmdb_cache_v6";
 let TMDB_CACHE={}; try{ TMDB_CACHE=JSON.parse(localStorage.getItem(CACHE_KEY)||"{}"); }catch{}
-function saveCache(){ localStorage.setItem(CACHE_KEY, JSON.stringify(TMDB_CACHE)); }
 const cacheKey=(title,year)=> (title||"").toLowerCase()+"::"+String(year||"").slice(0,4);
+function saveCache(){ localStorage.setItem(CACHE_KEY, JSON.stringify(TMDB_CACHE)); }
 
-/* ====== UI ERR ====== */
-function setUIError(m=""){ const e=$("#err"); e.textContent=m; e.style.color=m?"#ffb3b3":"#9ab"; }
-
-/* ====== TMDb SEARCH ====== */
 async function tmdbSearchPoster(title,year){
   if(!TMDB_API_KEY) return null;
-  const k=cacheKey(title,year); if(TMDB_CACHE[k]?.poster) return TMDB_CACHE[k].poster;
-  if(!tmdbSearchPoster._q) tmdbSearchPoster._q=Promise.resolve(); tmdbSearchPoster._q=tmdbSearchPoster._q.then(()=>new Promise(r=>setTimeout(r,250))); await tmdbSearchPoster._q;
+  const k=cacheKey(title,year);
+  if(TMDB_CACHE[k]?.poster) return TMDB_CACHE[k].poster;
+  if(!tmdbSearchPoster._q) tmdbSearchPoster._q=Promise.resolve();
+  tmdbSearchPoster._q=tmdbSearchPoster._q.then(()=>new Promise(r=>setTimeout(r,250)));
+  await tmdbSearchPoster._q;
   async function call(p){ const u=new URL("https://api.themoviedb.org/3/search/movie"); u.searchParams.set("api_key",TMDB_API_KEY); for(const [k,v] of Object.entries(p)) u.searchParams.set(k,v); const r=await fetch(u); if(!r.ok) throw 0; return r.json(); }
   try{
     let j=await call({query:title, year:String(year||"").slice(0,4)}); let hit=(j.results||[])[0];
     if(!hit||!hit.poster_path){ j=await call({query:title}); hit=(j.results||[])[0]; }
-    const poster=hit?.poster_path||null; TMDB_CACHE[k]=TMDB_CACHE[k]||{}; TMDB_CACHE[k].poster=poster; saveCache(); return poster;
+    const poster=hit?.poster_path||null;
+    TMDB_CACHE[k]=TMDB_CACHE[k]||{}; TMDB_CACHE[k].poster=poster; saveCache();
+    return poster;
   }catch{ return null; }
 }
 async function ensurePoster(item){
@@ -70,29 +72,44 @@ async function ensurePoster(item){
   return "";
 }
 
-/* ====== CSV PARSE ====== */
+/* ================== CSV + LOAD ================== */
 async function fetchMaybe(url){ try{ const r=await fetch(url,{cache:"no-store"}); if(!r.ok) return null; return await r.text(); }catch{ return null; } }
 function splitCSV(str,delim=","){ const out=[]; let cur="",q=false; for(let i=0;i<str.length;i++){ const ch=str[i]; if(ch==='"'){ q=!q; continue; } if(ch===delim && !q){ out.push(cur); cur=""; continue; } cur+=ch; } out.push(cur); return out; }
-function parseCSV(text){ const lines=text.split(/\r?\n/).filter(l=>l.trim()); const header=lines[0]; const delim=header.includes("\t")? "\t":","; const cols=header.split(delim).map(s=>s.trim().toLowerCase()); const out=[]; for(let i=1;i<lines.length;i++){ const row=splitCSV(lines[i],delim); const rec={}; cols.forEach((c,idx)=>rec[c]=(row[idx]??"").trim()); out.push(rec);} return {cols,rows:out}; }
-function coerceFlags(s){ const set=new Set(String(s||"").toLowerCase().split(/[,\s]+/).filter(Boolean)); return {
+function parseCSV(text){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim()); if(lines.length<2) return {cols:[],rows:[]};
+  const header=lines[0]; const delim=header.includes("\t")? "\t":",";
+  const cols=header.split(delim).map(s=>s.trim().toLowerCase());
+  const out=[]; for(let i=1;i<lines.length;i++){ const raw=lines[i]; if(!raw.trim()) continue; const row=splitCSV(raw,delim); const rec={}; cols.forEach((c,idx)=>rec[c]=(row[idx]??"").trim()); out.push(rec); }
+  return {cols,rows:out};
+}
+function coerceFlags(s){ const set=new Set(String(s||"").toLowerCase().split(/[,\s;|]+/).filter(Boolean)); return {
   theme_witchy:set.has("witchy"), theme_body_horror:set.has("body"), theme_folk:set.has("folk"),
   theme_found_footage:set.has("found"), theme_neon:set.has("neon"),
-  extreme_gore:set.has("gore"), sexual_violence:set.has("sv"), kids_in_peril:set.has("kids")
+  extreme_gore:set.has("gore"), sexual_violence:set.has("sv")||set.has("sexual-violence"), kids_in_peril:set.has("kids")
 };}
 
-/* ====== LOAD DATA ====== */
 function loadBanished(){ try{ const raw=localStorage.getItem("mr_banished"); if(!raw) return; const obj=JSON.parse(raw); if(obj.date===todayKey()) banished=obj; }catch{} }
 function saveBanished(){ localStorage.setItem("mr_banished", JSON.stringify(banished)); }
 function idFor(m){ return `${m.title||""}::${m.year||""}`; }
+
+/* Demo deck so buttons always work */
+const DEMO = [
+  {title:"Tetsuo: The Iron Man", year:"1989", link:"https://boxd.it/ZoM", tagline:"Flesh welded to steel; body becomes weaponized noise.", poster:"/qrs", runtime:67, flags:{theme_neon:true}, cursed:70, spooky:25, cozy:5},
+  {title:"Night of the Demons", year:"1988", link:"https://boxd.it/1wLO", tagline:"Punk party, demon lipstick, cemetery chaos.", poster:"", runtime:90, flags:{theme_neon:true}, cursed:60, spooky:35, cozy:5},
+  {title:"Valerie and Her Week of Wonders", year:"1970", link:"https://boxd.it/NsC", tagline:"Ethereal puberty fairy tale with lace and fangs.", poster:"", runtime:77, flags:{theme_folk:true}, cursed:35, spooky:35, cozy:30}
+];
 
 async function loadData(){
   try{
     loadBanished();
 
+    // 1) movies.json
     let js = await fetchMaybe("./movies.json?v="+Date.now());
     if (js){
       MOVIES = JSON.parse(js);
+      setBanner("");
     } else {
+      // 2) data/movies.csv
       let enriched = await fetchMaybe("./data/movies.csv?v="+Date.now());
       if (enriched){
         const {rows}=parseCSV(enriched);
@@ -101,39 +118,48 @@ async function loadData(){
           link:r["letterboxd uri"]||r["uri"]||"", tagline:r["tagline"]||"",
           poster:r["poster"]||"", runtime:r["runtime"]?Number(r["runtime"]):null,
           flags:coerceFlags(r["flags"]||""),
-          cursed: r["cursed"]? Number(r["cursed"]) : 0,
-          spooky: r["spooky"]? Number(r["spooky"]) : 0,
-          cozy:   r["cozy"]?   Number(r["cozy"])   : 0
+          cursed: Number(r["cursed"]||0), spooky: Number(r["spooky"]||0), cozy: Number(r["cozy"]||0)
         }));
+        if(!MOVIES.length) setBanner("Loaded data/movies.csv but found 0 rows — check headers.");
+        else setBanner("");
       } else {
-        const base = await fetchMaybe("./data/watchlist.csv?v="+Date.now());
-        if(!base) throw new Error("No movies.json or CSV found");
-        const {rows}=parseCSV(base);
-        MOVIES = rows.map(r=>({
-          title:r["name"]||"", year:(r["year"]||"").slice(0,4),
-          link:r["letterboxd uri"]||"", tagline:"",
-          poster:"", runtime:null, flags:{}, cursed:33, spooky:33, cozy:34
-        }));
+        // 3) data/watchlist.csv (fallback)
+        let base = await fetchMaybe("./data/watchlist.csv?v="+Date.now());
+        if(base){
+          const {rows}=parseCSV(base);
+          MOVIES = rows.map(r=>({
+            title:r["name"]||"", year:(r["year"]||"").slice(0,4),
+            link:r["letterboxd uri"]||"", tagline:"",
+            poster:"", runtime:null, flags:{}, cursed:33, spooky:33, cozy:34
+          }));
+          setBanner("Using watchlist.csv (no vibes/tags). Add data/movies.csv for full features.");
+        } else {
+          // 4) demo
+          MOVIES = DEMO.slice();
+          setBanner("No movies.json or CSV found → loaded a tiny demo deck. Place /data/movies.csv in the repo root/data folder.");
+        }
       }
     }
 
     $("#total").textContent = MOVIES.length;
     rebuildDeck();
-  }catch(e){ console.error(e); setUIError("Data not loaded yet."); }
+  }catch(e){
+    console.error(e);
+    setBanner("Data not loaded yet. Check file paths and CSV headers.");
+  }
 }
 
-/* ====== VIBE MATH ====== */
+/* ================== VIBE MATH ================== */
 function normTriple(c,s,z){ c=Math.max(0,c||0); s=Math.max(0,s||0); z=Math.max(0,z||0); const sum=c+s+z; if(sum<=0) return {c:33,s:33,z:34}; return {c:100*c/sum, s:100*s/sum, z:100*z/sum}; }
 function distTriple(a,b){ const A=normTriple(a.c,a.s,a.z); const B=normTriple(b.c,b.s,b.z); const dx=(A.c-B.c)/100, dy=(A.s-B.s)/100, dz=(A.z-B.z)/100; return Math.sqrt(dx*dx + dy*dy + dz*dz); }
-function band(){ return VARIETY==="T"?0.18: VARIETY==="M"?0.32:0.55; } // lower = tighter
+function band(){ return VARIETY==="T"?0.18: VARIETY==="M"?0.32:0.55; }
 function weightFor(movie, target){
   const m={c:movie.cursed||0, s:movie.spooky||0, z:movie.cozy||0};
   const d=distTriple(m, target);
-  const w=Math.exp(-0.5*Math.pow(d/band(),2));
-  return w;
+  return Math.exp(-0.5*Math.pow(d/band(),2));
 }
 
-/* ====== FILTER PASS ====== */
+/* ================== FILTERS ================== */
 function presetPass(item){
   if (ACTIVE_PRESET==="none") return true;
   const f=item.flags||{};
@@ -160,10 +186,12 @@ function contentPass(item){
   const f=item.flags||{}; if(FILTERS.noGore&&f.extreme_gore)return false; if(FILTERS.noSV&&f.sexual_violence)return false; if(FILTERS.noKids&&f.kids_in_peril)return false; return true;
 }
 
-/* ====== DECK ====== */
+/* ================== DECK ================== */
 function rebuildDeck(){
-  if(!MOVIES.length) return;
-  const todaysBan=(banished.date===todayKey())?new Set(banished.ids):new Set();
+  if(!MOVIES.length){ $("#left").textContent=0; $("#deckCountMini").textContent="Deck: 0"; return; }
+
+  if(banished.date!==todayKey()) banished={date:todayKey(), ids:[]};
+  const todaysBan=new Set(banished.ids);
 
   let cands = MOVIES.map((m,i)=>({m,i}))
     .filter(({m})=>presetPass(m)&&!todaysBan.has(idFor(m))&&themePass(m)&&contentPass(m))
@@ -174,13 +202,12 @@ function rebuildDeck(){
     if(!cands.length) cands=MOVIES.map((_,i)=>i);
   }
 
-  // FIXED: proper shuffle (this was the crash)
+  // Proper shuffle
   for(let i=cands.length-1;i>0;i--){
     const j=Math.floor(Math.random()*(i+1));
     [cands[i], cands[j]] = [cands[j], cands[i]];
   }
 
-  // Weighted by vibe distance
   const deck=[], used=new Set(), MAX=Math.min(80,cands.length);
   for(let n=0;n<MAX;n++){
     const pool=cands.filter(i=>!used.has(i)); if(!pool.length) break;
@@ -195,12 +222,11 @@ function rebuildDeck(){
   $("#left").textContent = DECK.length;
   $("#deckCountMini").textContent = "Deck: " + DECK.length;
   updateResetVisibility();
-  setUIError("");
+  setBanner("");
 }
 
-/* ====== PICK / REROLL ====== */
 function safeDealIndex(){ if(!DECK.length) rebuildDeck(); let idx=DECK.pop(); if(idx==null||isNaN(idx)) idx=Math.floor(Math.random()*(MOVIES.length||1)); return idx; }
-function dealOne(){ if(!MOVIES.length){ setUIError("Data not loaded yet."); return; } const idx=safeDealIndex(); lastPickIndex=idx; dealtOnce=true; $("#left").textContent=Math.max(0,DECK.length); render(MOVIES[idx]); updateResetVisibility(); setUIError(""); haptics("light"); }
+function dealOne(){ if(!MOVIES.length){ setBanner("No data loaded yet. Add /data/movies.csv or /movies.json."); return; } const idx=safeDealIndex(); lastPickIndex=idx; dealtOnce=true; $("#left").textContent=Math.max(0,DECK.length); render(MOVIES[idx]); updateResetVisibility(); setBanner(""); haptics("light"); }
 function rerollNearby(){
   if(lastPickIndex==null){ dealOne(); return; }
   const curr=MOVIES[lastPickIndex];
@@ -217,7 +243,7 @@ function rerollNearby(){
   const idx=pool[Math.floor(Math.random()*pool.length)]; lastPickIndex=idx; render(MOVIES[idx]); haptics("mid");
 }
 
-/* ====== BANISH (250ms hold) ====== */
+/* ================== BANISH ================== */
 let lpTimer=null; const infoLP=$("#longPressArea");
 ["touchstart","mousedown"].forEach(e=>infoLP.addEventListener(e,()=>{ lpTimer=setTimeout(banishCurrent,250); },{passive:true}));
 ["touchend","touchcancel","mouseup","mouseleave"].forEach(e=>infoLP.addEventListener(e,()=>clearTimeout(lpTimer)));
@@ -230,13 +256,13 @@ function banishCurrent(){
 }
 function undoBanish(){ if(banished.date!==todayKey()||!banished.ids.length) return; banished.ids.pop(); saveBanished(); showToast("Undo ✓"); rebuildDeck(); }
 
-/* ====== PREFETCH NEXT ====== */
+/* ================== PREFETCH ================== */
 async function prefetchNextPosters(n=3){
   const peek=DECK.slice(-n);
   for(const idx of peek){ const m=MOVIES[idx]; if(m && !m.poster){ ensurePoster(m); } }
 }
 
-/* ====== VIBE BADGE (readout triangle for current pick) ====== */
+/* ================== BADGE ================== */
 function renderVibeBadge(el, m){
   const w=180, h=156;
   const top   = {x:w/2, y:10};
@@ -260,7 +286,7 @@ function renderVibeBadge(el, m){
   </svg>`;
 }
 
-/* ====== RENDER CARD ====== */
+/* ================== RENDER ================== */
 function links(container,item){
   container.innerHTML="";
   const lb=document.createElement("a"); lb.textContent="Open on Letterboxd"; lb.href=item.link||"#"; lb.target="_blank"; lb.rel="noopener";
@@ -283,11 +309,10 @@ async function render(item){
 
   renderVibeBadge($("#vibeBadge"), item);
   links($("#linksRow"), item);
-
   prefetchNextPosters(3);
 }
 
-/* ====== SHARE (poster postcard; fallback to native share text+link) ====== */
+/* ================== SHARE ================== */
 async function shareCurrent(){
   if(lastPickIndex==null) return; const m=MOVIES[lastPickIndex];
   const posterPath = await ensurePoster(m); const posterUrl = posterURL(posterPath||"", "w500");
@@ -297,17 +322,13 @@ async function shareCurrent(){
     ctx.fillStyle="#0d0d0d"; ctx.fillRect(0,0,W,H);
     const PX=60, PW=W-120, PH=Math.round(PW*1.5), PY=60;
     roundRect(ctx,PX,PY,PW,PH,24); ctx.save(); ctx.clip(); ctx.drawImage(img,PX,PY,PW,PH); ctx.restore();
-    // title + tagline
     ctx.fillStyle="#eafff3"; ctx.font="bold 44px system-ui,-apple-system,Segoe UI,Inter"; wrapText(ctx, m.title||"Untitled", 60, 990, W-120, 52);
     ctx.fillStyle="#cfe8dc"; ctx.font="400 28px system-ui,-apple-system,Segoe UI,Inter"; wrapText(ctx, (m.tagline||"").trim(), 60, 1050, W-120, 36);
-    // vibe chips
     drawChip(ctx, `Cursed ${m.cursed||0}%`, 60, 1150);
     drawChip(ctx, `Spooky ${m.spooky||0}%`, 270, 1150);
     drawChip(ctx, `Cozy ${m.cozy||0}%`, 470, 1150);
-    // link
     ctx.fillStyle="#8fb8a5"; ctx.font="500 22px system-ui,-apple-system,Segoe UI,Inter";
     const urlText=(m.link||"").replace(/^https?:\/\//,""); ctx.fillText(urlText||"letterboxd.com", 60, 1290);
-
     const blob=await new Promise(res=>canvas.toBlob(b=>res(b),"image/png",0.92));
     const file=new File([blob], `${(m.title||"movie").replace(/\W+/g,'_')}.png`, {type:"image/png"});
     if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], text:`${m.title} — ${m.tagline||""}`, url:m.link||undefined}); return; }
@@ -323,10 +344,10 @@ function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo
 function drawChip(ctx, text, x, y){ ctx.save(); ctx.font="bold 26px system-ui,-apple-system,Segoe UI,Inter"; const padX=16; const w=ctx.measureText(text).width+padX*2; ctx.fillStyle="#18291f"; ctx.strokeStyle="#284832"; ctx.lineWidth=2; roundRect(ctx,x,y-28,w,42,18); ctx.fill(); ctx.stroke(); ctx.fillStyle="#bff7cf"; ctx.fillText(text,x+padX,y); ctx.restore(); }
 function wrapText(ctx,text,x,y,maxWidth,lineHeight){ const words=(text||"").split(/\s+/); let line=""; let dy=0; for(let n=0;n<words.length;n++){ const test=line+words[n]+" "; if(ctx.measureText(test).width>maxWidth && n>0){ ctx.fillText(line,x,y+dy); line=words[n]+" "; dy+=lineHeight; } else line=test; } ctx.fillText(line,x,y+dy); }
 
-/* ====== TOAST ====== */
+/* ================== TOAST ================== */
 function showToast(text){ const t=$("#toast"); t.textContent=text; t.classList.remove("show"); void t.offsetWidth; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),3000); }
 
-/* ====== FILTERS & PRESETS WIRES ====== */
+/* ================== FILTER WIRING ================== */
 const dlg=$("#filtersDlg");
 $("#openFilters").onclick = ()=>dlg.showModal();
 $("#closeFilters").onclick = ()=>dlg.close();
@@ -359,10 +380,9 @@ $("#presets").addEventListener("click",(e)=>{
 });
 $("#presetLock").onclick=()=>{ ACTIVE_PRESET="none"; $("#presetLock").style.display="none"; rebuildDeck(); };
 
-/* ====== TRIANGLE PAD (draggable target) ====== */
+/* ================== TRI PAD ================== */
 const pad = $("#vibePad");
 let padCanvas, ctx, padGeom;
-
 function initPad(){
   pad.innerHTML = ""; padCanvas = document.createElement("canvas");
   padCanvas.width = Math.max(160, pad.clientWidth) * devicePixelRatio;
@@ -372,7 +392,6 @@ function initPad(){
   ctx = padCanvas.getContext("2d");
   padGeom = computeGeom();
   drawPad();
-  // events
   const down = (e)=>{ moveDot(e); e.preventDefault(); dragging=true; };
   const move = (e)=>{ if(!dragging) return; moveDot(e); e.preventDefault(); };
   const up   = ()=>{ dragging=false; };
@@ -433,7 +452,7 @@ function baryToPoint(bary, A,B,C){
 }
 function clipBary(b){ let {c,s,z}=b; c=Math.max(0,Math.min(1,c)); s=Math.max(0,Math.min(1,s)); z=Math.max(0,Math.min(1,z)); const sum=c+s+z; if(sum===0){ c=1; s=0; z=0; } else{ c/=sum; s/=sum; z/=sum; } return {c,s,z}; }
 
-/* ====== WIRES ====== */
+/* ================== WIRES ================== */
 const dlg=$("#filtersDlg");
 $("#openFilters").onclick = ()=>dlg.showModal();
 $("#closeFilters").onclick = ()=>dlg.close();
@@ -445,36 +464,6 @@ function resetDeck(){ rebuildDeck(); $("#left").textContent=DECK.length; dealtOn
 function updateResetVisibility(){ show($("#resetDeck"), dealtOnce); }
 $("#resetDeck").onclick = resetDeck;
 
-/* ====== START ====== */
+/* ================== BOOT ================== */
 initPad();
 loadData();
-
-/* ====== CARD UTIL (end) ====== */
-function links(container,item){
-  container.innerHTML="";
-  const lb=document.createElement("a"); lb.textContent="Open on Letterboxd"; lb.href=item.link||"#"; lb.target="_blank"; lb.rel="noopener";
-  container.appendChild(lb);
-  const s=document.createElement("a");
-  const q=encodeURIComponent(`${item.title} full movie site:archive.org OR site:youtube.com OR torrent`);
-  s.textContent="Where to watch (search)"; s.href="https://www.google.com/search?q="+q; s.target="_blank"; s.rel="noopener";
-  container.appendChild(s);
-}
-async function render(item){
-  setPoster($("#poster"), "/null", item.title);
-  const posterPath = await ensurePoster(item);
-  setPoster($("#poster"), posterPath || "/null", item.title);
-
-  $("#title").textContent = item.title || "Untitled";
-  const tg=(item.tagline||"").trim(); $("#taglineInline").textContent=tg; show($("#taglineInline"), !!tg);
-
-  if(item.year){ $("#year").textContent=`Year: ${item.year}`; show($("#year"),true); } else show($("#year"),false);
-  const run=item.runtime?`${item.runtime} min`:""; $("#runChip").textContent=run; show($("#runChip"), !!run);
-
-  // readout for this movie's own vibe
-  const badge = $("#vibeBadge");
-  badge.innerHTML = "";
-  renderVibeBadge(badge, item);
-
-  links($("#linksRow"), item);
-  prefetchNextPosters(3);
-}
