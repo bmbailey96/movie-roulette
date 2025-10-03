@@ -118,7 +118,7 @@ h1{margin:0;font-size:20px;letter-spacing:.2px}
 
 <script>
 /* ===== CONFIG ===== */
-const TMDB_API_KEY = "000802da6224e125437187b196cde898";   // <-- set your TMDb key here
+const TMDB_API_KEY = "000802da6224e125437187b196cde898";   // <-- put your TMDb v3 key here
 const TMDB_IMG = "https://image.tmdb.org/t/p";
 
 /* ===== helpers ===== */
@@ -155,17 +155,27 @@ function setPoster(img, path, title){
   tryOne();
 }
 
-const CACHE_KEY="mr_tmdb_cache_v13";
+const CACHE_KEY="mr_tmdb_cache_v14";
 let TMDB_CACHE={}; try{ TMDB_CACHE=JSON.parse(localStorage.getItem(CACHE_KEY)||"{}"); }catch{}
 const ck=(t,y)=> (t||"").toLowerCase()+"::"+String(y||"").slice(0,4);
 const saveCache=()=>localStorage.setItem(CACHE_KEY, JSON.stringify(TMDB_CACHE));
 const keyMissing=()=>!TMDB_API_KEY || TMDB_API_KEY.includes("PASTE_");
-function scrub(t){ return String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\(.+?\)/g,"").replace(/–.+$/,"").replace(/:.*$/,"").replace(/\s{2,}/g," ").trim(); }
+function scrub(t){ 
+  return String(t||"")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/(^|\s)(the|le|la|el)\s+/ig,"$1")
+    .replace(/\(.+?\)/g,"")
+    .replace(/–.+$/,"")
+    .replace(/:.*$/,"")
+    .replace(/\s{2,}/g," ")
+    .trim(); 
+}
 
 async function tmdbPoster(title,year){
   if(keyMissing()){ note("TMDb key missing"); banner("TMDb key missing — put it at the top of <code>index.html</code>."); return null; }
   const k=ck(title,year);
   if(TMDB_CACHE[k]?.poster){ note("cache"); return TMDB_CACHE[k].poster; }
+
   async function q(params){
     const u=new URL("https://api.themoviedb.org/3/search/movie");
     u.searchParams.set("api_key", TMDB_API_KEY);
@@ -179,27 +189,40 @@ async function tmdbPoster(title,year){
     if(!r.ok){ note("TMDb error"); return {results:[]}; }
     return r.json();
   }
-  const clean=scrub(title);
+
+  const clean = scrub(title);
+  const y = String(year||"").slice(0,4);
   const tries=[
-    {query:clean, year:String(year||"").slice(0,4)},
-    {query:clean, primary_release_year:String(year||"").slice(0,4)},
-    {query:clean.replace(/^the\s+/i,""), year:String(year||"").slice(0,4)},
-    {query:clean, year:String((+year||0)-1)},
-    {query:clean, year:String((+year||0)+1)},
-    {query:clean}
+    {query:clean, year:y},
+    {query:clean},
+    {query:clean.replace(/^the\s+/i,""), year:y},
+    {query:clean, year:String((+y||0)-1)},
+    {query:clean, year:String((+y||0)+1)}
   ];
+
   let hit=null;
   for(const t of tries){
     const j=await q(t);
-    if((j.results||[]).length){ hit=(j.results||[]).find(x=>x.poster_path)||j.results[0]; if(hit) break; }
+    if((j.results||[]).length){
+      // prefer exact year + poster_path
+      hit = (j.results||[]).find(x=>x.poster_path && (y? String(x.release_date||"").startsWith(y):true)) 
+         || (j.results||[]).find(x=>x.poster_path)
+         || j.results[0];
+      if(hit) break;
+    }
   }
   if(!hit){ note("0 results"); }
   const poster = hit?.poster_path || null;
   TMDB_CACHE[k]=TMDB_CACHE[k]||{}; TMDB_CACHE[k].poster=poster; saveCache();
   return poster;
 }
+
+function isEmptyPosterVal(v){
+  const s=String(v||"").trim().toLowerCase();
+  return !s || s==="null" || s==="nil" || s==="none" || s==="-" || s==="#n/a";
+}
 async function ensurePoster(item){
-  if(item.poster && String(item.poster).trim()) return item.poster;
+  if(!isEmptyPosterVal(item.poster)) return item.poster;
   const p=await tmdbPoster(item.title,item.year);
   return p||"";
 }
@@ -251,7 +274,7 @@ let banished={date:new Date().toISOString().slice(0,10), ids:[]}; try{const raw=
 function saveBan(){ localStorage.setItem("mr_banished", JSON.stringify(banished)); }
 
 function presetPass(m){ const f=m.flags||{}; if(ACTIVE==="none")return true; if(ACTIVE==="midnight"){ const c=[f.theme_neon,f.extreme_gore,f.theme_body_horror,f.theme_found_footage,f.theme_witchy].filter(Boolean).length; return c>=1 && (m.cursed+m.spooky)>=70; } if(ACTIVE==="cozy"){ if(f.extreme_gore||f.sexual_violence) return false; return (m.cozy||0)>=50; } if(ACTIVE==="folk"){ return (f.theme_folk||f.theme_witchy); } return true; }
-function themePass(m){ const f=m.flags||{}; if(THEME==="all")return true; if(THEME==="witch")return f.theme_witchy; if(THEME==="body")return f.theme_body_horror; if(THEME==="folk")return f.theme_folk; if(THEME==="found")return f.theme_found_footage; if(THEME==="neon")return f.theme_neon; return true; }
+function themePass(m){ return true; }
 function contentPass(m){ const f=m.flags||{}; if(FILTERS.noGore&&f.extreme_gore)return false; if(FILTERS.noSV&&f.sexual_violence)return false; if(FILTERS.noKids&&f.kids_in_peril)return false; return true; }
 
 function rebuild(){
@@ -299,17 +322,14 @@ function wire(){
   $("#reset").onclick=()=>{ rebuild(); $("#left").textContent=DECK.length; dealt=false; $("#reset").style.display="none"; };
   $("#presets").addEventListener("click",(e)=>{ const b=e.target.closest(".preset"); if(!b) return; const lock=$("#lock"); const p=b.dataset.preset; if(p==="cozy"){ ACTIVE="cozy"; TARGET={c:10,s:15,z:75}; } else if(p==="midnight"){ ACTIVE="midnight"; TARGET={c:70,s:25,z:5}; } else { ACTIVE="folk"; TARGET={c:30,s:55,z:15}; } lock.style.display="inline-block"; lock.textContent=b.textContent+" 🔒"; drawPad(); rebuild(); });
   $("#biasSeg").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON") return; VARIETY=e.target.dataset.bias; [...$("#biasSeg").children].forEach(x=>x.classList.toggle("active",x===e.target)); rebuild(); });
-  // Long-press banish
-  const area=$("#longPress"); let t=null; area.onpointerdown=()=>{ t=setTimeout(()=>{ if(lastIdx!=null){ const id=idFor(MOVIES[lastIdx]); if(!banished.ids.includes(id)){ banished.ids.push(id); saveBan(); rebuild(); deal(); toast("Banished — Undo"); } } }, 250); };
-  area.onpointerup=area.onpointerleave=()=>{ if(t){ clearTimeout(t); t=null; } };
-  $("#undo").onclick=()=>{ banished.ids.pop(); saveBan(); rebuild(); toast("Undo complete"); };
-  $("#share").onclick=shareCard;
 }
+
 function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1600); }
 
 /* pad init */
+let geom,ctx,padCanvas;
 function initPad(){
-  const host=$("#pad"); host.innerHTML=""; const c=document.createElement("canvas"); c.width=Math.max(170, host.clientWidth||200)*devicePixelRatio; c.height=c.width*(9/11); c.style.width="100%"; c.style.height="100%"; host.appendChild(c); pad=c; ctx=c.getContext("2d"); geom=geomOf(); drawPad();
+  const host=$("#pad"); host.innerHTML=""; const c=document.createElement("canvas"); c.width=Math.max(170, host.clientWidth||200)*devicePixelRatio; c.height=c.width*(9/11); c.style.width="100%"; c.style.height="100%"; host.appendChild(c); padCanvas=c; ctx=c.getContext("2d"); geom=geomOf(); drawPad();
   let drag=false; const down=(e)=>{ move(e); drag=true; e.preventDefault(); }; const move=(e)=>{ if(!drag) return; const r=c.getBoundingClientRect(); const px=(e.touches?e.touches[0].clientX:e.clientX)-r.left; const py=(e.touches?e.touches[0].clientY:e.clientY)-r.top; const p={x:px*devicePixelRatio,y:py*devicePixelRatio}; let b=pointToBar(p,geom.top,geom.left,geom.right); b=clipBar(b); TARGET=barToNorm(b); drawPad(); }; const up=()=>{ if(drag){ drag=false; rebuild(); } };
   c.addEventListener("mousedown",down); c.addEventListener("touchstart",down,{passive:false});
   window.addEventListener("mousemove",move,{passive:false}); window.addEventListener("touchmove",move,{passive:false});
@@ -340,22 +360,12 @@ async function loadCSV(){
   $("#total").textContent=MOVIES.length;
 }
 
-/* share (text card) */
-async function shareCard(){
-  if(!lastIdx!=null) return;
-  const m=MOVIES[lastIdx]; const text=`${m.title} (${m.year})\n${m.tagline||""}\n${m.link||""}`;
-  try{
-    if(navigator.share){ await navigator.share({text,title:"Movie Roulette pick"}); }
-    else { await navigator.clipboard.writeText(text); toast("Copied to clipboard"); }
-  }catch{}
-}
-
 /* boot */
 (async function boot(){
-  initPad(); // 1) draw triangle
-  wire();    // 2) wire UI
-  await loadCSV(); // 3) load data
-  rebuild(); // 4) build deck
+  initPad();
+  wire();
+  await loadCSV();
+  rebuild();
 })();
 </script>
 </body>
