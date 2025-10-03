@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en"> 
+<html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>Movie Roulette</title> 
+<title>Movie Roulette</title>
 <meta name="theme-color" content="#0b0b0b"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
@@ -28,7 +28,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .sub{color:var(--muted);font-size:12px;margin-top:-4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .deck{color:#cfe;font-size:12px;padding:6px 10px;border:1px solid #263;border-radius:10px;background:#0f1a14}
 
-/* Vibe bar (triangle + controls) */
+/* Vibe bar */
 .vibeBar{display:grid;grid-template-columns:200px 1fr;gap:12px;align-items:center}
 @media (max-width:680px){.vibeBar{grid-template-columns:170px 1fr}}
 .triWrap{display:grid;gap:6px}
@@ -49,7 +49,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:10px}
 /* Error banner */
 .errBanner{display:block;background:#1a1010;border:1px solid #412525;color:#ffd6d6;padding:8px 10px;border-radius:10px;font-weight:700}
 
-/* Stage (poster + info) */
+/* Stage */
 .stage{min-height:0;display:grid;grid-template-columns:56% 1fr;gap:12px;align-items:start;overflow:hidden;width:100%}
 @media (min-width:760px){.stage{grid-template-columns:minmax(48%,1fr) 1fr}}
 .poster{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:14px;background:#181818;border:1px solid #1f1f1f}
@@ -184,19 +184,19 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 
 <script>
 /* ===== CONFIG ===== */
-const TMDB_API_KEY = "000802da6224e125437187b196cde898"; // <— put your TMDb key here
+const TMDB_API_KEY = "000802da6224e125437187b196cde898"; // <-- replace with your TMDb key
 const TMDB_IMG = "https://image.tmdb.org/t/p";
 
-/* ===== LITTLE HELPERS ===== */
+/* ===== HELPERS ===== */
 const $ = s => document.querySelector(s);
 const todayKey = () => new Date().toISOString().slice(0,10);
 function haptics(kind="light"){ if(navigator.vibrate) navigator.vibrate(kind==="heavy"?[10,20,10]:kind==="mid"?12:6); }
 function setBanner(msg){ const b=$("#err"); if(!msg){ b.style.display="none"; b.textContent=""; return; } b.textContent=msg; b.style.display="block"; }
 
-/* Prevent long-press save dialog on poster interfering with banish */
+/* stop iOS save-as from long press interfering */
 document.addEventListener("contextmenu", e => { if (e.target && e.target.id==="poster") e.preventDefault(); });
 
-/* ===== POSTER UTILS ===== */
+/* ===== POSTERS ===== */
 function posterURL(path,size="w500"){
   if(!path) return "";
   const s=String(path).trim();
@@ -218,27 +218,45 @@ function setPoster(imgEl, posterPath, title){
   next();
 }
 
-/* ===== TMDb CACHE & LOOKUP ===== */
-const CACHE_KEY="mr_tmdb_cache_v8";
+/* ===== TMDb CACHE / LOOKUP ===== */
+const CACHE_KEY="mr_tmdb_cache_v9";
 let TMDB_CACHE={}; try{ TMDB_CACHE=JSON.parse(localStorage.getItem(CACHE_KEY)||"{}"); }catch{}
 const cacheKey=(title,year)=> (title||"").toLowerCase()+"::"+String(year||"").slice(0,4);
 function saveCache(){ localStorage.setItem(CACHE_KEY, JSON.stringify(TMDB_CACHE)); }
 
+function tmdbKeyLooksMissing(){ return !TMDB_API_KEY || TMDB_API_KEY.includes("PASTE_"); }
+
 async function tmdbSearchPoster(title,year){
-  if(!TMDB_API_KEY || TMDB_API_KEY.includes("PASTE_")) return null;
+  if(tmdbKeyLooksMissing()){ setBanner("TMDb key missing — add it at the top of index.html to load posters."); return null; }
   const k=cacheKey(title,year);
   if(TMDB_CACHE[k]?.poster) return TMDB_CACHE[k].poster;
+
+  // soft rate limit queue
   if(!tmdbSearchPoster._q) tmdbSearchPoster._q=Promise.resolve();
-  tmdbSearchPoster._q=tmdbSearchPoster._q.then(()=>new Promise(r=>setTimeout(r,250)));
+  tmdbSearchPoster._q=tmdbSearchPoster._q.then(()=>new Promise(r=>setTimeout(r,220)));
   await tmdbSearchPoster._q;
-  async function call(p){ const u=new URL("https://api.themoviedb.org/3/search/movie"); u.searchParams.set("api_key",TMDB_API_KEY); for(const [k,v] of Object.entries(p)) u.searchParams.set(k,v); const r=await fetch(u); if(!r.ok) throw 0; return r.json(); }
+
+  async function call(p){
+    const u=new URL("https://api.themoviedb.org/3/search/movie");
+    u.searchParams.set("api_key",TMDB_API_KEY);
+    for(const [kk,v] of Object.entries(p)) u.searchParams.set(kk,v);
+    const r=await fetch(u);
+    if(r.status===401){ setBanner("TMDb API key rejected (401). Check the key value."); return {results:[]}; }
+    if(!r.ok) throw new Error("tmdb");
+    return r.json();
+  }
   try{
-    let j=await call({query:title, year:String(year||"").slice(0,4)}); let hit=(j.results||[])[0];
+    let j=await call({query:title, year:String(year||"").slice(0,4)});
+    let hit=(j.results||[])[0];
     if(!hit||!hit.poster_path){ j=await call({query:title}); hit=(j.results||[])[0]; }
     const poster=hit?.poster_path||null;
     TMDB_CACHE[k]=TMDB_CACHE[k]||{}; TMDB_CACHE[k].poster=poster; saveCache();
+    if(!poster) setBanner(`Couldn’t find a TMDb poster for “${title}”.`);
     return poster;
-  }catch{ return null; }
+  }catch{
+    setBanner(`Search failed for “${title}”. Network or TMDb hiccup.`);
+    return null;
+  }
 }
 async function ensurePoster(item){
   if(item.poster && String(item.poster).trim()) return item.poster;
@@ -247,7 +265,7 @@ async function ensurePoster(item){
   return "";
 }
 
-/* ===== CSV / DATA LOADING ===== */
+/* ===== CSV / DATA ===== */
 async function fetchMaybe(url){ try{ const r=await fetch(url,{cache:"no-store"}); if(!r.ok) return null; return await r.text(); }catch{ return null; } }
 function splitCSV(str,delim=","){ const out=[]; let cur="",q=false; for(let i=0;i<str.length;i++){ const ch=str[i]; if(ch==='"'){ q=!q; continue; } if(ch===delim && !q){ out.push(cur); cur=""; continue; } cur+=ch; } out.push(cur); return out; }
 function parseCSV(text){
@@ -307,7 +325,7 @@ async function loadData(){
           setBanner("Using watchlist.csv (no vibes/tags). Add /data/movies.csv for full features.");
         } else {
           MOVIES = DEMO.slice();
-          setBanner("No movies.csv or JSON found → loaded a tiny demo deck. Place /data/movies.csv in /data.");
+          setBanner("No movies.csv found → using a tiny demo deck. Place /data/movies.csv in /data.");
         }
       }
     }
@@ -317,7 +335,7 @@ async function loadData(){
   }catch(e){ console.error(e); setBanner("Data not loaded yet. Check file paths and CSV headers."); }
 }
 
-/* ===== TRIANGLE (barycentric) ===== */
+/* ===== TRIANGLE ===== */
 const pad = $("#vibePad"); let padCanvas, ctx, padGeom;
 function initPad(){
   pad.innerHTML = ""; padCanvas = document.createElement("canvas");
@@ -353,7 +371,7 @@ function drawPad(){
   ctx.fillStyle="#0f1511"; ctx.strokeStyle="#284832"; ctx.lineWidth=2*devicePixelRatio;
   ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo(left.x,left.y); ctx.lineTo(right.x,right.y); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.strokeStyle="#1f3327"; ctx.lineWidth=1*devicePixelRatio; ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo((left.x+right.x)/2,left.y); ctx.stroke();
-  const p = baryToPoint(normTriple(TARGET.c,TARGET.s,TARGET.z), top,left,right);
+  const p = baryToPoint(normToBary(TARGET), top,left,right);
   ctx.fillStyle="#77ffa5"; ctx.strokeStyle="#173824"; ctx.lineWidth=2*devicePixelRatio;
   ctx.beginPath(); ctx.arc(p.x,p.y,5*devicePixelRatio,0,Math.PI*2); ctx.fill(); ctx.stroke();
 }
@@ -366,35 +384,33 @@ function moveDot(e){
   const {top,left,right}=padGeom;
   let bary = pointToBary({x,y}, top,left,right);
   bary = clipBary(bary);
-  TARGET = { c:bary.c*100, s:bary.s*100, z:bary.z*100 };
-  updatePadPercents();
-  drawPad();
+  const n = baryToNorm(bary);
+  TARGET = n; updatePadPercents(); drawPad();
 }
-function normTriple(c,s,z){ c=Math.max(0,c||0); s=Math.max(0,s||0); z=Math.max(0,z||0); const sum=c+s+z; if(sum<=0) return {c:33,s:33,z:34}; return {c:100*c/sum, s:100*s/sum, z:100*z/sum}; }
+function normToBary(n){ const sum=(n.c+n.s+n.z)||1; return {c:n.c/sum, s:n.s/sum, z:n.z/sum}; }
+function baryToNorm(b){ const s=(b.c+b.s+b.z)||1; return {c:b.c/s*100, s:b.s/s*100, z:b.z/s*100}; }
 function pointToBary(p, A,B,C){
   const v0={x:B.x-A.x, y:B.y-A.y}, v1={x:C.x-A.x, y:C.y-A.y}, v2={x:p.x-A.x, y:p.y-A.y};
   const d00=v0.x*v0.x+v0.y*v0.y, d01=v0.x*v1.x+v0.y*v1.y, d11=v1.x*v1.x+v1.y*v1.y;
   const d20=v2.x*v0.x+v2.y*v0.y, d21=v2.x*v1.x+v2.y*v1.y; const denom=d00*d11-d01*d01||1;
   let v=(d11*d20-d01*d21)/denom, w=(d00*d21-d01*d20)/denom, u=1-v-w;
-  return {c:u, s:v, z:w}; // top=cursed, left=spooky, right=cozy
+  return {c:u, s:v, z:w};
 }
-function baryToPoint(bary, A,B,C){ return { x: bary.c*A.x + bary.s*B.x + bary.z*C.x, y: bary.c*A.y + bary.s*B.y + bary.z*C.y }; }
+function baryToPoint(b, A,B,C){ return { x: b.c*A.x + b.s*B.x + b.z*C.x, y: b.c*A.y + b.s*B.y + b.z*C.y }; }
 function clipBary(b){ let {c,s,z}=b; c=Math.max(0,Math.min(1,c)); s=Math.max(0,Math.min(1,s)); z=Math.max(0,Math.min(1,z)); const sum=c+s+z; if(sum===0){ c=1; s=0; z=0; } else{ c/=sum; s/=sum; z/=sum; } return {c,s,z}; }
-function updatePadPercents(){
-  const n = normTriple(TARGET.c,TARGET.s,TARGET.z);
-  $("#pcC").textContent = Math.round(n.c) + "%";
-  $("#pcS").textContent = Math.round(n.s) + "%";
-  $("#pcZ").textContent = Math.round(n.z) + "%";
-}
+function updatePadPercents(){ const n = baryToNorm(normToBary(TARGET)); $("#pcC").textContent=Math.round(n.c)+"%"; $("#pcS").textContent=Math.round(n.s)+"%"; $("#pcZ").textContent=Math.round(n.z)+"%"; }
 
-/* ===== WEIGHTING / FILTERS ===== */
+/* ===== VIBES / WEIGHTING ===== */
+function normTriple(c,s,z){ c=Math.max(0,c||0); s=Math.max(0,s||0); z=Math.max(0,z||0); const sum=c+s+z; if(sum<=0) return {c:33,s:33,z:34}; return {c:100*c/sum, s:100*s/sum, z:100*z/sum}; }
 function distTriple(a,b){ const A=normTriple(a.c,a.s,a.z), B=normTriple(b.c,b.s,b.z); const dx=(A.c-B.c)/100, dy=(A.s-B.s)/100, dz=(A.z-B.z)/100; return Math.sqrt(dx*dx + dy*dy + dz*dz); }
 function band(){ return VARIETY==="T"?0.18: VARIETY==="M"?0.32:0.55; }
 function weightFor(movie, target){
-  const m={c:movie.cursed||0, s:movie.spooky||0, z:movie.cozy||0};
+  const m=normTriple(movie.cursed||0, movie.spooky||0, movie.cozy||0);
   const d=distTriple(m, target);
   return Math.exp(-0.5*Math.pow(d/band(),2));
 }
+
+/* ===== FILTERS / PRESETS ===== */
 function presetPass(item){
   if (ACTIVE_PRESET==="none") return true;
   const f=item.flags||{};
@@ -404,7 +420,7 @@ function presetPass(item){
   }
   if (ACTIVE_PRESET==="cozy"){
     if (f.extreme_gore || f.sexual_violence) return false;
-    return item.cozy >= 50;
+    return (item.cozy||0) >= 50;
   }
   if (ACTIVE_PRESET==="folk"){ return (f.theme_folk || f.theme_witchy); }
   return true;
@@ -421,8 +437,11 @@ function contentPass(item){
 
 /* ===== DECK / BANISH ===== */
 function idFor(m){ return `${m.title||""}::${m.year||""}`; }
+let banished = { date: todayKey(), ids: [] };
 function loadBanished(){ try{ const raw=localStorage.getItem("mr_banished"); if(!raw) return; const obj=JSON.parse(raw); if(obj.date===todayKey()) banished=obj; }catch{} }
 function saveBanished(){ localStorage.setItem("mr_banished", JSON.stringify(banished)); }
+
+let DECK=[], lastPickIndex=null, dealtOnce=false;
 
 function rebuildDeck(){
   if(!MOVIES.length){ $("#left").textContent=0; $("#deckCountMini").textContent="Deck: 0"; return; }
@@ -453,7 +472,8 @@ function rebuildDeck(){
   $("#left").textContent = DECK.length;
   $("#deckCountMini").textContent = "Deck: " + DECK.length;
   updateResetVisibility();
-  setBanner("");
+  // clear any old error if we successfully built a deck
+  if (DECK.length) setBanner("");
 }
 function safeDealIndex(){ if(!DECK.length) rebuildDeck(); let idx=DECK.pop(); if(idx==null||isNaN(idx)) idx=Math.floor(Math.random()*(MOVIES.length||1)); return idx; }
 function dealOne(){ if(!MOVIES.length){ setBanner("No data loaded yet. Add /data/movies.csv or /movies.json."); return; } const idx=safeDealIndex(); lastPickIndex=idx; dealtOnce=true; $("#left").textContent=Math.max(0,DECK.length); render(MOVIES[idx]); updateResetVisibility(); setBanner(""); haptics("light"); }
@@ -464,8 +484,8 @@ function rerollNearby(){
   for(let i=0;i<MOVIES.length;i++){
     if(i===lastPickIndex) continue;
     const m=MOVIES[i]; if(!presetPass(m)||!themePass(m)||!contentPass(m)) continue;
-    const dT=distTriple({c:m.cursed,s:m.spooky,z:m.cozy}, TARGET);
-    const dC=distTriple({c:m.cursed,s:m.spooky,z:m.cozy}, {c:curr.cursed,s:curr.spooky,z:curr.cozy});
+    const dT=distTriple(normTriple(m.cursed,m.spooky,m.cozy), TARGET);
+    const dC=distTriple(normTriple(m.cursed,m.spooky,m.cozy), normTriple(curr.cursed,curr.spooky,curr.cozy));
     if(dT<=band()*1.2 || dC<=0.18) pool.push(i);
   }
   if(!pool.length){ pool=MOVIES.map((m,i)=>i).filter(i=>i!==lastPickIndex && presetPass(MOVIES[i])&&themePass(MOVIES[i])&&contentPass(MOVIES[i])); }
@@ -473,7 +493,7 @@ function rerollNearby(){
   const idx=pool[Math.floor(Math.random()*pool.length)]; lastPickIndex=idx; render(MOVIES[idx]); haptics("mid");
 }
 
-/* Banishing */
+/* Banish */
 let lpTimer=null; const infoLP=$("#longPressArea");
 ["touchstart","mousedown"].forEach(e=>infoLP.addEventListener(e,()=>{ lpTimer=setTimeout(banishCurrent,250); },{passive:true}));
 ["touchend","touchcancel","mouseup","mouseleave"].forEach(e=>infoLP.addEventListener(e,()=>clearTimeout(lpTimer)));
@@ -486,7 +506,7 @@ function banishCurrent(){
 }
 function undoBanish(){ if(banished.date!==todayKey()||!banished.ids.length) return; banished.ids.pop(); saveBanished(); showToast("Undo ✓"); rebuildDeck(); }
 
-/* Prefetch */
+/* Prefetch next posters */
 async function prefetchNextPosters(n=3){
   const peek=DECK.slice(-n);
   for(const idx of peek){ const m=MOVIES[idx]; if(m && !m.poster){ ensurePoster(m); } }
@@ -495,10 +515,11 @@ async function prefetchNextPosters(n=3){
 /* ===== RENDER ===== */
 function chips(container, m){
   container.innerHTML="";
+  const n=normTriple(m.cursed||0, m.spooky||0, m.cozy||0);
   const mk=(t)=>{ const el=document.createElement("span"); el.className="chip"; el.textContent=t; return el; };
-  container.appendChild(mk(`Cursed ${Math.round(m.cursed||0)}%`));
-  container.appendChild(mk(`Spooky ${Math.round(m.spooky||0)}%`));
-  container.appendChild(mk(`Cozy ${Math.round(m.cozy||0)}%`));
+  container.appendChild(mk(`Cursed ${Math.round(n.c)}%`));
+  container.appendChild(mk(`Spooky ${Math.round(n.s)}%`));
+  container.appendChild(mk(`Cozy ${Math.round(n.z)}%`));
 }
 function links(container,item){
   container.innerHTML="";
@@ -537,9 +558,10 @@ async function shareCurrent(){
     roundRect(ctx,PX,PY,PW,PH,24); ctx.save(); ctx.clip(); ctx.drawImage(img,PX,PY,PW,PH); ctx.restore();
     ctx.fillStyle="#eafff3"; ctx.font="bold 44px system-ui,-apple-system,Segoe UI,Inter"; wrapText(ctx, m.title||"Untitled", 60, 990, W-120, 52);
     ctx.fillStyle="#cfe8dc"; ctx.font="400 28px system-ui,-apple-system,Segoe UI,Inter"; wrapText(ctx, (m.tagline||"").trim(), 60, 1050, W-120, 36);
-    drawChip(ctx, `Cursed ${Math.round(m.cursed||0)}%`, 60, 1150);
-    drawChip(ctx, `Spooky ${Math.round(m.spooky||0)}%`, 270, 1150);
-    drawChip(ctx, `Cozy ${Math.round(m.cozy||0)}%`, 470, 1150);
+    const n=normTriple(m.cursed||0,m.spooky||0,m.cozy||0);
+    drawChip(ctx, `Cursed ${Math.round(n.c)}%`, 60, 1150);
+    drawChip(ctx, `Spooky ${Math.round(n.s)}%`, 270, 1150);
+    drawChip(ctx, `Cozy ${Math.round(n.z)}%`, 470, 1150);
     ctx.fillStyle="#8fb8a5"; ctx.font="500 22px system-ui,-apple-system,Segoe UI,Inter";
     const urlText=(m.link||"").replace(/^https?:\/\//,""); ctx.fillText(urlText||"letterboxd.com", 60, 1290);
     const blob=await new Promise(res=>canvas.toBlob(b=>res(b),"image/png",0.92));
@@ -553,7 +575,7 @@ async function shareCurrent(){
   }
 }
 function loadImage(url){ return new Promise((res,rej)=>{ const i=new Image(); i.crossOrigin="anonymous"; i.onload=()=>res(i); i.onerror=rej; i.src=url; }); }
-function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y,h=r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
 function drawChip(ctx, text, x, y){ ctx.save(); ctx.font="bold 26px system-ui,-apple-system,Segoe UI,Inter"; const padX=16; const w=ctx.measureText(text).width+padX*2; ctx.fillStyle="#18291f"; ctx.strokeStyle="#284832"; ctx.lineWidth=2; roundRect(ctx,x,y-28,w,42,18); ctx.fill(); ctx.stroke(); ctx.fillStyle="#bff7cf"; ctx.fillText(text,x+padX,y); ctx.restore(); }
 function wrapText(ctx,text,x,y,maxWidth,lineHeight){ const words=(text||"").split(/\s+/); let line=""; let dy=0; for(let n=0;n<words.length;n++){ const test=line+words[n]+" "; if(ctx.measureText(test).width>maxWidth && n>0){ ctx.fillText(line,x,y+dy); line=words[n]+" "; dy+=lineHeight; } else line=test; } ctx.fillText(line,x,y+dy); }
 
