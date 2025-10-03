@@ -184,16 +184,14 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 
 <script>
 /* ===== CONFIG ===== */
-const TMDB_API_KEY = "000802da6224e125437187b196cde898"; // <-- replace with your TMDb key
+const TMDB_API_KEY = "000802da6224e125437187b196cde898"; // <-- REPLACE with your TMDb key
 const TMDB_IMG = "https://image.tmdb.org/t/p";
 
-/* ===== HELPERS ===== */
+/* ===== UTILS ===== */
 const $ = s => document.querySelector(s);
 const todayKey = () => new Date().toISOString().slice(0,10);
 function haptics(kind="light"){ if(navigator.vibrate) navigator.vibrate(kind==="heavy"?[10,20,10]:kind==="mid"?12:6); }
 function setBanner(msg){ const b=$("#err"); if(!msg){ b.style.display="none"; b.textContent=""; return; } b.textContent=msg; b.style.display="block"; }
-
-/* stop iOS save-as from long press interfering */
 document.addEventListener("contextmenu", e => { if (e.target && e.target.id==="poster") e.preventDefault(); });
 
 /* ===== POSTERS ===== */
@@ -206,24 +204,29 @@ function posterURL(path,size="w500"){
   return `${TMDB_IMG}/${size}${clean}`;
 }
 function setPoster(imgEl, posterPath, title){
-  const order = ["w780","w500","w342","original"];
+  const sizes=["w780","w500","w342","original"];
   let i=0;
-  function next(){ const u=posterURL(posterPath, order[i]); if(!u){ fallback(); return; } imgEl.crossOrigin="anonymous"; imgEl.src=u; }
+  function tryLoad(){
+    const url = posterURL(posterPath, sizes[i]);
+    if(!url){ fallback(); return; }
+    imgEl.crossOrigin="anonymous";
+    imgEl.src=url;
+  }
   function fallback(){
     imgEl.src=`data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900"><rect width="100%" height="100%" fill="#141414"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#5a5a5a" font-family="system-ui, -apple-system, Segoe UI, Roboto" font-size="28">NO POSTER</text></svg>')}`;
   }
-  imgEl.alt=title||"poster"; imgEl.classList.add("skeleton");
-  imgEl.onerror=()=>{ i++; (i<order.length) ? next() : (fallback(), imgEl.classList.remove("skeleton")); };
+  imgEl.alt=title||"poster";
+  imgEl.classList.add("skeleton");
+  imgEl.onerror=()=>{ i++; (i<sizes.length)? tryLoad() : (fallback(), imgEl.classList.remove("skeleton")); };
   imgEl.onload =()=> imgEl.classList.remove("skeleton");
-  next();
+  tryLoad();
 }
 
 /* ===== TMDb CACHE / LOOKUP ===== */
-const CACHE_KEY="mr_tmdb_cache_v9";
+const CACHE_KEY="mr_tmdb_cache_v10";
 let TMDB_CACHE={}; try{ TMDB_CACHE=JSON.parse(localStorage.getItem(CACHE_KEY)||"{}"); }catch{}
 const cacheKey=(title,year)=> (title||"").toLowerCase()+"::"+String(year||"").slice(0,4);
 function saveCache(){ localStorage.setItem(CACHE_KEY, JSON.stringify(TMDB_CACHE)); }
-
 function tmdbKeyLooksMissing(){ return !TMDB_API_KEY || TMDB_API_KEY.includes("PASTE_"); }
 
 async function tmdbSearchPoster(title,year){
@@ -231,7 +234,6 @@ async function tmdbSearchPoster(title,year){
   const k=cacheKey(title,year);
   if(TMDB_CACHE[k]?.poster) return TMDB_CACHE[k].poster;
 
-  // soft rate limit queue
   if(!tmdbSearchPoster._q) tmdbSearchPoster._q=Promise.resolve();
   tmdbSearchPoster._q=tmdbSearchPoster._q.then(()=>new Promise(r=>setTimeout(r,220)));
   await tmdbSearchPoster._q;
@@ -282,62 +284,17 @@ function coerceFlags(s){ const set=new Set(String(s||"").toLowerCase().split(/[,
   sexual_violence:set.has("sv")||set.has("sexual-violence"), kids_in_peril:set.has("kids")
 };}
 
+/* ===== GLOBAL STATE ===== */
 let MOVIES=[], DECK=[], lastPickIndex=null, dealtOnce=false;
 let ACTIVE_PRESET="none"; let VARIETY="T"; let THEME="all";
 let FILTERS={ noGore:false, noSV:false, noKids:false };
 let banished = { date: todayKey(), ids: [] };
 let TARGET = { c:33, s:33, z:34 };
 
-const DEMO = [
-  {title:"Tetsuo: The Iron Man", year:"1989", link:"https://boxd.it/ZoM", tagline:"Flesh welded to steel; body becomes weaponized noise.", poster:"", runtime:67, flags:{theme_neon:true}, cursed:70, spooky:25, cozy:5},
-  {title:"Night of the Demons", year:"1988", link:"https://boxd.it/1wLO", tagline:"Punk party, demon lipstick, cemetery chaos.", poster:"", runtime:90, flags:{theme_neon:true}, cursed:60, spooky:35, cozy:5},
-  {title:"Valerie and Her Week of Wonders", year:"1970", link:"https://boxd.it/NsC", tagline:"Ethereal puberty fairy tale with lace and fangs.", poster:"", runtime:77, flags:{theme_folk:true}, cursed:35, spooky:35, cozy:30}
-];
-
-async function loadData(){
-  try{
-    loadBanished();
-
-    let enriched = await fetchMaybe("./data/movies.csv?v="+Date.now());
-    if (enriched){
-      const {rows}=parseCSV(enriched);
-      MOVIES = rows.map(r=>({
-        title:r["name"]||r["title"]||"", year:(r["year"]||"").slice(0,4),
-        link:r["letterboxd uri"]||r["uri"]||"", tagline:r["tagline"]||"",
-        poster:r["poster"]||"", runtime:r["runtime"]?Number(r["runtime"]):null,
-        flags:coerceFlags(r["flags"]||""),
-        cursed:Number(r["cursed"]||0), spooky:Number(r["spooky"]||0), cozy:Number(r["cozy"]||0)
-      }));
-      if(!MOVIES.length) setBanner("Loaded data/movies.csv but found 0 rows — check headers.");
-    } else {
-      let js = await fetchMaybe("./movies.json?v="+Date.now());
-      if (js){
-        MOVIES = JSON.parse(js);
-      } else {
-        let base = await fetchMaybe("./data/watchlist.csv?v="+Date.now());
-        if(base){
-          const {rows}=parseCSV(base);
-          MOVIES = rows.map(r=>({
-            title:r["name"]||"", year:(r["year"]||"").slice(0,4),
-            link:r["letterboxd uri"]||"", tagline:"",
-            poster:"", runtime:null, flags:{}, cursed:33, spooky:33, cozy:34
-          }));
-          setBanner("Using watchlist.csv (no vibes/tags). Add /data/movies.csv for full features.");
-        } else {
-          MOVIES = DEMO.slice();
-          setBanner("No movies.csv found → using a tiny demo deck. Place /data/movies.csv in /data.");
-        }
-      }
-    }
-
-    $("#total").textContent = MOVIES.length;
-    rebuildDeck();
-  }catch(e){ console.error(e); setBanner("Data not loaded yet. Check file paths and CSV headers."); }
-}
-
 /* ===== TRIANGLE ===== */
-const pad = $("#vibePad"); let padCanvas, ctx, padGeom;
+let padCanvas, ctx, padGeom;
 function initPad(){
+  const pad=$("#vibePad");
   pad.innerHTML = ""; padCanvas = document.createElement("canvas");
   padCanvas.width = Math.max(170, pad.clientWidth) * devicePixelRatio;
   padCanvas.height = padCanvas.width * (9/11);
@@ -437,11 +394,8 @@ function contentPass(item){
 
 /* ===== DECK / BANISH ===== */
 function idFor(m){ return `${m.title||""}::${m.year||""}`; }
-let banished = { date: todayKey(), ids: [] };
 function loadBanished(){ try{ const raw=localStorage.getItem("mr_banished"); if(!raw) return; const obj=JSON.parse(raw); if(obj.date===todayKey()) banished=obj; }catch{} }
 function saveBanished(){ localStorage.setItem("mr_banished", JSON.stringify(banished)); }
-
-let DECK=[], lastPickIndex=null, dealtOnce=false;
 
 function rebuildDeck(){
   if(!MOVIES.length){ $("#left").textContent=0; $("#deckCountMini").textContent="Deck: 0"; return; }
@@ -472,7 +426,6 @@ function rebuildDeck(){
   $("#left").textContent = DECK.length;
   $("#deckCountMini").textContent = "Deck: " + DECK.length;
   updateResetVisibility();
-  // clear any old error if we successfully built a deck
   if (DECK.length) setBanner("");
 }
 function safeDealIndex(){ if(!DECK.length) rebuildDeck(); let idx=DECK.pop(); if(idx==null||isNaN(idx)) idx=Math.floor(Math.random()*(MOVIES.length||1)); return idx; }
@@ -494,9 +447,12 @@ function rerollNearby(){
 }
 
 /* Banish */
-let lpTimer=null; const infoLP=$("#longPressArea");
-["touchstart","mousedown"].forEach(e=>infoLP.addEventListener(e,()=>{ lpTimer=setTimeout(banishCurrent,250); },{passive:true}));
-["touchend","touchcancel","mouseup","mouseleave"].forEach(e=>infoLP.addEventListener(e,()=>clearTimeout(lpTimer)));
+let lpTimer=null;
+function attachLongPress(){
+  const el=$("#longPressArea");
+  ["touchstart","mousedown"].forEach(e=>el.addEventListener(e,()=>{ lpTimer=setTimeout(banishCurrent,250); },{passive:true}));
+  ["touchend","touchcancel","mouseup","mouseleave"].forEach(e=>el.addEventListener(e,()=>clearTimeout(lpTimer)));
+}
 function banishCurrent(){
   if(lastPickIndex==null) return;
   const it=MOVIES[lastPickIndex], key=idFor(it);
@@ -531,9 +487,9 @@ function links(container,item){
   container.appendChild(s);
 }
 async function render(item){
-  setPoster($("#poster"), "/null", item.title); // skeleton first
+  $("#poster").classList.add("skeleton");
   const posterPath = await ensurePoster(item);
-  setPoster($("#poster"), posterPath || "/null", item.title);
+  setPoster($("#poster"), posterPath, item.title);
 
   $("#title").textContent = item.title || "Untitled";
   const tg=(item.tagline||"").trim(); $("#taglineInline").textContent=tg; $("#taglineInline").style.display = tg ? "" : "none";
@@ -584,47 +540,78 @@ function showToast(text){ const t=$("#toast"); t.textContent=text; t.classList.r
 
 /* ===== FILTER UI ===== */
 const dlg=$("#filtersDlg");
-$("#openFilters").onclick = ()=>dlg.showModal();
-$("#closeFilters").onclick = ()=>dlg.close();
-$("#resetAll").onclick = ()=>{
-  VARIETY="T"; THEME="all"; FILTERS={noGore:false,noSV:false,noKids:false}; ACTIVE_PRESET="none";
-  TARGET={c:33,s:33,z:34}; drawPad(); updatePadPercents();
-  [...$("#biasSegTop").children].forEach(b=>b.classList.remove("active")); $("#biasSegTop").children[0].classList.add("active");
-  ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active")); $("#thAll").classList.add("active");
-  ["fNoGore","fNoSV","fNoKids"].forEach(id=>$("#"+id).classList.remove("active"));
-  $("#presetLock").style.display="none";
-  rebuildDeck(); dlg.close(); haptics("light");
-};
-$("#biasSegTop").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return; VARIETY=e.target.dataset.bias; [...$("#biasSegTop").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); haptics("light"); });
-function setTheme(w){ THEME=w; ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active")); const map={all:"thAll",witch:"thWitch",body:"thBody",folk:"thFolk",found:"thFound",neon:"thNeon"}; $("#"+map[w]).classList.add("active"); rebuildDeck(); haptics("light"); }
-$("#thAll").onclick=()=>setTheme("all"); $("#thWitch").onclick=()=>setTheme("witch"); $("#thBody").onclick=()=>setTheme("body"); $("#thFolk").onclick=()=>setTheme("folk"); $("#thFound").onclick=()=>setTheme("found"); $("#thNeon").onclick=()=>setTheme("neon");
+function wireFilters(){
+  $("#openFilters").onclick = ()=>dlg.showModal();
+  $("#closeFilters").onclick = ()=>dlg.close();
+  $("#resetAll").onclick = ()=>{
+    VARIETY="T"; THEME="all"; FILTERS={noGore:false,noSV:false,noKids:false}; ACTIVE_PRESET="none";
+    TARGET={c:33,s:33,z:34}; drawPad(); updatePadPercents();
+    [...$("#biasSegTop").children].forEach(b=>b.classList.remove("active")); $("#biasSegTop").children[0].classList.add("active");
+    ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active")); $("#thAll").classList.add("active");
+    ["fNoGore","fNoSV","fNoKids"].forEach(id=>$("#"+id).classList.remove("active"));
+    $("#presetLock").style.display="none";
+    rebuildDeck(); dlg.close(); haptics("light");
+  };
+  $("#biasSegTop").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return; VARIETY=e.target.dataset.bias; [...$("#biasSegTop").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); haptics("light"); });
+  function setTheme(w){ THEME=w; ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active")); const map={all:"thAll",witch:"thWitch",body:"thBody",folk:"thFolk",found:"thFound",neon:"thNeon"}; $("#"+map[w]).classList.add("active"); rebuildDeck(); haptics("light"); }
+  $("#thAll").onclick=()=>setTheme("all"); $("#thWitch").onclick=()=>setTheme("witch"); $("#thBody").onclick=()=>setTheme("body"); $("#thFolk").onclick=()=>setTheme("folk"); $("#thFound").onclick=()=>setTheme("found"); $("#thNeon").onclick=()=>setTheme("neon");
 
-$("#fNoGore").onclick =()=>{ FILTERS.noGore=!FILTERS.noGore; $("#fNoGore").classList.toggle("active",FILTERS.noGore); rebuildDeck(); haptics("light"); };
-$("#fNoSV").onclick   =()=>{ FILTERS.noSV=!FILTERS.noSV; $("#fNoSV").classList.toggle("active",FILTERS.noSV); rebuildDeck(); haptics("light"); };
-$("#fNoKids").onclick =()=>{ FILTERS.noKids=!FILTERS.noKids; $("#fNoKids").classList.toggle("active",FILTERS.noKids); rebuildDeck(); haptics("light"); };
+  $("#fNoGore").onclick =()=>{ FILTERS.noGore=!FILTERS.noGore; $("#fNoGore").classList.toggle("active",FILTERS.noGore); rebuildDeck(); haptics("light"); };
+  $("#fNoSV").onclick   =()=>{ FILTERS.noSV=!FILTERS.noSV; $("#fNoSV").classList.toggle("active",FILTERS.noSV); rebuildDeck(); haptics("light"); };
+  $("#fNoKids").onclick =()=>{ FILTERS.noKids=!FILTERS.noKids; $("#fNoKids").classList.toggle("active",FILTERS.noKids); rebuildDeck(); haptics("light"); };
 
-$("#presets").addEventListener("click",(e)=>{
-  const b=e.target.closest(".preset"); if(!b) return;
-  ACTIVE_PRESET=b.dataset.preset; $("#presetLock").style.display="inline-block";
-  $("#presetLock").textContent=(ACTIVE_PRESET==="midnight"?"Cult midnight":ACTIVE_PRESET==="cozy"?"Cozy offbeat":"Folk dread")+" 🔒";
-  if (ACTIVE_PRESET==="cozy") TARGET={c:10,s:15,z:75};
-  else if (ACTIVE_PRESET==="midnight") TARGET={c:70,s:25,z:5};
-  else TARGET={c:25,s:65,z:10};
-  drawPad(); updatePadPercents(); rebuildDeck(); haptics("mid");
-});
-$("#presetLock").onclick=()=>{ ACTIVE_PRESET="none"; $("#presetLock").style.display="none"; rebuildDeck(); };
-
-/* ===== WIRES ===== */
-$("#deal").onclick = ()=>dealOne();
-$("#reroll").onclick = ()=>rerollNearby();
-$("#shareCard").onclick = ()=>shareCurrent();
-$("#undo").onclick = ()=>{ undoBanish(); haptics("mid"); };
-function updateResetVisibility(){ $("#resetDeck").style.display = dealtOnce ? "" : "none"; }
-$("#resetDeck").onclick = ()=>{ rebuildDeck(); $("#left").textContent=DECK.length; dealtOnce=false; updateResetVisibility(); haptics("mid"); };
+  $("#presets").addEventListener("click",(e)=>{
+    const b=e.target.closest(".preset"); if(!b) return;
+    ACTIVE_PRESET=b.dataset.preset; $("#presetLock").style.display="inline-block";
+    $("#presetLock").textContent=(ACTIVE_PRESET==="midnight"?"Cult midnight":ACTIVE_PRESET==="cozy"?"Cozy offbeat":"Folk dread")+" 🔒";
+    if (ACTIVE_PRESET==="cozy") TARGET={c:10,s:15,z:75};
+    else if (ACTIVE_PRESET==="midnight") TARGET={c:70,s:25,z:5};
+    else TARGET={c:25,s:65,z:10};
+    drawPad(); updatePadPercents(); rebuildDeck(); haptics("mid");
+  });
+  $("#presetLock").onclick=()=>{ ACTIVE_PRESET="none"; $("#presetLock").style.display="none"; rebuildDeck(); };
+}
 
 /* ===== BOOT ===== */
-initPad();
-loadData();
+document.addEventListener("DOMContentLoaded", async () => {
+  initPad(); updatePadPercents(); wireFilters(); attachLongPress(); loadBanished();
+  await loadData();
+  // wires
+  $("#deal").onclick = ()=>dealOne();
+  $("#reroll").onclick = ()=>rerollNearby();
+  $("#shareCard").onclick = ()=>shareCurrent();
+  $("#undo").onclick = ()=>{ undoBanish(); haptics("mid"); };
+  $("#resetDeck").onclick = ()=>{ rebuildDeck(); $("#left").textContent=DECK.length; dealtOnce=false; updateResetVisibility(); haptics("mid"); };
+});
+
+async function loadData(){
+  try{
+    let enriched = await fetchMaybe("./data/movies.csv?v="+Date.now());
+    if (enriched){
+      const {rows}=parseCSV(enriched);
+      MOVIES = rows.map(r=>({
+        title:r["name"]||r["title"]||"", year:(r["year"]||"").slice(0,4),
+        link:r["letterboxd uri"]||r["uri"]||"", tagline:r["tagline"]||"",
+        poster:r["poster"]||"", runtime:r["runtime"]?Number(r["runtime"]):null,
+        flags:coerceFlags(r["flags"]||""),
+        cursed:Number(r["cursed"]||0), spooky:Number(r["spooky"]||0), cozy:Number(r["cozy"]||0)
+      }));
+      if(!MOVIES.length) setBanner("Loaded data/movies.csv but found 0 rows — check headers.");
+    } else {
+      let js = await fetchMaybe("./movies.json?v="+Date.now());
+      if (js){
+        MOVIES = JSON.parse(js);
+      } else {
+        setBanner("No movies.csv found → add /data/movies.csv with vibes/tags.");
+        MOVIES=[];
+      }
+    }
+    $("#total").textContent = MOVIES.length;
+    rebuildDeck();
+  }catch(e){ console.error(e); setBanner("Data not loaded yet. Check file paths and CSV headers."); }
+}
+
+function updateResetVisibility(){ $("#resetDeck").style.display = dealtOnce ? "" : "none"; }
 </script>
 </body>
 </html>
