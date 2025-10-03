@@ -9,10 +9,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <style>
 :root{
-  color-scheme: light dark;
-  --bg:#0b0b0b; --card:#101010; --fg:#f4f4f4; --muted:#a9b0b6; --border:#1f1f1f;
-  --accent:#77ffa5; --accentFg:#061b10; --ghost:#151515;
-  --radius:16px; --shadow:0 10px 34px rgba(0,0,0,.45);
+  color-scheme:light dark;
+  --bg:#0b0b0b; --card:#101010; --fg:#f4f4f4; --mut:#a9b0b6; --bd:#1f1f1f;
+  --acc:#77ffa5; --accFg:#061b10; --ghost:#151515;
+  --r:16px; --sh:0 10px 34px rgba(0,0,0,.45);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
@@ -20,20 +20,17 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
 .wrap{height:100dvh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 .card{
   width:min(920px,100%);height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 12px);
-  margin:auto;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);
+  margin:auto;background:var(--card);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);
   display:grid;grid-template-rows:auto auto 1fr auto;gap:10px;padding:10px;overflow:hidden
 }
 header{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .appTitle{margin:0;font-weight:1000;letter-spacing:.2px;font-size:20px}
-.sub{color:var(--muted);font-size:12px;margin-top:-4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{color:var(--mut);font-size:12px;margin-top:-4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .deck{color:#cfe;font-size:12px;padding:6px 10px;border:1px solid #263;border-radius:10px;background:#0f1a14}
 
-/* Vibe bar */
 .vibeBar{display:grid;grid-template-columns:200px 1fr;gap:12px;align-items:center}
 @media (max-width:680px){.vibeBar{grid-template-columns:170px 1fr}}
 .triWrap{display:grid;gap:6px}
-.triLegend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#a7c9bb}
-.triLegend b{color:#c8ffe0;font-weight:900}
 #vibePad{width:100%;aspect-ratio:11/9;border-radius:12px;border:1px solid #1f1f1f;background:#0f1511;position:relative}
 #vibePad canvas{width:100%;height:100%;display:block;border-radius:12px}
 .vibeSide{display:grid;gap:8px}
@@ -46,10 +43,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .preset{background:#141414;border:1px solid #262626;color:#dfffe8;font-weight:800;font-size:12px;padding:6px 10px;border-radius:999px;cursor:pointer}
 .lockChip{background:#0f1a14;border:1px solid #264;color:#bff7cf;padding:4px 8px;font-weight:800;font-size:11px;border-radius:999px}
 
-/* Error banner */
 .errBanner{display:block;background:#1a1010;border:1px solid #412525;color:#ffd6d6;padding:8px 10px;border-radius:10px;font-weight:700}
 
-/* Stage */
 .stage{min-height:0;display:grid;grid-template-columns:56% 1fr;gap:12px;align-items:start;overflow:hidden;width:100%}
 @media (min-width:760px){.stage{grid-template-columns:minmax(48%,1fr) 1fr}}
 .poster{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:14px;background:#181818;border:1px solid #1f1f1f}
@@ -63,14 +58,13 @@ header{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .links{display:grid;grid-template-columns:1fr;gap:8px}
 .links a{display:block;padding:12px;text-align:center;border-radius:12px;text-decoration:none;font-weight:900;font-size:15px;background:#1b1b1b;color:#c0ffd6;border:1px solid #2a2a2a}
 
-/* Dock */
 .dock{display:flex;gap:10px;align-items:center;padding-bottom:calc(env(safe-area-inset-bottom) + 2px);overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
 .dock .btn{scroll-snap-align:center;min-width:120px}
 .btn{appearance:none;border:0;border-radius:14px;padding:14px 12px;font-weight:900;cursor:pointer;font-size:15px}
-.btn.pri{background:var(--accent);color:var(--accentFg)}
+.btn.pri{background:var(--acc);color:var(--accFg)}
 .btn.gh{background:var(--ghost);color:var(--fg);border:1px solid #262626}
 
-dialog{border:1px solid var(--border);background:#0f0f0f;color:#fff;border-radius:16px;width:min(560px,92vw);padding:14px}
+dialog{border:1px solid var(--bd);background:#0f0f0f;color:#fff;border-radius:16px;width:min(560px,92vw);padding:14px}
 dialog::backdrop{background:rgba(0,0,0,.6)}
 .dlgHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .rowFilt{display:flex;gap:8px;flex-wrap:wrap}
@@ -100,11 +94,6 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     <section class="vibeBar">
       <div class="triWrap">
         <div id="vibePad" aria-label="Vibe triangle chooser"></div>
-        <div class="triLegend">
-          <span>🝮 Cursed <b id="pcC">33%</b></span>
-          <span>🕯️ Spooky <b id="pcS">33%</b></span>
-          <span>☕ Cozy <b id="pcZ">34%</b></span>
-        </div>
       </div>
       <div class="vibeSide">
         <div class="group">
@@ -183,18 +172,18 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 <div class="toast" id="toast">Banished — Undo</div>
 
 <script>
-/* ===== CONFIG ===== */
-const TMDB_API_KEY = "000802da6224e125437187b196cde898"; // <-- REPLACE with your TMDb key
+/* ====== CONFIG ====== */
+const TMDB_API_KEY = "000802da6224e125437187b196cde898"; // <-- put your real TMDb key here
 const TMDB_IMG = "https://image.tmdb.org/t/p";
 
-/* ===== UTILS ===== */
-const $ = s => document.querySelector(s);
-const todayKey = () => new Date().toISOString().slice(0,10);
+/* ====== HELPERS ====== */
+const $=s=>document.querySelector(s);
+const todayKey=()=>new Date().toISOString().slice(0,10);
 function haptics(kind="light"){ if(navigator.vibrate) navigator.vibrate(kind==="heavy"?[10,20,10]:kind==="mid"?12:6); }
 function setBanner(msg){ const b=$("#err"); if(!msg){ b.style.display="none"; b.textContent=""; return; } b.textContent=msg; b.style.display="block"; }
-document.addEventListener("contextmenu", e => { if (e.target && e.target.id==="poster") e.preventDefault(); });
+document.addEventListener("contextmenu",e=>{ if(e.target && e.target.id==="poster") e.preventDefault(); });
 
-/* ===== POSTERS ===== */
+/* ====== POSTERS ====== */
 function posterURL(path,size="w500"){
   if(!path) return "";
   const s=String(path).trim();
@@ -222,41 +211,66 @@ function setPoster(imgEl, posterPath, title){
   tryLoad();
 }
 
-/* ===== TMDb CACHE / LOOKUP ===== */
-const CACHE_KEY="mr_tmdb_cache_v10";
+/* Smarter TMDb search */
+const CACHE_KEY="mr_tmdb_cache_v11";
 let TMDB_CACHE={}; try{ TMDB_CACHE=JSON.parse(localStorage.getItem(CACHE_KEY)||"{}"); }catch{}
 const cacheKey=(title,year)=> (title||"").toLowerCase()+"::"+String(year||"").slice(0,4);
 function saveCache(){ localStorage.setItem(CACHE_KEY, JSON.stringify(TMDB_CACHE)); }
-function tmdbKeyLooksMissing(){ return !TMDB_API_KEY || TMDB_API_KEY.includes("PASTE_"); }
+const tmdbKeyMissing=()=> !TMDB_API_KEY || TMDB_API_KEY.includes("PASTE_");
+
+function scrubTitle(t){
+  return String(t||"")
+    .replace(/\(.+?\)/g,"")        // remove parentheses
+    .replace(/:.*$/,"")            // after colon
+    .replace(/–.+$/,"")            // after dash
+    .replace(/\bpart\s+[ivx]+\b/gi,"") // remove “part viii” etc
+    .replace(/\s{2,}/g," ")
+    .trim();
+}
 
 async function tmdbSearchPoster(title,year){
-  if(tmdbKeyLooksMissing()){ setBanner("TMDb key missing — add it at the top of index.html to load posters."); return null; }
+  if(tmdbKeyMissing()){ setBanner("TMDb key missing — add it at the top of index.html to load posters."); return null; }
   const k=cacheKey(title,year);
   if(TMDB_CACHE[k]?.poster) return TMDB_CACHE[k].poster;
 
+  // gentle throttle
   if(!tmdbSearchPoster._q) tmdbSearchPoster._q=Promise.resolve();
   tmdbSearchPoster._q=tmdbSearchPoster._q.then(()=>new Promise(r=>setTimeout(r,220)));
   await tmdbSearchPoster._q;
 
-  async function call(p){
+  async function call(params){
     const u=new URL("https://api.themoviedb.org/3/search/movie");
     u.searchParams.set("api_key",TMDB_API_KEY);
-    for(const [kk,v] of Object.entries(p)) u.searchParams.set(kk,v);
+    u.searchParams.set("include_adult","true");
+    u.searchParams.set("language","en-US");
+    for(const [kk,v] of Object.entries(params)) if(v!=null && v!=="") u.searchParams.set(kk,String(v));
     const r=await fetch(u);
     if(r.status===401){ setBanner("TMDb API key rejected (401). Check the key value."); return {results:[]}; }
     if(!r.ok) throw new Error("tmdb");
     return r.json();
   }
+
+  const clean = scrubTitle(title);
+  const tries = [
+    {query:clean, year:String(year||"").slice(0,4)},
+    {query:clean, primary_release_year:String(year||"").slice(0,4)},
+    {query:clean, year: String((Number(year)||0)-1)},
+    {query:clean, year: String((Number(year)||0)+1)},
+    {query:clean}
+  ];
   try{
-    let j=await call({query:title, year:String(year||"").slice(0,4)});
-    let hit=(j.results||[])[0];
-    if(!hit||!hit.poster_path){ j=await call({query:title}); hit=(j.results||[])[0]; }
-    const poster=hit?.poster_path||null;
+    let hit=null, json=null;
+    for(const p of tries){
+      json = await call(p);
+      hit = (json.results||[]).find(r=>r.poster_path) || (json.results||[])[0];
+      if(hit) break;
+    }
+    const poster = hit?.poster_path || null;
     TMDB_CACHE[k]=TMDB_CACHE[k]||{}; TMDB_CACHE[k].poster=poster; saveCache();
     if(!poster) setBanner(`Couldn’t find a TMDb poster for “${title}”.`);
     return poster;
   }catch{
-    setBanner(`Search failed for “${title}”. Network or TMDb hiccup.`);
+    setBanner(`TMDb search failed for “${title}”. Network or CORS hiccup.`);
     return null;
   }
 }
@@ -267,7 +281,7 @@ async function ensurePoster(item){
   return "";
 }
 
-/* ===== CSV / DATA ===== */
+/* ====== CSV / DATA ====== */
 async function fetchMaybe(url){ try{ const r=await fetch(url,{cache:"no-store"}); if(!r.ok) return null; return await r.text(); }catch{ return null; } }
 function splitCSV(str,delim=","){ const out=[]; let cur="",q=false; for(let i=0;i<str.length;i++){ const ch=str[i]; if(ch==='"'){ q=!q; continue; } if(ch===delim && !q){ out.push(cur); cur=""; continue; } cur+=ch; } out.push(cur); return out; }
 function parseCSV(text){
@@ -284,14 +298,14 @@ function coerceFlags(s){ const set=new Set(String(s||"").toLowerCase().split(/[,
   sexual_violence:set.has("sv")||set.has("sexual-violence"), kids_in_peril:set.has("kids")
 };}
 
-/* ===== GLOBAL STATE ===== */
+/* ====== STATE ====== */
 let MOVIES=[], DECK=[], lastPickIndex=null, dealtOnce=false;
 let ACTIVE_PRESET="none"; let VARIETY="T"; let THEME="all";
 let FILTERS={ noGore:false, noSV:false, noKids:false };
 let banished = { date: todayKey(), ids: [] };
 let TARGET = { c:33, s:33, z:34 };
 
-/* ===== TRIANGLE ===== */
+/* ====== TRIANGLE ====== */
 let padCanvas, ctx, padGeom;
 function initPad(){
   const pad=$("#vibePad");
@@ -327,7 +341,17 @@ function drawPad(){
   ctx.clearRect(0,0,W,H);
   ctx.fillStyle="#0f1511"; ctx.strokeStyle="#284832"; ctx.lineWidth=2*devicePixelRatio;
   ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo(left.x,left.y); ctx.lineTo(right.x,right.y); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+  // center line
   ctx.strokeStyle="#1f3327"; ctx.lineWidth=1*devicePixelRatio; ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo((left.x+right.x)/2,left.y); ctx.stroke();
+
+  // corner labels
+  ctx.fillStyle="#bfe9cf"; ctx.font=`${12*devicePixelRatio}px system-ui,-apple-system,Inter`;
+  ctx.textAlign="center"; ctx.fillText("CURSED", top.x, top.y + 12*devicePixelRatio + 4);
+  ctx.textAlign="left";   ctx.fillText("SPOOKY", left.x + 6*devicePixelRatio, left.y - 6*devicePixelRatio);
+  ctx.textAlign="right";  ctx.fillText("COZY", right.x - 6*devicePixelRatio, right.y - 6*devicePixelRatio);
+
+  // dot
   const p = baryToPoint(normToBary(TARGET), top,left,right);
   ctx.fillStyle="#77ffa5"; ctx.strokeStyle="#173824"; ctx.lineWidth=2*devicePixelRatio;
   ctx.beginPath(); ctx.arc(p.x,p.y,5*devicePixelRatio,0,Math.PI*2); ctx.fill(); ctx.stroke();
@@ -341,8 +365,8 @@ function moveDot(e){
   const {top,left,right}=padGeom;
   let bary = pointToBary({x,y}, top,left,right);
   bary = clipBary(bary);
-  const n = baryToNorm(bary);
-  TARGET = n; updatePadPercents(); drawPad();
+  TARGET = baryToNorm(bary);
+  drawPad();
 }
 function normToBary(n){ const sum=(n.c+n.s+n.z)||1; return {c:n.c/sum, s:n.s/sum, z:n.z/sum}; }
 function baryToNorm(b){ const s=(b.c+b.s+b.z)||1; return {c:b.c/s*100, s:b.s/s*100, z:b.z/s*100}; }
@@ -355,9 +379,8 @@ function pointToBary(p, A,B,C){
 }
 function baryToPoint(b, A,B,C){ return { x: b.c*A.x + b.s*B.x + b.z*C.x, y: b.c*A.y + b.s*B.y + b.z*C.y }; }
 function clipBary(b){ let {c,s,z}=b; c=Math.max(0,Math.min(1,c)); s=Math.max(0,Math.min(1,s)); z=Math.max(0,Math.min(1,z)); const sum=c+s+z; if(sum===0){ c=1; s=0; z=0; } else{ c/=sum; s/=sum; z/=sum; } return {c,s,z}; }
-function updatePadPercents(){ const n = baryToNorm(normToBary(TARGET)); $("#pcC").textContent=Math.round(n.c)+"%"; $("#pcS").textContent=Math.round(n.s)+"%"; $("#pcZ").textContent=Math.round(n.z)+"%"; }
 
-/* ===== VIBES / WEIGHTING ===== */
+/* ====== VIBES / WEIGHTING ====== */
 function normTriple(c,s,z){ c=Math.max(0,c||0); s=Math.max(0,s||0); z=Math.max(0,z||0); const sum=c+s+z; if(sum<=0) return {c:33,s:33,z:34}; return {c:100*c/sum, s:100*s/sum, z:100*z/sum}; }
 function distTriple(a,b){ const A=normTriple(a.c,a.s,a.z), B=normTriple(b.c,b.s,b.z); const dx=(A.c-B.c)/100, dy=(A.s-B.s)/100, dz=(A.z-B.z)/100; return Math.sqrt(dx*dx + dy*dy + dz*dz); }
 function band(){ return VARIETY==="T"?0.18: VARIETY==="M"?0.32:0.55; }
@@ -367,7 +390,7 @@ function weightFor(movie, target){
   return Math.exp(-0.5*Math.pow(d/band(),2));
 }
 
-/* ===== FILTERS / PRESETS ===== */
+/* ====== FILTERS / PRESETS ====== */
 function presetPass(item){
   if (ACTIVE_PRESET==="none") return true;
   const f=item.flags||{};
@@ -392,10 +415,12 @@ function contentPass(item){
   const f=item.flags||{}; if(FILTERS.noGore&&f.extreme_gore)return false; if(FILTERS.noSV&&f.sexual_violence)return false; if(FILTERS.noKids&&f.kids_in_peril)return false; return true;
 }
 
-/* ===== DECK / BANISH ===== */
+/* ====== DECK / BANISH ====== */
 function idFor(m){ return `${m.title||""}::${m.year||""}`; }
 function loadBanished(){ try{ const raw=localStorage.getItem("mr_banished"); if(!raw) return; const obj=JSON.parse(raw); if(obj.date===todayKey()) banished=obj; }catch{} }
 function saveBanished(){ localStorage.setItem("mr_banished", JSON.stringify(banished)); }
+
+let DECK=[], lastPickIndex=null, dealtOnce=false;
 
 function rebuildDeck(){
   if(!MOVIES.length){ $("#left").textContent=0; $("#deckCountMini").textContent="Deck: 0"; return; }
@@ -446,7 +471,7 @@ function rerollNearby(){
   const idx=pool[Math.floor(Math.random()*pool.length)]; lastPickIndex=idx; render(MOVIES[idx]); haptics("mid");
 }
 
-/* Banish */
+/* banish */
 let lpTimer=null;
 function attachLongPress(){
   const el=$("#longPressArea");
@@ -462,13 +487,13 @@ function banishCurrent(){
 }
 function undoBanish(){ if(banished.date!==todayKey()||!banished.ids.length) return; banished.ids.pop(); saveBanished(); showToast("Undo ✓"); rebuildDeck(); }
 
-/* Prefetch next posters */
+/* prefetch */
 async function prefetchNextPosters(n=3){
   const peek=DECK.slice(-n);
   for(const idx of peek){ const m=MOVIES[idx]; if(m && !m.poster){ ensurePoster(m); } }
 }
 
-/* ===== RENDER ===== */
+/* ====== RENDER ====== */
 function chips(container, m){
   container.innerHTML="";
   const n=normTriple(m.cursed||0, m.spooky||0, m.cozy||0);
@@ -502,7 +527,7 @@ async function render(item){
   prefetchNextPosters(3);
 }
 
-/* ===== SHARE ===== */
+/* ====== SHARE ====== */
 async function shareCurrent(){
   if(lastPickIndex==null) return; const m=MOVIES[lastPickIndex];
   const posterPath = await ensurePoster(m); const posterUrl = posterURL(posterPath||"", "w500");
@@ -535,17 +560,17 @@ function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo
 function drawChip(ctx, text, x, y){ ctx.save(); ctx.font="bold 26px system-ui,-apple-system,Segoe UI,Inter"; const padX=16; const w=ctx.measureText(text).width+padX*2; ctx.fillStyle="#18291f"; ctx.strokeStyle="#284832"; ctx.lineWidth=2; roundRect(ctx,x,y-28,w,42,18); ctx.fill(); ctx.stroke(); ctx.fillStyle="#bff7cf"; ctx.fillText(text,x+padX,y); ctx.restore(); }
 function wrapText(ctx,text,x,y,maxWidth,lineHeight){ const words=(text||"").split(/\s+/); let line=""; let dy=0; for(let n=0;n<words.length;n++){ const test=line+words[n]+" "; if(ctx.measureText(test).width>maxWidth && n>0){ ctx.fillText(line,x,y+dy); line=words[n]+" "; dy+=lineHeight; } else line=test; } ctx.fillText(line,x,y+dy); }
 
-/* ===== TOAST ===== */
+/* ====== TOAST ====== */
 function showToast(text){ const t=$("#toast"); t.textContent=text; t.classList.remove("show"); void t.offsetWidth; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),3000); }
 
-/* ===== FILTER UI ===== */
+/* ====== FILTER UI ====== */
 const dlg=$("#filtersDlg");
 function wireFilters(){
   $("#openFilters").onclick = ()=>dlg.showModal();
   $("#closeFilters").onclick = ()=>dlg.close();
   $("#resetAll").onclick = ()=>{
     VARIETY="T"; THEME="all"; FILTERS={noGore:false,noSV:false,noKids:false}; ACTIVE_PRESET="none";
-    TARGET={c:33,s:33,z:34}; drawPad(); updatePadPercents();
+    TARGET={c:33,s:33,z:34}; drawPad();
     [...$("#biasSegTop").children].forEach(b=>b.classList.remove("active")); $("#biasSegTop").children[0].classList.add("active");
     ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active")); $("#thAll").classList.add("active");
     ["fNoGore","fNoSV","fNoKids"].forEach(id=>$("#"+id).classList.remove("active"));
@@ -567,16 +592,15 @@ function wireFilters(){
     if (ACTIVE_PRESET==="cozy") TARGET={c:10,s:15,z:75};
     else if (ACTIVE_PRESET==="midnight") TARGET={c:70,s:25,z:5};
     else TARGET={c:25,s:65,z:10};
-    drawPad(); updatePadPercents(); rebuildDeck(); haptics("mid");
+    drawPad(); rebuildDeck(); haptics("mid");
   });
   $("#presetLock").onclick=()=>{ ACTIVE_PRESET="none"; $("#presetLock").style.display="none"; rebuildDeck(); };
 }
 
-/* ===== BOOT ===== */
+/* ====== BOOT ====== */
 document.addEventListener("DOMContentLoaded", async () => {
-  initPad(); updatePadPercents(); wireFilters(); attachLongPress(); loadBanished();
+  initPad(); wireFilters(); attachLongPress(); loadBanished();
   await loadData();
-  // wires
   $("#deal").onclick = ()=>dealOne();
   $("#reroll").onclick = ()=>rerollNearby();
   $("#shareCard").onclick = ()=>shareCurrent();
