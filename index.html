@@ -8,26 +8,15 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <style>
-:root{
-  color-scheme:light dark;
-  --bg:#0b0b0b; --card:#101010; --fg:#f4f4f4; --mut:#a9b0b6; --bd:#1f1f1f;
-  --acc:#77ffa5; --accFg:#061b10; --ghost:#151515;
-  --r:16px; --sh:0 10px 34px rgba(0,0,0,.45);
-}
+:root{color-scheme:light dark;--bg:#0b0b0b;--card:#101010;--fg:#f4f4f4;--mut:#a9b0b6;--bd:#1f1f1f;--acc:#77ffa5;--accFg:#061b10;--ghost:#151515;--r:16px;--sh:0 10px 34px rgba(0,0,0,.45)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-  font:15px/1.45 system-ui,-apple-system,Inter,Segoe UI,Roboto,Arial,sans-serif;overflow:hidden}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,Inter,Segoe UI,Roboto,Arial,sans-serif;overflow:hidden}
 .wrap{height:100dvh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
-.card{
-  width:min(920px,100%);height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 12px);
-  margin:auto;background:var(--card);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);
-  display:grid;grid-template-rows:auto auto 1fr auto;gap:10px;padding:10px;overflow:hidden
-}
+.card{width:min(920px,100%);height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 12px);margin:auto;background:var(--card);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);display:grid;grid-template-rows:auto auto 1fr auto;gap:10px;padding:10px;overflow:hidden}
 header{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .appTitle{margin:0;font-weight:1000;letter-spacing:.2px;font-size:20px}
 .sub{color:var(--mut);font-size:12px;margin-top:-4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .deck{color:#cfe;font-size:12px;padding:6px 10px;border:1px solid #263;border-radius:10px;background:#0f1a14}
-
 .vibeBar{display:grid;grid-template-columns:200px 1fr;gap:12px;align-items:center}
 @media (max-width:680px){.vibeBar{grid-template-columns:170px 1fr}}
 .triWrap{display:grid;gap:6px}
@@ -42,9 +31,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .presets{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .preset{background:#141414;border:1px solid #262626;color:#dfffe8;font-weight:800;font-size:12px;padding:6px 10px;border-radius:999px;cursor:pointer}
 .lockChip{background:#0f1a14;border:1px solid #264;color:#bff7cf;padding:4px 8px;font-weight:800;font-size:11px;border-radius:999px}
-
-.errBanner{display:block;background:#1a1010;border:1px solid #412525;color:#ffd6d6;padding:8px 10px;border-radius:10px;font-weight:700}
-
+.errBanner{display:none;background:#1a1010;border:1px solid #412525;color:#ffd6d6;padding:10px 12px;border-radius:10px;font-weight:800}
 .stage{min-height:0;display:grid;grid-template-columns:56% 1fr;gap:12px;align-items:start;overflow:hidden;width:100%}
 @media (min-width:760px){.stage{grid-template-columns:minmax(48%,1fr) 1fr}}
 .poster{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:14px;background:#181818;border:1px solid #1f1f1f}
@@ -57,13 +44,11 @@ header{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .chip{background:#141414;border:1px solid #262626;border-radius:999px;padding:6px 10px;font-weight:800;font-size:12px;color:#d8ffe9}
 .links{display:grid;grid-template-columns:1fr;gap:8px}
 .links a{display:block;padding:12px;text-align:center;border-radius:12px;text-decoration:none;font-weight:900;font-size:15px;background:#1b1b1b;color:#c0ffd6;border:1px solid #2a2a2a}
-
 .dock{display:flex;gap:10px;align-items:center;padding-bottom:calc(env(safe-area-inset-bottom) + 2px);overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
 .dock .btn{scroll-snap-align:center;min-width:120px}
 .btn{appearance:none;border:0;border-radius:14px;padding:14px 12px;font-weight:900;cursor:pointer;font-size:15px}
 .btn.pri{background:var(--acc);color:var(--accFg)}
 .btn.gh{background:var(--ghost);color:var(--fg);border:1px solid #262626}
-
 dialog{border:1px solid var(--bd);background:#0f0f0f;color:#fff;border-radius:16px;width:min(560px,92vw);padding:14px}
 dialog::backdrop{background:rgba(0,0,0,.6)}
 .dlgHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
@@ -72,9 +57,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 .pill{background:#161616;border:1px solid #2a2a2a;border-radius:999px;padding:8px 10px;font-weight:800;font-size:13px;color:#dfffe8;cursor:pointer}
 .pill.active{background:#242a24;color:#b6ffd1}
 .kicker{color:#9ab;font-size:12px}
-
-.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);
-  background:#0f1511;border:1px solid #2a3a2f;color:#caffe0;padding:10px 12px;border-radius:12px;font-weight:800;display:none;z-index:50}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#0f1511;border:1px solid #2a3a2f;color:#caffe0;padding:10px 12px;border-radius:12px;font-weight:800;display:none;z-index:50}
 .toast.show{display:block;animation:fade 3s ease both}
 @keyframes fade{0%{opacity:0;transform:translate(-50%,8px)}10%{opacity:1;transform:translate(-50%,0)}90%{opacity:1}100%{opacity:0}}
 </style>
@@ -90,11 +73,8 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
       <div class="deck"><span id="left">0</span> left · <span id="total">0</span> total</div>
     </header>
 
-    <!-- Vibe control -->
     <section class="vibeBar">
-      <div class="triWrap">
-        <div id="vibePad" aria-label="Vibe triangle chooser"></div>
-      </div>
+      <div class="triWrap"><div id="vibePad"></div></div>
       <div class="vibeSide">
         <div class="group">
           <span class="label">Bias</span>
@@ -113,9 +93,8 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
       </div>
     </section>
 
-    <div id="err" class="errBanner" style="display:none;"></div>
+    <div id="err" class="errBanner"></div>
 
-    <!-- Result -->
     <section class="stage" aria-live="polite">
       <img id="poster" class="poster skeleton" referrerpolicy="no-referrer" alt="Movie poster"/>
       <div class="infoCol" id="longPressArea" title="Hold to banish (250ms)">
@@ -130,7 +109,6 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
       </div>
     </section>
 
-    <!-- Dock -->
     <nav class="dock">
       <button id="deal" class="btn pri">Deal</button>
       <button id="reroll" class="btn gh">Re-roll</button>
@@ -142,7 +120,6 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   </main>
 </div>
 
-<!-- Filters -->
 <dialog id="filtersDlg">
   <div class="dlgHead">
     <strong>Filters</strong>
@@ -173,17 +150,15 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 
 <script>
 /* ====== CONFIG ====== */
-const TMDB_API_KEY = "000802da6224e125437187b196cde898"; // <-- put your real TMDb key here
+const TMDB_API_KEY = "000802da6224e125437187b196cde898";   // <-- your TMDb key
 const TMDB_IMG = "https://image.tmdb.org/t/p";
 
-/* ====== HELPERS ====== */
+/* ====== SHORTCUTS ====== */
 const $=s=>document.querySelector(s);
-const todayKey=()=>new Date().toISOString().slice(0,10);
-function haptics(kind="light"){ if(navigator.vibrate) navigator.vibrate(kind==="heavy"?[10,20,10]:kind==="mid"?12:6); }
-function setBanner(msg){ const b=$("#err"); if(!msg){ b.style.display="none"; b.textContent=""; return; } b.textContent=msg; b.style.display="block"; }
-document.addEventListener("contextmenu",e=>{ if(e.target && e.target.id==="poster") e.preventDefault(); });
+function banner(html){ const b=$("#err"); b.innerHTML=html; b.style.display="block"; }
+function clearBanner(){ const b=$("#err"); b.style.display="none"; b.textContent=""; }
 
-/* ====== POSTERS ====== */
+/* ====== POSTER HELPERS (same as last version) ====== */
 function posterURL(path,size="w500"){
   if(!path) return "";
   const s=String(path).trim();
@@ -210,46 +185,20 @@ function setPoster(imgEl, posterPath, title){
   imgEl.onload =()=> imgEl.classList.remove("skeleton");
   tryLoad();
 }
-
-/* Smarter TMDb search */
-const CACHE_KEY="mr_tmdb_cache_v11";
-let TMDB_CACHE={}; try{ TMDB_CACHE=JSON.parse(localStorage.getItem(CACHE_KEY)||"{}"); }catch{}
+const CACHE_KEY="mr_tmdb_cache_v11"; let TMDB_CACHE={}; try{ TMDB_CACHE=JSON.parse(localStorage.getItem(CACHE_KEY)||"{}"); }catch{}
 const cacheKey=(title,year)=> (title||"").toLowerCase()+"::"+String(year||"").slice(0,4);
 function saveCache(){ localStorage.setItem(CACHE_KEY, JSON.stringify(TMDB_CACHE)); }
 const tmdbKeyMissing=()=> !TMDB_API_KEY || TMDB_API_KEY.includes("PASTE_");
-
-function scrubTitle(t){
-  return String(t||"")
-    .replace(/\(.+?\)/g,"")        // remove parentheses
-    .replace(/:.*$/,"")            // after colon
-    .replace(/–.+$/,"")            // after dash
-    .replace(/\bpart\s+[ivx]+\b/gi,"") // remove “part viii” etc
-    .replace(/\s{2,}/g," ")
-    .trim();
-}
-
+function scrubTitle(t){ return String(t||"").replace(/\(.+?\)/g,"").replace(/:.*$/,"").replace(/–.+$/,"").replace(/\bpart\s+[ivx]+\b/gi,"").replace(/\s{2,}/g," ").trim(); }
 async function tmdbSearchPoster(title,year){
-  if(tmdbKeyMissing()){ setBanner("TMDb key missing — add it at the top of index.html to load posters."); return null; }
-  const k=cacheKey(title,year);
-  if(TMDB_CACHE[k]?.poster) return TMDB_CACHE[k].poster;
-
-  // gentle throttle
-  if(!tmdbSearchPoster._q) tmdbSearchPoster._q=Promise.resolve();
-  tmdbSearchPoster._q=tmdbSearchPoster._q.then(()=>new Promise(r=>setTimeout(r,220)));
-  await tmdbSearchPoster._q;
-
+  if(tmdbKeyMissing()){ banner("TMDb key missing — add it at the top of index.html to load posters."); return null; }
+  const k=cacheKey(title,year); if(TMDB_CACHE[k]?.poster) return TMDB_CACHE[k].poster;
   async function call(params){
     const u=new URL("https://api.themoviedb.org/3/search/movie");
-    u.searchParams.set("api_key",TMDB_API_KEY);
-    u.searchParams.set("include_adult","true");
-    u.searchParams.set("language","en-US");
-    for(const [kk,v] of Object.entries(params)) if(v!=null && v!=="") u.searchParams.set(kk,String(v));
-    const r=await fetch(u);
-    if(r.status===401){ setBanner("TMDb API key rejected (401). Check the key value."); return {results:[]}; }
-    if(!r.ok) throw new Error("tmdb");
-    return r.json();
+    u.searchParams.set("api_key",TMDB_API_KEY); u.searchParams.set("include_adult","true"); u.searchParams.set("language","en-US");
+    for(const [kk,v] of Object.entries(params)) if(v!=null&&v!=="") u.searchParams.set(kk,String(v));
+    const r=await fetch(u); if(r.status===401){ banner("TMDb key rejected (401)."); return {results:[]}; } if(!r.ok) throw new Error("tmdb"); return r.json();
   }
-
   const clean = scrubTitle(title);
   const tries = [
     {query:clean, year:String(year||"").slice(0,4)},
@@ -259,383 +208,165 @@ async function tmdbSearchPoster(title,year){
     {query:clean}
   ];
   try{
-    let hit=null, json=null;
-    for(const p of tries){
-      json = await call(p);
-      hit = (json.results||[]).find(r=>r.poster_path) || (json.results||[])[0];
-      if(hit) break;
-    }
-    const poster = hit?.poster_path || null;
-    TMDB_CACHE[k]=TMDB_CACHE[k]||{}; TMDB_CACHE[k].poster=poster; saveCache();
-    if(!poster) setBanner(`Couldn’t find a TMDb poster for “${title}”.`);
-    return poster;
-  }catch{
-    setBanner(`TMDb search failed for “${title}”. Network or CORS hiccup.`);
-    return null;
-  }
+    let hit=null; for(const p of tries){ const json=await call(p); hit=(json.results||[]).find(r=>r.poster_path)||json.results?.[0]; if(hit) break; }
+    const poster = hit?.poster_path || null; TMDB_CACHE[k]=TMDB_CACHE[k]||{}; TMDB_CACHE[k].poster=poster; saveCache(); return poster;
+  }catch{ banner(`TMDb search failed for “${title}”.`); return null; }
 }
-async function ensurePoster(item){
-  if(item.poster && String(item.poster).trim()) return item.poster;
-  const found=await tmdbSearchPoster(item.title,item.year);
-  if(found){ item.poster=found; return found; }
-  return "";
-}
+async function ensurePoster(item){ if(item.poster && String(item.poster).trim()) return item.poster; const found=await tmdbSearchPoster(item.title,item.year); if(found){ item.poster=found; return found; } return ""; }
 
-/* ====== CSV / DATA ====== */
-async function fetchMaybe(url){ try{ const r=await fetch(url,{cache:"no-store"}); if(!r.ok) return null; return await r.text(); }catch{ return null; } }
+/* ====== CSV ====== */
 function splitCSV(str,delim=","){ const out=[]; let cur="",q=false; for(let i=0;i<str.length;i++){ const ch=str[i]; if(ch==='"'){ q=!q; continue; } if(ch===delim && !q){ out.push(cur); cur=""; continue; } cur+=ch; } out.push(cur); return out; }
 function parseCSV(text){
   const lines=text.split(/\r?\n/).filter(l=>l.trim()); if(lines.length<2) return {cols:[],rows:[]};
-  const header=lines[0]; const delim=header.includes("\t")? "\t":",";
-  const cols=header.split(delim).map(s=>s.trim().toLowerCase());
-  const out=[]; for(let i=1;i<lines.length;i++){ const raw=lines[i]; if(!raw.trim()) continue; const row=splitCSV(raw,delim); const rec={}; cols.forEach((c,idx)=>rec[c]=(row[idx]??"").trim()); out.push(rec); }
-  return {cols,rows:out};
+  const header=lines[0]; const delim=header.includes("\t")? "\t":","; const cols=header.split(delim).map(s=>s.trim().toLowerCase());
+  const out=[]; for(let i=1;i<lines.length;i++){ const raw=lines[i]; if(!raw.trim()) continue; const row=splitCSV(raw,delim); const rec={}; cols.forEach((c,idx)=>rec[c]=(row[idx]??"").trim()); out.push(rec); } return {cols,rows:out};
 }
 function coerceFlags(s){ const set=new Set(String(s||"").toLowerCase().split(/[,\s;|]+/).filter(Boolean)); return {
-  theme_witchy:set.has("witchy"), theme_body_horror:set.has("body"),
-  theme_folk:set.has("folk"), theme_found_footage:set.has("found"),
-  theme_neon:set.has("neon"), extreme_gore:set.has("gore"),
+  theme_witchy:set.has("witchy"), theme_body_horror:set.has("body"), theme_folk:set.has("folk"),
+  theme_found_footage:set.has("found"), theme_neon:set.has("neon"), extreme_gore:set.has("gore"),
   sexual_violence:set.has("sv")||set.has("sexual-violence"), kids_in_peril:set.has("kids")
 };}
 
-/* ====== STATE ====== */
-let MOVIES=[], DECK=[], lastPickIndex=null, dealtOnce=false;
-let ACTIVE_PRESET="none"; let VARIETY="T"; let THEME="all";
-let FILTERS={ noGore:false, noSV:false, noKids:false };
-let banished = { date: todayKey(), ids: [] };
-let TARGET = { c:33, s:33, z:34 };
-
-/* ====== TRIANGLE ====== */
-let padCanvas, ctx, padGeom;
+/* ====== TRIANGLE CONTROL ====== */
+let padCanvas, ctx, padGeom, TARGET={c:33,s:33,z:34};
 function initPad(){
-  const pad=$("#vibePad");
-  pad.innerHTML = ""; padCanvas = document.createElement("canvas");
-  padCanvas.width = Math.max(170, pad.clientWidth) * devicePixelRatio;
-  padCanvas.height = padCanvas.width * (9/11);
-  padCanvas.style.width = "100%"; padCanvas.style.height="100%";
-  pad.appendChild(padCanvas);
-  ctx = padCanvas.getContext("2d");
-  padGeom = computeGeom();
-  drawPad();
-
-  let dragging=false;
-  const down = (e)=>{ moveDot(e); e.preventDefault(); dragging=true; };
-  const move = (e)=>{ if(!dragging) return; moveDot(e); e.preventDefault(); };
-  const up   = ()=>{ if(dragging){ dragging=false; rebuildDeck(); haptics("light"); } };
-  pad.addEventListener("mousedown", down);
-  pad.addEventListener("touchstart", down, {passive:false});
-  window.addEventListener("mousemove", move, {passive:false});
-  window.addEventListener("touchmove", move, {passive:false});
-  window.addEventListener("mouseup", up);
-  window.addEventListener("touchend", up);
-  window.addEventListener("resize", ()=>{ initPad(); });
+  const pad=$("#vibePad"); pad.innerHTML=""; padCanvas=document.createElement("canvas");
+  padCanvas.width=Math.max(170, pad.clientWidth||200)*devicePixelRatio; padCanvas.height=padCanvas.width*(9/11);
+  padCanvas.style.width="100%"; padCanvas.style.height="100%"; pad.appendChild(padCanvas); ctx=padCanvas.getContext("2d");
+  padGeom=computeGeom(); drawPad();
+  let dragging=false; const down=(e)=>{ moveDot(e); dragging=true; e.preventDefault(); };
+  const move=(e)=>{ if(!dragging) return; moveDot(e); e.preventDefault(); };
+  const up=()=>{ if(dragging){ dragging=false; rebuildDeck(); } };
+  pad.addEventListener("mousedown",down); pad.addEventListener("touchstart",down,{passive:false});
+  window.addEventListener("mousemove",move,{passive:false}); window.addEventListener("touchmove",move,{passive:false});
+  window.addEventListener("mouseup",up); window.addEventListener("touchend",up);
 }
-function computeGeom(){
-  const W=padCanvas.width, H=padCanvas.height;
-  const m=18*devicePixelRatio;
-  const top={x:W/2,y:m+4}, left={x:m,y:H-m}, right={x:W-m,y:H-m};
-  return {W,H,top,left,right};
-}
+function computeGeom(){ const W=padCanvas.width,H=padCanvas.height,m=18*devicePixelRatio; const top={x:W/2,y:m+4},left={x:m,y:H-m},right={x:W-m,y:H-m}; return {W,H,top,left,right}; }
 function drawPad(){
-  const {W,H,top,left,right}=padGeom;
-  ctx.clearRect(0,0,W,H);
+  const {W,H,top,left,right}=padGeom; ctx.clearRect(0,0,W,H);
   ctx.fillStyle="#0f1511"; ctx.strokeStyle="#284832"; ctx.lineWidth=2*devicePixelRatio;
   ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo(left.x,left.y); ctx.lineTo(right.x,right.y); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-  // center line
   ctx.strokeStyle="#1f3327"; ctx.lineWidth=1*devicePixelRatio; ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo((left.x+right.x)/2,left.y); ctx.stroke();
-
-  // corner labels
   ctx.fillStyle="#bfe9cf"; ctx.font=`${12*devicePixelRatio}px system-ui,-apple-system,Inter`;
   ctx.textAlign="center"; ctx.fillText("CURSED", top.x, top.y + 12*devicePixelRatio + 4);
-  ctx.textAlign="left";   ctx.fillText("SPOOKY", left.x + 6*devicePixelRatio, left.y - 6*devicePixelRatio);
-  ctx.textAlign="right";  ctx.fillText("COZY", right.x - 6*devicePixelRatio, right.y - 6*devicePixelRatio);
-
-  // dot
-  const p = baryToPoint(normToBary(TARGET), top,left,right);
-  ctx.fillStyle="#77ffa5"; ctx.strokeStyle="#173824"; ctx.lineWidth=2*devicePixelRatio;
-  ctx.beginPath(); ctx.arc(p.x,p.y,5*devicePixelRatio,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.textAlign="left"; ctx.fillText("SPOOKY", left.x + 6*devicePixelRatio, left.y - 6*devicePixelRatio);
+  ctx.textAlign="right"; ctx.fillText("COZY", right.x - 6*devicePixelRatio, right.y - 6*devicePixelRatio);
+  const p=baryToPoint(normToBary(TARGET), top,left,right);
+  ctx.fillStyle="#77ffa5"; ctx.strokeStyle="#173824"; ctx.lineWidth=2*devicePixelRatio; ctx.beginPath(); ctx.arc(p.x,p.y,5*devicePixelRatio,0,Math.PI*2); ctx.fill(); ctx.stroke();
 }
 function moveDot(e){
-  const rect=padCanvas.getBoundingClientRect();
-  const clientX = (e.touches? e.touches[0].clientX : e.clientX);
-  const clientY = (e.touches? e.touches[0].clientY : e.clientY);
-  const x = (clientX - rect.left) * devicePixelRatio;
-  const y = (clientY - rect.top) * devicePixelRatio;
-  const {top,left,right}=padGeom;
-  let bary = pointToBary({x,y}, top,left,right);
-  bary = clipBary(bary);
-  TARGET = baryToNorm(bary);
-  drawPad();
+  const rect=padCanvas.getBoundingClientRect(); const pX=(e.touches?e.touches[0].clientX:e.clientX)-rect.left; const pY=(e.touches?e.touches[0].clientY:e.clientY)-rect.top;
+  const x=pX*devicePixelRatio,y=pY*devicePixelRatio; const {top,left,right}=padGeom;
+  let bary=pointToBary({x,y},top,left,right); bary=clipBary(bary); TARGET=baryToNorm(bary); drawPad();
 }
-function normToBary(n){ const sum=(n.c+n.s+n.z)||1; return {c:n.c/sum, s:n.s/sum, z:n.z/sum}; }
+function normToBary(n){ const s=(n.c+n.s+n.z)||1; return {c:n.c/s, s:n.s/s, z:n.z/s}; }
 function baryToNorm(b){ const s=(b.c+b.s+b.z)||1; return {c:b.c/s*100, s:b.s/s*100, z:b.z/s*100}; }
-function pointToBary(p, A,B,C){
-  const v0={x:B.x-A.x, y:B.y-A.y}, v1={x:C.x-A.x, y:C.y-A.y}, v2={x:p.x-A.x, y:p.y-A.y};
-  const d00=v0.x*v0.x+v0.y*v0.y, d01=v0.x*v1.x+v0.y*v1.y, d11=v1.x*v1.x+v1.y*v1.y;
-  const d20=v2.x*v0.x+v2.y*v0.y, d21=v2.x*v1.x+v2.y*v1.y; const denom=d00*d11-d01*d01||1;
-  let v=(d11*d20-d01*d21)/denom, w=(d00*d21-d01*d20)/denom, u=1-v-w;
-  return {c:u, s:v, z:w};
-}
-function baryToPoint(b, A,B,C){ return { x: b.c*A.x + b.s*B.x + b.z*C.x, y: b.c*A.y + b.s*B.y + b.z*C.y }; }
-function clipBary(b){ let {c,s,z}=b; c=Math.max(0,Math.min(1,c)); s=Math.max(0,Math.min(1,s)); z=Math.max(0,Math.min(1,z)); const sum=c+s+z; if(sum===0){ c=1; s=0; z=0; } else{ c/=sum; s/=sum; z/=sum; } return {c,s,z}; }
+function pointToBary(p,A,B,C){ const v0={x:B.x-A.x,y:B.y-A.y},v1={x:C.x-A.x,y:C.y-A.y},v2={x:p.x-A.x,y:p.y-A.y},d00=v0.x*v0.x+v0.y*v0.y,d01=v0.x*v1.x+v0.y*v1.y,d11=v1.x*v1.x+v1.y*v1.y,d20=v2.x*v0.x+v2.y*v0.y,d21=v2.x*v1.x+v2.y*v1.y,den=d00*d11-d01*d01||1; let v=(d11*d20-d01*d21)/den,w=(d00*d21-d01*d20)/den,u=1-v-w; return {c:u,s:v,z:w}; }
+function baryToPoint(b,A,B,C){ return {x:b.c*A.x+b.s*B.x+b.z*C.x,y:b.c*A.y+b.s*B.y+b.z*C.y}; }
+function clipBary(b){ let {c,s,z}=b; c=Math.max(0,Math.min(1,c)); s=Math.max(0,Math.min(1,s)); z=Math.max(0,Math.min(1,z)); const sum=c+s+z; if(sum===0){ c=1;s=0;z=0; } else { c/=sum; s/=sum; z/=sum; } return {c,s,z}; }
 
-/* ====== VIBES / WEIGHTING ====== */
+/* ====== WEIGHTING / FILTERS ====== */
 function normTriple(c,s,z){ c=Math.max(0,c||0); s=Math.max(0,s||0); z=Math.max(0,z||0); const sum=c+s+z; if(sum<=0) return {c:33,s:33,z:34}; return {c:100*c/sum, s:100*s/sum, z:100*z/sum}; }
-function distTriple(a,b){ const A=normTriple(a.c,a.s,a.z), B=normTriple(b.c,b.s,b.z); const dx=(A.c-B.c)/100, dy=(A.s-B.s)/100, dz=(A.z-B.z)/100; return Math.sqrt(dx*dx + dy*dy + dz*dz); }
+function distTriple(a,b){ const A=normTriple(a.c,a.s,a.z), B=normTriple(b.c,b.s,b.z); const dx=(A.c-B.c)/100, dy=(A.s-B.s)/100, dz=(A.z-B.z)/100; return Math.sqrt(dx*dx+dy*dy+dz*dz); }
 function band(){ return VARIETY==="T"?0.18: VARIETY==="M"?0.32:0.55; }
-function weightFor(movie, target){
-  const m=normTriple(movie.cursed||0, movie.spooky||0, movie.cozy||0);
-  const d=distTriple(m, target);
-  return Math.exp(-0.5*Math.pow(d/band(),2));
-}
+function weightFor(m,t){ const n=normTriple(m.cursed||0,m.spooky||0,m.cozy||0); const d=distTriple(n,t); return Math.exp(-0.5*Math.pow(d/band(),2)); }
 
-/* ====== FILTERS / PRESETS ====== */
-function presetPass(item){
-  if (ACTIVE_PRESET==="none") return true;
-  const f=item.flags||{};
-  if (ACTIVE_PRESET==="midnight"){
-    const count=[f.theme_neon,f.extreme_gore,f.theme_body_horror,f.theme_found_footage,f.theme_witchy].filter(Boolean).length;
-    return count>=1 && (item.cursed+item.spooky)>=70;
-  }
-  if (ACTIVE_PRESET==="cozy"){
-    if (f.extreme_gore || f.sexual_violence) return false;
-    return (item.cozy||0) >= 50;
-  }
-  if (ACTIVE_PRESET==="folk"){ return (f.theme_folk || f.theme_witchy); }
-  return true;
-}
-function themePass(item){
-  const f=item.flags||{}; if(THEME==="all")return true;
-  if(THEME==="witch")return f.theme_witchy; if(THEME==="body")return f.theme_body_horror;
-  if(THEME==="folk")return f.theme_folk; if(THEME==="found")return f.theme_found_footage; if(THEME==="neon")return f.theme_neon;
-  return true;
-}
-function contentPass(item){
-  const f=item.flags||{}; if(FILTERS.noGore&&f.extreme_gore)return false; if(FILTERS.noSV&&f.sexual_violence)return false; if(FILTERS.noKids&&f.kids_in_peril)return false; return true;
-}
+let VARIETY="T", ACTIVE_PRESET="none", THEME="all", FILTERS={noGore:false,noSV:false,noKids:false};
+function presetPass(m){ const f=m.flags||{}; if(ACTIVE_PRESET==="none")return true; if(ACTIVE_PRESET==="midnight"){ const c=[f.theme_neon,f.extreme_gore,f.theme_body_horror,f.theme_found_footage,f.theme_witchy].filter(Boolean).length; return c>=1 && (m.cursed+m.spooky)>=70; } if(ACTIVE_PRESET==="cozy"){ if(f.extreme_gore||f.sexual_violence) return false; return (m.cozy||0)>=50; } if(ACTIVE_PRESET==="folk"){ return (f.theme_folk||f.theme_witchy); } return true; }
+function themePass(m){ const f=m.flags||{}; if(THEME==="all")return true; if(THEME==="witch")return f.theme_witchy; if(THEME==="body")return f.theme_body_horror; if(THEME==="folk")return f.theme_folk; if(THEME==="found")return f.theme_found_footage; if(THEME==="neon")return f.theme_neon; return true; }
+function contentPass(m){ const f=m.flags||{}; if(FILTERS.noGore&&f.extreme_gore)return false; if(FILTERS.noSV&&f.sexual_violence)return false; if(FILTERS.noKids&&f.kids_in_peril)return false; return true; }
 
-/* ====== DECK / BANISH ====== */
+/* ====== DATA / DECK ====== */
+let MOVIES=[], DECK=[], lastPickIndex=null, dealtOnce=false;
 function idFor(m){ return `${m.title||""}::${m.year||""}`; }
-function loadBanished(){ try{ const raw=localStorage.getItem("mr_banished"); if(!raw) return; const obj=JSON.parse(raw); if(obj.date===todayKey()) banished=obj; }catch{} }
+let banished = {date:new Date().toISOString().slice(0,10), ids:[]};
+try{ const raw=localStorage.getItem("mr_banished"); if(raw){ const obj=JSON.parse(raw); if(obj.date===banished.date) banished=obj; }}catch{}
 function saveBanished(){ localStorage.setItem("mr_banished", JSON.stringify(banished)); }
-
-let DECK=[], lastPickIndex=null, dealtOnce=false;
 
 function rebuildDeck(){
   if(!MOVIES.length){ $("#left").textContent=0; $("#deckCountMini").textContent="Deck: 0"; return; }
-  if(banished.date!==todayKey()) banished={date:todayKey(), ids:[]};
-  const todaysBan=new Set(banished.ids);
-
-  let cands = MOVIES.map((m,i)=>({m,i}))
-    .filter(({m})=>presetPass(m)&&!todaysBan.has(idFor(m))&&themePass(m)&&contentPass(m))
-    .map(x=>x.i);
-
-  if(!cands.length){
-    cands=MOVIES.map((m,i)=>({m,i})).filter(({m})=>presetPass(m)&&!todaysBan.has(idFor(m))).map(x=>x.i);
-    if(!cands.length) cands=MOVIES.map((_,i)=>i);
-  }
-
-  for(let i=cands.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [cands[i], cands[j]]=[cands[j], cands[i]]; }
+  const todays=new Set(banished.ids);
+  let cands=MOVIES.map((m,i)=>({m,i})).filter(({m})=>presetPass(m)&&themePass(m)&&contentPass(m)&&!todays.has(idFor(m))).map(x=>x.i);
+  if(!cands.length){ cands=MOVIES.map((m,i)=>({m,i})).filter(({m})=>presetPass(m)&&!todays.has(idFor(m))).map(x=>x.i); if(!cands.length) cands=MOVIES.map((_,i)=>i); }
+  for(let i=cands.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [cands[i],cands[j]]=[cands[j],cands[i]]; }
   const deck=[], used=new Set(), MAX=Math.min(80,cands.length);
-  for(let n=0;n<MAX;n++){
-    const pool=cands.filter(i=>!used.has(i)); if(!pool.length) break;
-    const weights = pool.map(i=> weightFor(MOVIES[i], TARGET));
-    let sum=weights.reduce((a,b)=>a+b,0); if(sum<=0){ deck.push(pool[0]); used.add(pool[0]); continue; }
-    let r=Math.random()*sum; let pick=pool[0];
-    for(let k=0;k<pool.length;k++){ r-=weights[k]; if(r<=0){ pick=pool[k]; break; } }
-    used.add(pick); deck.push(pick);
-  }
+  for(let n=0;n<MAX;n++){ const pool=cands.filter(i=>!used.has(i)); if(!pool.length) break; const weights=pool.map(i=>weightFor(MOVIES[i],TARGET)); let sum=weights.reduce((a,b)=>a+b,0); if(sum<=0){ deck.push(pool[0]); used.add(pool[0]); continue; } let r=Math.random()*sum; let pick=pool[0]; for(let k=0;k<pool.length;k++){ r-=weights[k]; if(r<=0){ pick=pool[k]; break; } } used.add(pick); deck.push(pick); }
+  DECK=deck.length?deck:cands; $("#left").textContent=DECK.length; $("#deckCountMini").textContent="Deck: "+DECK.length; updateResetVisibility(); if(DECK.length) clearBanner();
+}
+function safeDealIndex(){ if(!DECK.length) rebuildDeck(); let idx=DECK.pop(); if(idx==null || isNaN(idx)) idx=Math.floor(Math.random()*(MOVIES.length||1)); return idx; }
 
-  DECK = deck.length? deck : cands;
-  $("#left").textContent = DECK.length;
-  $("#deckCountMini").textContent = "Deck: " + DECK.length;
-  updateResetVisibility();
-  if (DECK.length) setBanner("");
-}
-function safeDealIndex(){ if(!DECK.length) rebuildDeck(); let idx=DECK.pop(); if(idx==null||isNaN(idx)) idx=Math.floor(Math.random()*(MOVIES.length||1)); return idx; }
-function dealOne(){ if(!MOVIES.length){ setBanner("No data loaded yet. Add /data/movies.csv or /movies.json."); return; } const idx=safeDealIndex(); lastPickIndex=idx; dealtOnce=true; $("#left").textContent=Math.max(0,DECK.length); render(MOVIES[idx]); updateResetVisibility(); setBanner(""); haptics("light"); }
-function rerollNearby(){
-  if(lastPickIndex==null){ dealOne(); return; }
-  const curr=MOVIES[lastPickIndex];
-  let pool=[];
-  for(let i=0;i<MOVIES.length;i++){
-    if(i===lastPickIndex) continue;
-    const m=MOVIES[i]; if(!presetPass(m)||!themePass(m)||!contentPass(m)) continue;
-    const dT=distTriple(normTriple(m.cursed,m.spooky,m.cozy), TARGET);
-    const dC=distTriple(normTriple(m.cursed,m.spooky,m.cozy), normTriple(curr.cursed,curr.spooky,curr.cozy));
-    if(dT<=band()*1.2 || dC<=0.18) pool.push(i);
-  }
-  if(!pool.length){ pool=MOVIES.map((m,i)=>i).filter(i=>i!==lastPickIndex && presetPass(MOVIES[i])&&themePass(MOVIES[i])&&contentPass(MOVIES[i])); }
-  if(!pool.length){ pool=MOVIES.map((_,i)=>i).filter(i=>i!==lastPickIndex); }
-  const idx=pool[Math.floor(Math.random()*pool.length)]; lastPickIndex=idx; render(MOVIES[idx]); haptics("mid");
-}
-
-/* banish */
-let lpTimer=null;
-function attachLongPress(){
-  const el=$("#longPressArea");
-  ["touchstart","mousedown"].forEach(e=>el.addEventListener(e,()=>{ lpTimer=setTimeout(banishCurrent,250); },{passive:true}));
-  ["touchend","touchcancel","mouseup","mouseleave"].forEach(e=>el.addEventListener(e,()=>clearTimeout(lpTimer)));
-}
-function banishCurrent(){
-  if(lastPickIndex==null) return;
-  const it=MOVIES[lastPickIndex], key=idFor(it);
-  if(banished.date!==todayKey()) banished={date:todayKey(), ids:[]};
-  if(!banished.ids.includes(key)) banished.ids.push(key);
-  saveBanished(); showToast("Banished — Undo"); rebuildDeck(); dealOne(); haptics("heavy");
-}
-function undoBanish(){ if(banished.date!==todayKey()||!banished.ids.length) return; banished.ids.pop(); saveBanished(); showToast("Undo ✓"); rebuildDeck(); }
-
-/* prefetch */
-async function prefetchNextPosters(n=3){
-  const peek=DECK.slice(-n);
-  for(const idx of peek){ const m=MOVIES[idx]; if(m && !m.poster){ ensurePoster(m); } }
-}
-
-/* ====== RENDER ====== */
-function chips(container, m){
-  container.innerHTML="";
-  const n=normTriple(m.cursed||0, m.spooky||0, m.cozy||0);
-  const mk=(t)=>{ const el=document.createElement("span"); el.className="chip"; el.textContent=t; return el; };
-  container.appendChild(mk(`Cursed ${Math.round(n.c)}%`));
-  container.appendChild(mk(`Spooky ${Math.round(n.s)}%`));
-  container.appendChild(mk(`Cozy ${Math.round(n.z)}%`));
-}
-function links(container,item){
-  container.innerHTML="";
-  const lb=document.createElement("a"); lb.textContent="Open on Letterboxd"; lb.href=item.link||"#"; lb.target="_blank"; lb.rel="noopener";
-  container.appendChild(lb);
-  const s=document.createElement("a");
-  const q=encodeURIComponent(`${item.title} full movie site:archive.org OR site:youtube.com OR torrent`);
-  s.textContent="Where to watch (search)"; s.href="https://www.google.com/search?q="+q; s.target="_blank"; s.rel="noopener";
-  container.appendChild(s);
-}
 async function render(item){
-  $("#poster").classList.add("skeleton");
-  const posterPath = await ensurePoster(item);
-  setPoster($("#poster"), posterPath, item.title);
-
-  $("#title").textContent = item.title || "Untitled";
-  const tg=(item.tagline||"").trim(); $("#taglineInline").textContent=tg; $("#taglineInline").style.display = tg ? "" : "none";
-
+  const p=await ensurePoster(item); setPoster($("#poster"), p, item.title);
+  $("#title").textContent=item.title||"Untitled";
+  const tg=(item.tagline||"").trim(); $("#taglineInline").textContent=tg; $("#taglineInline").style.display=tg?"":"none";
   if(item.year){ $("#year").textContent=`Year: ${item.year}`; $("#year").style.display=""; } else $("#year").style.display="none";
-  const run=item.runtime?`${item.runtime} min`:""; $("#runChip").textContent=run; $("#runChip").style.display = run ? "" : "none";
-
-  chips($("#vibeChips"), item);
-  links($("#linksRow"), item);
-  prefetchNextPosters(3);
+  const run=item.runtime?`${item.runtime} min`:""; $("#runChip").textContent=run; $("#runChip").style.display=run?"":"none";
+  const chips=$("#vibeChips"); chips.innerHTML=""; const n=normTriple(item.cursed||0,item.spooky||0,item.cozy||0);
+  ["Cursed "+Math.round(n.c)+"%","Spooky "+Math.round(n.s)+"%","Cozy "+Math.round(n.z)+"%"].forEach(t=>{ const s=document.createElement("span"); s.className="chip"; s.textContent=t; chips.appendChild(s); });
+  const links=$("#linksRow"); links.innerHTML=""; const a=document.createElement("a"); a.textContent="Open on Letterboxd"; a.href=item.link||"#"; a.target="_blank"; links.appendChild(a);
+  const s=document.createElement("a"); const q=encodeURIComponent(`${item.title} full movie site:archive.org OR site:youtube.com OR torrent`); s.textContent="Where to watch (search)"; s.href="https://www.google.com/search?q="+q; s.target="_blank"; links.appendChild(s);
 }
-
-/* ====== SHARE ====== */
-async function shareCurrent(){
-  if(lastPickIndex==null) return; const m=MOVIES[lastPickIndex];
-  const posterPath = await ensurePoster(m); const posterUrl = posterURL(posterPath||"", "w500");
-  try{
-    const img = await loadImage(posterUrl);
-    const canvas=document.createElement("canvas"); const W=900,H=1350; canvas.width=W; canvas.height=H; const ctx=canvas.getContext("2d");
-    ctx.fillStyle="#0d0d0d"; ctx.fillRect(0,0,W,H);
-    const PX=60, PW=W-120, PH=Math.round(PW*1.5), PY=60;
-    roundRect(ctx,PX,PY,PW,PH,24); ctx.save(); ctx.clip(); ctx.drawImage(img,PX,PY,PW,PH); ctx.restore();
-    ctx.fillStyle="#eafff3"; ctx.font="bold 44px system-ui,-apple-system,Segoe UI,Inter"; wrapText(ctx, m.title||"Untitled", 60, 990, W-120, 52);
-    ctx.fillStyle="#cfe8dc"; ctx.font="400 28px system-ui,-apple-system,Segoe UI,Inter"; wrapText(ctx, (m.tagline||"").trim(), 60, 1050, W-120, 36);
-    const n=normTriple(m.cursed||0,m.spooky||0,m.cozy||0);
-    drawChip(ctx, `Cursed ${Math.round(n.c)}%`, 60, 1150);
-    drawChip(ctx, `Spooky ${Math.round(n.s)}%`, 270, 1150);
-    drawChip(ctx, `Cozy ${Math.round(n.z)}%`, 470, 1150);
-    ctx.fillStyle="#8fb8a5"; ctx.font="500 22px system-ui,-apple-system,Segoe UI,Inter";
-    const urlText=(m.link||"").replace(/^https?:\/\//,""); ctx.fillText(urlText||"letterboxd.com", 60, 1290);
-    const blob=await new Promise(res=>canvas.toBlob(b=>res(b),"image/png",0.92));
-    const file=new File([blob], `${(m.title||"movie").replace(/\W+/g,'_')}.png`, {type:"image/png"});
-    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], text:`${m.title} — ${m.tagline||""}`, url:m.link||undefined}); return; }
-    window.open(URL.createObjectURL(blob), "_blank");
-  }catch{
-    const text=`${m.title}${m.year?` (${m.year})`:''}\n${m.tagline||''}\n${m.link||''}`.trim();
-    if(navigator.share){ try{ await navigator.share({title:m.title||"Movie", text, url:m.link||undefined}); return; }catch{} }
-    try{ await navigator.clipboard.writeText(text); showToast("Copied details to clipboard"); }catch{ window.prompt("Copy this", text); }
-  }
+function dealOne(){
+  if(!MOVIES.length){ banner("No data loaded. See the red message above for file paths & headers."); return; }
+  if(!DECK.length){ rebuildDeck(); if(!DECK.length){ banner("Deck is empty after filtering. Loosen filters / bias."); return; } }
+  const idx=safeDealIndex(); lastPickIndex=idx; dealtOnce=true; $("#left").textContent=Math.max(0,DECK.length); render(MOVIES[idx]); updateResetVisibility();
 }
-function loadImage(url){ return new Promise((res,rej)=>{ const i=new Image(); i.crossOrigin="anonymous"; i.onload=()=>res(i); i.onerror=rej; i.src=url; }); }
-function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y,h=r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
-function drawChip(ctx, text, x, y){ ctx.save(); ctx.font="bold 26px system-ui,-apple-system,Segoe UI,Inter"; const padX=16; const w=ctx.measureText(text).width+padX*2; ctx.fillStyle="#18291f"; ctx.strokeStyle="#284832"; ctx.lineWidth=2; roundRect(ctx,x,y-28,w,42,18); ctx.fill(); ctx.stroke(); ctx.fillStyle="#bff7cf"; ctx.fillText(text,x+padX,y); ctx.restore(); }
-function wrapText(ctx,text,x,y,maxWidth,lineHeight){ const words=(text||"").split(/\s+/); let line=""; let dy=0; for(let n=0;n<words.length;n++){ const test=line+words[n]+" "; if(ctx.measureText(test).width>maxWidth && n>0){ ctx.fillText(line,x,y+dy); line=words[n]+" "; dy+=lineHeight; } else line=test; } ctx.fillText(line,x,y+dy); }
+function rerollNearby(){ if(lastPickIndex==null){ dealOne(); return; } const curr=MOVIES[lastPickIndex]; let pool=[]; for(let i=0;i<MOVIES.length;i++){ if(i===lastPickIndex) continue; const m=MOVIES[i]; if(!presetPass(m)||!themePass(m)||!contentPass(m)) continue; const dT=distTriple(normTriple(m.cursed,m.spooky,m.cozy),TARGET); const dC=distTriple(normTriple(m.cursed,m.spooky,m.cozy),normTriple(curr.cursed,curr.spooky,curr.cozy)); if(dT<=band()*1.2||dC<=0.18) pool.push(i); } if(!pool.length) pool=MOVIES.map((_,i)=>i).filter(i=>i!==lastPickIndex); const idx=pool[Math.floor(Math.random()*pool.length)]; lastPickIndex=idx; render(MOVIES[idx]); }
 
-/* ====== TOAST ====== */
-function showToast(text){ const t=$("#toast"); t.textContent=text; t.classList.remove("show"); void t.offsetWidth; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),3000); }
-
-/* ====== FILTER UI ====== */
+/* ====== FILTERS / UI WIRING ====== */
 const dlg=$("#filtersDlg");
-function wireFilters(){
-  $("#openFilters").onclick = ()=>dlg.showModal();
-  $("#closeFilters").onclick = ()=>dlg.close();
-  $("#resetAll").onclick = ()=>{
-    VARIETY="T"; THEME="all"; FILTERS={noGore:false,noSV:false,noKids:false}; ACTIVE_PRESET="none";
-    TARGET={c:33,s:33,z:34}; drawPad();
-    [...$("#biasSegTop").children].forEach(b=>b.classList.remove("active")); $("#biasSegTop").children[0].classList.add("active");
-    ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active")); $("#thAll").classList.add("active");
-    ["fNoGore","fNoSV","fNoKids"].forEach(id=>$("#"+id).classList.remove("active"));
-    $("#presetLock").style.display="none";
-    rebuildDeck(); dlg.close(); haptics("light");
-  };
-  $("#biasSegTop").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON")return; VARIETY=e.target.dataset.bias; [...$("#biasSegTop").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); haptics("light"); });
-  function setTheme(w){ THEME=w; ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active")); const map={all:"thAll",witch:"thWitch",body:"thBody",folk:"thFolk",found:"thFound",neon:"thNeon"}; $("#"+map[w]).classList.add("active"); rebuildDeck(); haptics("light"); }
+function wireUI(){
+  $("#deal").onclick=dealOne; $("#reroll").onclick=rerollNearby;
+  $("#openFilters").onclick=()=>dlg.showModal(); $("#closeFilters").onclick=()=>dlg.close();
+  $("#resetAll").onclick=()=>{ VARIETY="T"; THEME="all"; FILTERS={noGore:false,noSV:false,noKids:false}; ACTIVE_PRESET="none"; TARGET={c:33,s:33,z:34}; drawPad(); [...$("#biasSegTop").children].forEach(b=>b.classList.remove("active")); $("#biasSegTop").children[0].classList.add("active"); ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active")); $("#thAll").classList.add("active"); ["fNoGore","fNoSV","fNoKids"].forEach(id=>$("#"+id).classList.remove("active")); $("#presetLock").style.display="none"; rebuildDeck(); dlg.close(); };
+  $("#biasSegTop").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON") return; VARIETY=e.target.dataset.bias; [...$("#biasSegTop").children].forEach(b=>b.classList.toggle("active",b===e.target)); rebuildDeck(); });
+  function setTheme(w){ THEME=w; ["thAll","thWitch","thBody","thFolk","thFound","thNeon"].forEach(id=>$("#"+id).classList.remove("active")); const map={all:"thAll",witch:"thWitch",body:"thBody",folk:"thFolk",found:"thFound",neon:"thNeon"}; $("#"+map[w]).classList.add("active"); rebuildDeck(); }
   $("#thAll").onclick=()=>setTheme("all"); $("#thWitch").onclick=()=>setTheme("witch"); $("#thBody").onclick=()=>setTheme("body"); $("#thFolk").onclick=()=>setTheme("folk"); $("#thFound").onclick=()=>setTheme("found"); $("#thNeon").onclick=()=>setTheme("neon");
+  $("#fNoGore").onclick=()=>{ FILTERS.noGore=!FILTERS.noGore; $("#fNoGore").classList.toggle("active",FILTERS.noGore); rebuildDeck(); };
+  $("#fNoSV").onclick=()=>{ FILTERS.noSV=!FILTERS.noSV; $("#fNoSV").classList.toggle("active",FILTERS.noSV); rebuildDeck(); };
+  $("#fNoKids").onclick=()=>{ FILTERS.noKids=!FILTERS.noKids; $("#fNoKids").classList.toggle("active",FILTERS.noKids); rebuildDeck(); };
+  $("#presets").addEventListener("click",(e)=>{ const b=e.target.closest(".preset"); if(!b) return; ACTIVE_PRESET=b.dataset.preset; $("#presetLock").style.display="inline-block"; $("#presetLock").textContent=(ACTIVE_PRESET==="midnight"?"Cult midnight":ACTIVE_PRESET==="cozy"?"Cozy offbeat":"Folk dread")+" 🔒"; if(ACTIVE_PRESET==="cozy") TARGET={c:10,s:15,z:75}; else if(ACTIVE_PRESET==="midnight") TARGET={c:70,s:25,z:5}; else TARGET={c:25,s:65,z:10}; drawPad(); rebuildDeck(); });
+  $("#resetDeck").onclick=()=>{ rebuildDeck(); $("#left").textContent=DECK.length; dealtOnce=false; updateResetVisibility(); };
+}
+function updateResetVisibility(){ $("#resetDeck").style.display=dealtOnce?"":"none"; }
 
-  $("#fNoGore").onclick =()=>{ FILTERS.noGore=!FILTERS.noGore; $("#fNoGore").classList.toggle("active",FILTERS.noGore); rebuildDeck(); haptics("light"); };
-  $("#fNoSV").onclick   =()=>{ FILTERS.noSV=!FILTERS.noSV; $("#fNoSV").classList.toggle("active",FILTERS.noSV); rebuildDeck(); haptics("light"); };
-  $("#fNoKids").onclick =()=>{ FILTERS.noKids=!FILTERS.noKids; $("#fNoKids").classList.toggle("active",FILTERS.noKids); rebuildDeck(); haptics("light"); };
+/* ====== DATA LOADER with PATH FALLBACKS ====== */
+async function fetchMaybe(url){ try{ const r=await fetch(url,{cache:"no-store"}); if(!r.ok) return {ok:false,status:r.status}; const txt=await r.text(); return {ok:true,text:txt}; }catch(e){ return {ok:false,status:"net"}; } }
 
-  $("#presets").addEventListener("click",(e)=>{
-    const b=e.target.closest(".preset"); if(!b) return;
-    ACTIVE_PRESET=b.dataset.preset; $("#presetLock").style.display="inline-block";
-    $("#presetLock").textContent=(ACTIVE_PRESET==="midnight"?"Cult midnight":ACTIVE_PRESET==="cozy"?"Cozy offbeat":"Folk dread")+" 🔒";
-    if (ACTIVE_PRESET==="cozy") TARGET={c:10,s:15,z:75};
-    else if (ACTIVE_PRESET==="midnight") TARGET={c:70,s:25,z:5};
-    else TARGET={c:25,s:65,z:10};
-    drawPad(); rebuildDeck(); haptics("mid");
-  });
-  $("#presetLock").onclick=()=>{ ACTIVE_PRESET="none"; $("#presetLock").style.display="none"; rebuildDeck(); };
+async function loadData(){
+  const tried=[];
+  const paths=["./data/movies.csv","./movies.csv","./data/watchlist.csv"];
+  let text=null, src=null, lastStatus=null;
+  for(const p of paths){
+    const got=await fetchMaybe(p+"?v="+Date.now());
+    if(got.ok && (got.text||"").trim()){ text=got.text; src=p; break; }
+    tried.push(p+" ("+got.status+")"); lastStatus=got.status;
+  }
+  if(!text){
+    banner(`Couldn’t load a CSV.<br><b>Put your file at</b> <code>/data/movies.csv</code> (preferred) or <code>/movies.csv</code>.<br>Tried: ${tried.join(" → ")}.`);
+    MOVIES=[]; $("#total").textContent=0; return;
+  }
+  const {cols,rows}=parseCSV(text);
+  const needed=["name","year","letterboxd uri","cursed","spooky","cozy"];
+  const hasNeeded=needed.every(k=>cols.includes(k));
+  if(!hasNeeded){
+    banner(`CSV loaded from <code>${src}</code> but headers look off.<br>Need at least: <code>${needed.join(", ")}</code><br>Got: <code>${cols.join(", ")}</code>`);
+  }
+  MOVIES = rows.map(r=>({
+    title:r["name"]||r["title"]||"", year:(r["year"]||"").slice(0,4),
+    link:r["letterboxd uri"]||r["uri"]||"", tagline:r["tagline"]||"",
+    poster:r["poster"]||"", runtime:r["runtime"]?Number(r["runtime"]):null,
+    flags:coerceFlags(r["flags"]||""), cursed:Number(r["cursed"]||0), spooky:Number(r["spooky"]||0), cozy:Number(r["cozy"]||0)
+  })).filter(m=>m.title);
+  $("#total").textContent=MOVIES.length;
+  if(!MOVIES.length){ banner(`Loaded <code>${src}</code> but found 0 rows with titles. Double-check delimiter and header names.`); }
+  rebuildDeck();
 }
 
 /* ====== BOOT ====== */
-document.addEventListener("DOMContentLoaded", async () => {
-  initPad(); wireFilters(); attachLongPress(); loadBanished();
-  await loadData();
-  $("#deal").onclick = ()=>dealOne();
-  $("#reroll").onclick = ()=>rerollNearby();
-  $("#shareCard").onclick = ()=>shareCurrent();
-  $("#undo").onclick = ()=>{ undoBanish(); haptics("mid"); };
-  $("#resetDeck").onclick = ()=>{ rebuildDeck(); $("#left").textContent=DECK.length; dealtOnce=false; updateResetVisibility(); haptics("mid"); };
+document.addEventListener("DOMContentLoaded", async ()=>{
+  initPad(); wireUI(); await loadData();
 });
-
-async function loadData(){
-  try{
-    let enriched = await fetchMaybe("./data/movies.csv?v="+Date.now());
-    if (enriched){
-      const {rows}=parseCSV(enriched);
-      MOVIES = rows.map(r=>({
-        title:r["name"]||r["title"]||"", year:(r["year"]||"").slice(0,4),
-        link:r["letterboxd uri"]||r["uri"]||"", tagline:r["tagline"]||"",
-        poster:r["poster"]||"", runtime:r["runtime"]?Number(r["runtime"]):null,
-        flags:coerceFlags(r["flags"]||""),
-        cursed:Number(r["cursed"]||0), spooky:Number(r["spooky"]||0), cozy:Number(r["cozy"]||0)
-      }));
-      if(!MOVIES.length) setBanner("Loaded data/movies.csv but found 0 rows — check headers.");
-    } else {
-      let js = await fetchMaybe("./movies.json?v="+Date.now());
-      if (js){
-        MOVIES = JSON.parse(js);
-      } else {
-        setBanner("No movies.csv found → add /data/movies.csv with vibes/tags.");
-        MOVIES=[];
-      }
-    }
-    $("#total").textContent = MOVIES.length;
-    rebuildDeck();
-  }catch(e){ console.error(e); setBanner("Data not loaded yet. Check file paths and CSV headers."); }
-}
-
-function updateResetVisibility(){ $("#resetDeck").style.display = dealtOnce ? "" : "none"; }
 </script>
 </body>
 </html>
