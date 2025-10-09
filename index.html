@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <style>
-:root{color-scheme:light dark;--bg:#0b0b0b;--card:#101010;--fg:#f4f4f4;--mut:#a9b0b6;--bd:#1f1f1f;--acc:#77ffa5;--accFg:#061b10;--r:16px;--sh:0 10px 34px rgba(0,0,0,.45)}
+:root{color-scheme:dark light;--bg:#0b0b0b;--card:#101010;--fg:#f2f6f3;--mut:#a9b0b6;--bd:#1f1f1f;--acc:#77ffa5;--accFg:#061b10;--r:16px;--sh:0 10px 34px rgba(0,0,0,.45)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,Inter,Segoe UI,Roboto,Arial,sans-serif;overflow:hidden}
 .wrap{height:100dvh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
@@ -17,10 +17,12 @@ header{display:flex;align-items:center;justify-content:space-between;gap:10px}
 h1{margin:0;font-size:20px;letter-spacing:.2px}
 .sub{color:var(--mut);font-size:12px;margin-top:-4px}
 .deck{color:#cfe;font-size:12px;padding:6px 10px;border:1px solid #263;border-radius:10px;background:#0f1a14}
+
 .vibeBar{display:grid;grid-template-columns:200px 1fr;gap:12px;align-items:center}
 @media (max-width:680px){.vibeBar{grid-template-columns:170px 1fr}}
 #pad{width:100%;aspect-ratio:11/9;border-radius:12px;border:1px solid #1f1f1f;background:#0f1511;position:relative;overflow:hidden}
 #pad canvas{width:100%;height:100%}
+
 .group{display:flex;gap:8px;align-items:center}
 .label{color:#9ab;font-size:12px}
 .seg{display:flex;background:#141414;border:1px solid #262626;border-radius:999px;overflow:hidden}
@@ -29,13 +31,17 @@ h1{margin:0;font-size:20px;letter-spacing:.2px}
 .presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 .preset{background:#141414;border:1px solid #262626;color:#dfffe8;font-weight:800;font-size:12px;padding:6px 10px;border-radius:999px;cursor:pointer}
 .lock{background:#0f1a14;border:1px solid #264;color:#bff7cf;padding:4px 8px;font-size:11px;border-radius:999px;display:none}
+
 .err{display:none;background:#1a1010;border:1px solid #412525;color:#ffd6d6;padding:10px;border-radius:10px;font-weight:800}
+#diag{display:none;font:12px/1.35 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#0e1113;border:1px dashed #294;color:#bfffd6;padding:10px;border-radius:10px;max-height:120px;overflow:auto}
+
 .stage{min-height:0;display:grid;grid-template-columns:56% 1fr;gap:12px;overflow:hidden}
 .posterWrap{position:relative}
 .poster{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:14px;background:#181818;border:1px solid #1f1f1f}
 .poster.skel{animation:pulse 1.2s infinite ease-in-out;background:linear-gradient(90deg,#141414 25%,#1a1a1a 37%,#141414 63%);background-size:400% 100%}
 @keyframes pulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
 .note{position:absolute;left:8px;bottom:8px;background:#0f1a14;border:1px solid #264;color:#b7ffcf;padding:4px 8px;border-radius:10px;font-size:11px;font-weight:800;opacity:.9}
+
 .info{display:grid;gap:8px;min-width:0}
 .title{margin:0;font-weight:1000;font-size:22px;line-height:1.15}
 .tag{color:#d6e2dd;font-size:14px;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
@@ -43,11 +49,11 @@ h1{margin:0;font-size:20px;letter-spacing:.2px}
 .chip{background:#141414;border:1px solid #262626;border-radius:999px;padding:6px 10px;font-weight:800;font-size:12px;color:#d8ffe9}
 .links{display:grid;gap:8px}
 .links a{display:block;padding:12px;text-align:center;border-radius:12px;text-decoration:none;font-weight:900;font-size:15px;background:#1b1b1b;color:#c0ffd6;border:1px solid #2a2a2a}
+
 .dock{display:flex;gap:10px;align-items:center;padding-bottom:calc(env(safe-area-inset-bottom) + 2px);overflow-x:auto}
 .btn{appearance:none;border:0;border-radius:14px;padding:14px 12px;font-weight:900;cursor:pointer;font-size:15px;min-width:120px}
 .pri{background:var(--acc);color:var(--accFg)}
 .gh{background:#141414;color:#fff;border:1px solid #262626}
-.kicker{color:#9ab;font-size:12px}
 .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#0f1511;border:1px solid #2a3a2f;color:#caffe0;padding:10px 12px;border-radius:12px;font-weight:800;display:none;z-index:50}
 .toast.show{display:block;animation:fade 3s ease both}
 @keyframes fade{0%{opacity:0;transform:translate(-50%,8px)}10%{opacity:1;transform:translate(-50%,0)}90%{opacity:1}100%{opacity:0}}
@@ -85,13 +91,14 @@ h1{margin:0;font-size:20px;letter-spacing:.2px}
     </section>
 
     <div id="err" class="err"></div>
+    <div id="diag"></div>
 
     <section class="stage" aria-live="polite">
       <div class="posterWrap">
         <img id="poster" class="poster skel" referrerpolicy="no-referrer" alt="Movie poster"/>
         <div id="note" class="note" style="display:none;"></div>
       </div>
-      <div class="info" id="longPress">
+      <div class="info">
         <h2 class="title" id="title">—</h2>
         <p class="tag" id="tagline" style="display:none;"></p>
         <div class="chips">
@@ -118,15 +125,18 @@ h1{margin:0;font-size:20px;letter-spacing:.2px}
 
 <script>
 /* ===== CONFIG ===== */
-const TMDB_API_KEY = "000802da6224e125437187b196cde898";   // <-- put your TMDb v3 key here
+const TMDB_API_KEY = "000802da6224e125437187b196cde898"; // <-- your TMDb v3 key
 const TMDB_IMG = "https://image.tmdb.org/t/p";
 
-/* ===== helpers ===== */
-const $=s=>document.querySelector(s);
-const banner = (msg)=>{ const e=$("#err"); e.innerHTML=msg; e.style.display="block"; };
-const clearBanner = ()=>{ const e=$("#err"); e.style.display="none"; e.textContent=""; };
-const note=(t)=>{ const n=$("#note"); if(!t){ n.style.display="none"; n.textContent=""; return; } n.textContent=t; n.style.display="block"; };
+/* ===== tiny logger & diagnostics ===== */
+const logLines=[];
+function log(...a){ logLines.push(a.map(x=>typeof x==='string'?x:JSON.stringify(x)).join(' ')); const box=document.getElementById('diag'); box.innerHTML=logLines.slice(-12).join('<br>'); }
+function showDiag(){ document.getElementById('diag').style.display='block'; }
+function banner(html){ const e=document.getElementById('err'); e.innerHTML=html; e.style.display='block'; }
+function clearBanner(){ const e=document.getElementById('err'); e.style.display='none'; e.textContent=''; }
+function note(t){ const n=document.getElementById('note'); if(!t){ n.style.display='none'; n.textContent=''; return; } n.textContent=t; n.style.display='block'; }
 
+/* ===== poster helpers ===== */
 function posterURL(path,size="w500"){
   if(!path) return "";
   const s=String(path).trim();
@@ -139,13 +149,13 @@ function setPoster(img, path, title){
   const sizes=["w780","w500","w342","original"]; let i=0;
   function tryOne(){
     const url = posterURL(path, sizes[i]);
-    if(!url) return fail("no url");
+    if(!url){ fail("no url"); return; }
     img.crossOrigin="anonymous";
     img.src = url;
   }
   function fail(reason){
     note(reason?`fallback (${reason})`:"fallback");
-    img.src = `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900"><rect width="100%" height="100%" fill="#141414"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#5a5a5a" font-family="system-ui, -apple-system, Segoe UI, Roboto" font-size="28">NO POSTER</text></svg>')}`;
+    img.src = `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900"><rect width="100%" height="100%" fill="#141414"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#5a5a5a" font-family="system-ui" font-size="28">NO POSTER</text></svg>')}`;
     img.classList.remove("skel");
   }
   img.alt=title||"poster";
@@ -154,8 +164,7 @@ function setPoster(img, path, title){
   img.onload =()=>{ note("OK"); img.classList.remove("skel"); };
   tryOne();
 }
-
-const CACHE_KEY="mr_tmdb_cache_v14";
+const CACHE_KEY="mr_tmdb_cache_v15";
 let TMDB_CACHE={}; try{ TMDB_CACHE=JSON.parse(localStorage.getItem(CACHE_KEY)||"{}"); }catch{}
 const ck=(t,y)=> (t||"").toLowerCase()+"::"+String(y||"").slice(0,4);
 const saveCache=()=>localStorage.setItem(CACHE_KEY, JSON.stringify(TMDB_CACHE));
@@ -164,15 +173,11 @@ function scrub(t){
   return String(t||"")
     .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
     .replace(/(^|\s)(the|le|la|el)\s+/ig,"$1")
-    .replace(/\(.+?\)/g,"")
-    .replace(/–.+$/,"")
-    .replace(/:.*$/,"")
-    .replace(/\s{2,}/g," ")
-    .trim(); 
+    .replace(/\(.+?\)/g,"").replace(/–.+$/,"").replace(/:.*$/,"")
+    .replace(/\s{2,}/g," ").trim(); 
 }
-
 async function tmdbPoster(title,year){
-  if(keyMissing()){ note("TMDb key missing"); banner("TMDb key missing — put it at the top of <code>index.html</code>."); return null; }
+  if(keyMissing()){ note("TMDb key missing"); showDiag(); log("TMDb key missing"); return null; }
   const k=ck(title,year);
   if(TMDB_CACHE[k]?.poster){ note("cache"); return TMDB_CACHE[k].poster; }
 
@@ -181,12 +186,12 @@ async function tmdbPoster(title,year){
     u.searchParams.set("api_key", TMDB_API_KEY);
     u.searchParams.set("include_adult","true");
     u.searchParams.set("language","en-US");
-    u.searchParams.set("_", Date.now()); // cache-bust
+    u.searchParams.set("_", Date.now());
     for(const [kk,v] of Object.entries(params)) if(v!=null&&v!=="") u.searchParams.set(kk,String(v));
     const r=await fetch(u);
-    if(r.status===401){ note("TMDb 401"); banner("TMDb key rejected (401) — double-check it."); return {results:[]}; }
+    if(r.status===401){ note("TMDb 401"); showDiag(); log("TMDb 401"); return {results:[]}; }
     if(r.status===429){ note("TMDb 429"); return {results:[]}; }
-    if(!r.ok){ note("TMDb error"); return {results:[]}; }
+    if(!r.ok){ note("TMDb error"); log("TMDb err", r.status); return {results:[]}; }
     return r.json();
   }
 
@@ -204,22 +209,20 @@ async function tmdbPoster(title,year){
   for(const t of tries){
     const j=await q(t);
     if((j.results||[]).length){
-      // prefer exact year + poster_path
       hit = (j.results||[]).find(x=>x.poster_path && (y? String(x.release_date||"").startsWith(y):true)) 
          || (j.results||[]).find(x=>x.poster_path)
          || j.results[0];
       if(hit) break;
     }
   }
-  if(!hit){ note("0 results"); }
+  if(!hit){ note("0 results"); log("TMDb 0 results", title, year); }
   const poster = hit?.poster_path || null;
   TMDB_CACHE[k]=TMDB_CACHE[k]||{}; TMDB_CACHE[k].poster=poster; saveCache();
   return poster;
 }
-
 function isEmptyPosterVal(v){
   const s=String(v||"").trim().toLowerCase();
-  return !s || s==="null" || s==="nil" || s==="none" || s==="-" || s==="#n/a";
+  return !s || s==="null" || s==="nil" || s==="none" || s==="-";
 }
 async function ensurePoster(item){
   if(!isEmptyPosterVal(item.poster)) return item.poster;
@@ -227,7 +230,8 @@ async function ensurePoster(item){
   return p||"";
 }
 
-/* ===== CSV + model ===== */
+/* ===== CSV + selection ===== */
+const $=s=>document.querySelector(s);
 function splitCSV(s,d=","){const out=[];let cur="",q=false;for(let i=0;i<s.length;i++){const c=s[i];if(c==='"'){q=!q;continue}if(c===d&&!q){out.push(cur);cur="";continue}cur+=c}out.push(cur);return out}
 function parseCSV(text){
   const lines=text.split(/\r?\n/).filter(l=>l.trim()); if(lines.length<2) return {cols:[],rows:[]};
@@ -247,8 +251,8 @@ function normTriple(c,s,z){ c=Math.max(0,c||0); s=Math.max(0,s||0); z=Math.max(0
 function dist(a,b){ const A=normTriple(a.c,a.s,a.z), B=normTriple(b.c,b.s,b.z); const dx=(A.c-B.c)/100, dy=(A.s-B.s)/100, dz=(A.z-B.z)/100; return Math.sqrt(dx*dx+dy*dy+dz*dz); }
 
 /* triangle */
-let pad,ctx,geom,TARGET={c:33,s:33,z:34}, VARIETY="T";
-function geomOf(){ const W=pad.width,H=pad.height,m=18*devicePixelRatio; return {W,H,top:{x:W/2,y:m+4},left:{x:m,y:H-m},right:{x:W-m,y:H-m}}; }
+let padCanvas,ctx,geom,TARGET={c:33,s:33,z:34}, VARIETY="T";
+function geomOf(){ const W=padCanvas.width,H=padCanvas.height,m=18*devicePixelRatio; return {W,H,top:{x:W/2,y:m+4},left:{x:m,y:H-m},right:{x:W-m,y:H-m}}; }
 function drawPad(){
   const {W,H,top,left,right}=geom; ctx.clearRect(0,0,W,H);
   ctx.fillStyle="#0f1511"; ctx.strokeStyle="#284832"; ctx.lineWidth=2*devicePixelRatio;
@@ -257,7 +261,7 @@ function drawPad(){
   ctx.fillStyle="#bfe9cf"; ctx.font=`${12*devicePixelRatio}px system-ui`; ctx.textAlign="center"; ctx.fillText("CURSED", top.x, top.y + 14*devicePixelRatio);
   ctx.textAlign="left"; ctx.fillText("SPOOKY", left.x + 6*devicePixelRatio, left.y - 6*devicePixelRatio);
   ctx.textAlign="right"; ctx.fillText("COZY", right.x - 6*devicePixelRatio, right.y - 6*devicePixelRatio);
-  const p=barToPoint(normToBar(TARGET), geom.top, geom.left, geom.right);
+  const b=normToBar(TARGET), p=barToPoint(b,top,left,right);
   ctx.fillStyle="#77ffa5"; ctx.strokeStyle="#173824"; ctx.lineWidth=2*devicePixelRatio; ctx.beginPath(); ctx.arc(p.x,p.y,5*devicePixelRatio,0,Math.PI*2); ctx.fill(); ctx.stroke();
 }
 function normToBar(n){ const s=(n.c+n.s+n.z)||1; return {c:n.c/s, s:n.s/s, z:n.z/s}; }
@@ -266,24 +270,23 @@ function pointToBar(p,A,B,C){ const v0={x:B.x-A.x,y:B.y-A.y},v1={x:C.x-A.x,y:C.y
 function barToPoint(b,A,B,C){ return {x:b.c*A.x+b.s*B.x+b.z*C.x,y:b.c*A.y+b.s*B.y+b.z*C.y}; }
 function clipBar(b){ let {c,s,z}=b; c=Math.max(0,Math.min(1,c)); s=Math.max(0,Math.min(1,s)); z=Math.max(0,Math.min(1,z)); const sum=c+s+z; if(sum===0){ c=1;s=0;z=0; } else { c/=sum; s/=sum; z/=sum; } return {c,s,z}; }
 function band(){ return VARIETY==="T"?0.18: VARIETY==="M"?0.32:0.55; }
-function weightFor(m,t){ const n=normTriple(m.cursed||0,m.spooky||0,m.cozy||0); const d=dist(n,t); return Math.exp(-0.5*Math.pow(d/band(),2)); }
 
-let MOVIES=[], DECK=[], lastIdx=null, dealt=false, THEME="all", FILTERS={noGore:false,noSV:false,noKids:false}, ACTIVE="none";
+/* state */
+let MOVIES=[], DECK=[], lastIdx=null, dealt=false, ACTIVE="none", FILTERS={noGore:false,noSV:false,noKids:false};
 function idFor(m){ return `${m.title||""}::${m.year||""}` }
 let banished={date:new Date().toISOString().slice(0,10), ids:[]}; try{const raw=localStorage.getItem("mr_banished"); if(raw){const o=JSON.parse(raw); if(o.date===banished.date) banished=o; }}catch{}
 function saveBan(){ localStorage.setItem("mr_banished", JSON.stringify(banished)); }
 
+/* selection */
 function presetPass(m){ const f=m.flags||{}; if(ACTIVE==="none")return true; if(ACTIVE==="midnight"){ const c=[f.theme_neon,f.extreme_gore,f.theme_body_horror,f.theme_found_footage,f.theme_witchy].filter(Boolean).length; return c>=1 && (m.cursed+m.spooky)>=70; } if(ACTIVE==="cozy"){ if(f.extreme_gore||f.sexual_violence) return false; return (m.cozy||0)>=50; } if(ACTIVE==="folk"){ return (f.theme_folk||f.theme_witchy); } return true; }
-function themePass(m){ return true; }
 function contentPass(m){ const f=m.flags||{}; if(FILTERS.noGore&&f.extreme_gore)return false; if(FILTERS.noSV&&f.sexual_violence)return false; if(FILTERS.noKids&&f.kids_in_peril)return false; return true; }
+function weightFor(m,t){ const n=normTriple(m.cursed||0,m.spooky||0,m.cozy||0); const d=(function(a,b){const A=normTriple(a.c,a.s,a.z),B=normTriple(b.c,b.s,b.z);const dx=(A.c-B.c)/100,dy=(A.s-B.s)/100,dz=(A.z-B.z)/100;return Math.sqrt(dx*dx+dy*dy+dz*dz)})(n,t); return Math.exp(-0.5*Math.pow(d/band(),2)); }
 
 function rebuild(){
-  if(!MOVIES.length){ $("#left").textContent=0; return; }
+  if(!MOVIES.length){ document.getElementById('left').textContent=0; return; }
   const todays=new Set(banished.ids);
-  let cands=MOVIES.map((m,i)=>({m,i}))
-    .filter(({m})=>presetPass(m)&&themePass(m)&&contentPass(m)&&!todays.has(idFor(m)))
-    .map(x=>x.i);
-  if(!cands.length){ cands=MOVIES.map((_,i)=>i); }
+  let cands=MOVIES.map((m,i)=>({m,i})).filter(({m})=>presetPass(m)&&contentPass(m)&&!todays.has(idFor(m))).map(x=>x.i);
+  if(!cands.length) cands=MOVIES.map((_,i)=>i);
   for(let i=cands.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [cands[i],cands[j]]=[cands[j],cands[i]]; }
   const deck=[], used=new Set(), MAX=Math.min(80,cands.length);
   for(let n=0;n<MAX;n++){
@@ -295,58 +298,70 @@ function rebuild(){
     used.add(pick); deck.push(pick);
   }
   DECK = deck.length?deck:cands;
-  $("#left").textContent=DECK.length; $("#total").textContent=MOVIES.length;
-  $("#reset").style.display = dealt ? "" : "none";
+  document.getElementById('left').textContent=DECK.length; document.getElementById('total').textContent=MOVIES.length;
+  document.getElementById('reset').style.display = dealt ? "" : "none";
   clearBanner();
 }
 
 async function render(item){
   const p = await ensurePoster(item);
-  setPoster($("#poster"), p, item.title);
-  $("#title").textContent=item.title||"Untitled";
-  const tg=(item.tagline||"").trim(); $("#tagline").textContent=tg; $("#tagline").style.display=tg?"":"none";
-  if(item.year){ $("#year").textContent=`Year: ${item.year}`; $("#year").style.display=""; } else $("#year").style.display="none";
-  const run=item.runtime?`${item.runtime} min`:""; $("#run").textContent=run; $("#run").style.display=run?"":"none";
-  const vibes=$("#vibes"); vibes.innerHTML=""; const n=normTriple(item.cursed,item.spooky,item.cozy);
+  setPoster(document.getElementById('poster'), p, item.title);
+  document.getElementById('title').textContent=item.title||"Untitled";
+  const tg=(item.tagline||"").trim(); const tgEl=document.getElementById('tagline'); tgEl.textContent=tg; tgEl.style.display=tg?"":"none";
+  if(item.year){ const y=document.getElementById('year'); y.textContent=`Year: ${item.year}`; y.style.display=""; } else document.getElementById('year').style.display="none";
+  const run=item.runtime?`${item.runtime} min`:""; const rEl=document.getElementById('run'); rEl.textContent=run; rEl.style.display=run?"":"none";
+  const vibes=document.getElementById('vibes'); vibes.innerHTML=""; const n=normTriple(item.cursed,item.spooky,item.cozy);
   ["Cursed "+Math.round(n.c)+"%","Spooky "+Math.round(n.s)+"%","Cozy "+Math.round(n.z)+"%"].forEach(t=>{ const s=document.createElement("span"); s.className="chip"; s.textContent=t; vibes.appendChild(s); });
-  const links=$("#links"); links.innerHTML="";
+  const links=document.getElementById('links'); links.innerHTML="";
   const lb=document.createElement("a"); lb.textContent="Open on Letterboxd"; lb.href=item.link||"#"; lb.target="_blank"; links.appendChild(lb);
   const sr=document.createElement("a"); sr.textContent="Where to watch (search)"; sr.href="https://www.google.com/search?q="+encodeURIComponent(`${item.title} full movie site:archive.org OR site:youtube.com OR torrent`); sr.target="_blank"; links.appendChild(sr);
 }
 
-function deal(){ if(!DECK.length) rebuild(); if(!DECK.length){ banner("Deck empty or data missing."); return; } const idx=DECK.pop(); lastIdx=idx; dealt=true; $("#left").textContent=DECK.length; render(MOVIES[idx]); $("#reset").style.display=""; }
-function reroll(){ if(lastIdx==null){ deal(); return; } const curr=MOVIES[lastIdx]; let pool=[]; for(let i=0;i<MOVIES.length;i++){ if(i===lastIdx) continue; const m=MOVIES[i]; if(!presetPass(m)||!themePass(m)||!contentPass(m)) continue; const dT=dist(normTriple(m.cursed,m.spooky,m.cozy),TARGET); const dC=dist(normTriple(m.cursed,m.spooky,m.cozy),normTriple(curr.cursed,curr.spooky,curr.cozy)); if(dT<=0.32||dC<=0.18) pool.push(i); } if(!pool.length) pool=MOVIES.map((_,i)=>i).filter(i=>i!==lastIdx); const idx=pool[Math.floor(Math.random()*pool.length)]; lastIdx=idx; render(MOVIES[idx]); }
+function deal(){ if(!DECK.length) rebuild(); if(!DECK.length){ banner("Deck empty or data missing."); showDiag(); return; } const idx=DECK.pop(); lastIdx=idx; dealt=true; document.getElementById('left').textContent=DECK.length; render(MOVIES[idx]); document.getElementById('reset').style.display=""; }
+function reroll(){ if(lastIdx==null){ deal(); return; } const curr=MOVIES[lastIdx]; let pool=[]; for(let i=0;i<MOVIES.length;i++){ if(i===lastIdx) continue; const m=MOVIES[i]; if(!presetPass(m)||!contentPass(m)) continue; const dT=dist(normTriple(m.cursed,m.spooky,m.cozy),TARGET); const dC=dist(normTriple(m.cursed,m.spooky,m.cozy),normTriple(curr.cursed,curr.spooky,curr.cozy)); if(dT<=0.32||dC<=0.18) pool.push(i); } if(!pool.length) pool=MOVIES.map((_,i)=>i).filter(i=>i!==lastIdx); const idx=pool[Math.floor(Math.random()*pool.length)]; lastIdx=idx; render(MOVIES[idx]); }
 
-function wire(){
-  $("#deal").onclick=deal; $("#reroll").onclick=reroll;
-  $("#reset").onclick=()=>{ rebuild(); $("#left").textContent=DECK.length; dealt=false; $("#reset").style.display="none"; };
-  $("#presets").addEventListener("click",(e)=>{ const b=e.target.closest(".preset"); if(!b) return; const lock=$("#lock"); const p=b.dataset.preset; if(p==="cozy"){ ACTIVE="cozy"; TARGET={c:10,s:15,z:75}; } else if(p==="midnight"){ ACTIVE="midnight"; TARGET={c:70,s:25,z:5}; } else { ACTIVE="folk"; TARGET={c:30,s:55,z:15}; } lock.style.display="inline-block"; lock.textContent=b.textContent+" 🔒"; drawPad(); rebuild(); });
-  $("#biasSeg").addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON") return; VARIETY=e.target.dataset.bias; [...$("#biasSeg").children].forEach(x=>x.classList.toggle("active",x===e.target)); rebuild(); });
-}
+/* wire */
+document.getElementById('deal').onclick=deal;
+document.getElementById('reroll').onclick=reroll;
+document.getElementById('reset').onclick=()=>{ rebuild(); document.getElementById('left').textContent=DECK.length; dealt=false; document.getElementById('reset').style.display="none"; };
+document.getElementById('biasSeg').addEventListener("click",(e)=>{ if(e.target.tagName!=="BUTTON") return; VARIETY=e.target.dataset.bias; [...document.getElementById('biasSeg').children].forEach(x=>x.classList.toggle("active",x===e.target)); rebuild(); });
+document.getElementById('presets').addEventListener("click",(e)=>{ const b=e.target.closest(".preset"); if(!b) return; const lock=document.getElementById('lock'); const p=b.dataset.preset; if(p==="cozy"){ ACTIVE="cozy"; TARGET={c:10,s:15,z:75}; } else if(p==="midnight"){ ACTIVE="midnight"; TARGET={c:70,s:25,z:5}; } else { ACTIVE="folk"; TARGET={c:30,s:55,z:15}; } lock.style.display="inline-block"; lock.textContent=b.textContent+" 🔒"; drawPad(); rebuild(); });
 
-function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1600); }
-
-/* pad init */
-let geom,ctx,padCanvas;
-function initPad(){
-  const host=$("#pad"); host.innerHTML=""; const c=document.createElement("canvas"); c.width=Math.max(170, host.clientWidth||200)*devicePixelRatio; c.height=c.width*(9/11); c.style.width="100%"; c.style.height="100%"; host.appendChild(c); padCanvas=c; ctx=c.getContext("2d"); geom=geomOf(); drawPad();
+/* triangle pad init */
+(function initPad(){
+  const host=document.getElementById('pad'); const c=document.createElement("canvas");
+  c.width=Math.max(170, host.clientWidth||200)*devicePixelRatio; c.height=c.width*(9/11);
+  c.style.width="100%"; c.style.height="100%"; host.appendChild(c); padCanvas=c; ctx=c.getContext("2d"); geom= (function(){const W=c.width,H=c.height,m=18*devicePixelRatio; return {W,H,top:{x:W/2,y:m+4},left:{x:m,y:H-m},right:{x:W-m,y:H-m}}})(); drawPad();
   let drag=false; const down=(e)=>{ move(e); drag=true; e.preventDefault(); }; const move=(e)=>{ if(!drag) return; const r=c.getBoundingClientRect(); const px=(e.touches?e.touches[0].clientX:e.clientX)-r.left; const py=(e.touches?e.touches[0].clientY:e.clientY)-r.top; const p={x:px*devicePixelRatio,y:py*devicePixelRatio}; let b=pointToBar(p,geom.top,geom.left,geom.right); b=clipBar(b); TARGET=barToNorm(b); drawPad(); }; const up=()=>{ if(drag){ drag=false; rebuild(); } };
   c.addEventListener("mousedown",down); c.addEventListener("touchstart",down,{passive:false});
   window.addEventListener("mousemove",move,{passive:false}); window.addEventListener("touchmove",move,{passive:false});
   window.addEventListener("mouseup",up); window.addEventListener("touchend",up);
-}
+})();
 
-/* data */
-async function getText(url){ try{ const r=await fetch(url+"?v="+Date.now(),{cache:"no-store"}); if(!r.ok) return {ok:false,status:r.status}; return {ok:true,text:await r.text()}; }catch{return {ok:false,status:"net"}} }
+/* ===== CSV load with diagnostics & demo fallback ===== */
+async function getText(url){ try{ const r=await fetch(url+"?v="+Date.now(),{cache:"no-store"}); if(!r.ok) return {ok:false,status:r.status}; return {ok:true,text:await r.text()}; }catch(e){ return {ok:false,status:e.message||"net"} } }
 async function loadCSV(){
-  const tried=[]; const paths=["./data/movies.csv","./movies.csv","./data/watchlist.csv"];
+  const tried=[];
+  // try multiple relative paths (GitHub Pages can be picky about prefixes)
+  const paths=["data/movies.csv","movies.csv","data/watchlist.csv","watchlist.csv","./data/movies.csv","./movies.csv","./data/watchlist.csv","./watchlist.csv"];
   let txt=null,src=null;
-  for(const p of paths){ const res=await getText(p); if(res.ok && (res.text||"").trim()){ txt=res.text; src=p; break; } tried.push(p+"("+res.status+")"); }
-  if(!txt){ banner(`CSV not found. Put your file at <code>/data/movies.csv</code>.<br>Tried: ${tried.join(" → ")}`); return; }
+  for(const p of paths){ const res=await getText(p); log("try",p,res.ok?"ok":res.status); if(res.ok && (res.text||"").trim()){ txt=res.text; src=p; break; } tried.push(`${p}(${res.status})`); }
+  if(!txt){
+    showDiag();
+    banner(`CSV not found. Put your file at <code>/data/movies.csv</code>.<br>Tried: ${tried.join(" → ")}`);
+    // demo row so UI still works
+    const demo=`Name,Year,Letterboxd URI,Cursed,Spooky,Cozy,Tagline,Poster,Runtime,Flags
+Things,1989,https://boxd.it/2SpC,45,55,20,Canadian creature feature from another, stupider planet.,,83,"gore,found"`;
+    txt=demo; src="(demo)"; log("Using demo CSV so UI works");
+  } else {
+    clearBanner();
+  }
+
   const {cols,rows}=parseCSV(txt);
   const need=["name","year","letterboxd uri","cursed","spooky","cozy"];
   const ok = need.every(k=>cols.includes(k));
-  if(!ok){ banner(`CSV headers look wrong in <code>${src}</code>.<br>Need: <code>${need.join(", ")}</code><br>Got: <code>${cols.join(", ")}</code>`); }
+  if(!ok){ showDiag(); banner(`CSV headers look wrong in <code>${src}</code>.<br>Need: <code>${need.join(", ")}</code><br>Got: <code>${cols.join(", ")}</code>`); }
+
   MOVIES = rows.map(r=>({
     title:r["name"]||r["title"]||"",
     year:(r["year"]||"").slice(0,4),
@@ -357,13 +372,12 @@ async function loadCSV(){
     flags:flagsOf(r["flags"]||""),
     cursed:Number(r["cursed"]||0), spooky:Number(r["spooky"]||0), cozy:Number(r["cozy"]||0)
   })).filter(m=>m.title);
-  $("#total").textContent=MOVIES.length;
+
+  document.getElementById('total').textContent=MOVIES.length;
+  log("loaded rows", MOVIES.length, "from", src);
 }
 
-/* boot */
 (async function boot(){
-  initPad();
-  wire();
   await loadCSV();
   rebuild();
 })();
